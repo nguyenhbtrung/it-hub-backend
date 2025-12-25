@@ -20,4 +20,11 @@ export class UserRepository {
       data: { password: hashedPassword },
     });
   }
+
+  async verifyEmail(id: string): Promise<User> {
+    return prisma.user.update({
+      where: { id },
+      data: { emailVerified: true },
+    });
+  }
 }
