@@ -7,6 +7,7 @@ import { PasswordResetTokenRepository } from '../repositories/passwordResetToken
 import { EmailService } from '../services/email.service';
 import { toUserResponseDTO } from '../dtos/user.dto';
 import { UnauthorizedError } from '@/errors';
+import { successResponse } from '@/utils/response';
 
 const authService = new AuthService(
   new UserRepository(),
@@ -28,14 +29,22 @@ export class AuthController {
         sameSite: 'none',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
-
-      res.status(200).json({
+      successResponse({
+        res,
+        status: 201,
         message: 'User registered successfully. Please check your email to verify your account.',
         data: {
           user: result.user,
           accessToken: result.accessToken,
         },
       });
+      // res.status(200).json({
+      //   message: 'User registered successfully. Please check your email to verify your account.',
+      //   data: {
+      //     user: result.user,
+      //     accessToken: result.accessToken,
+      //   },
+      // });
     } catch (error) {
       next(error);
     }
@@ -53,7 +62,8 @@ export class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      res.status(200).json({
+      successResponse({
+        res,
         message: 'Login successful',
         data: {
           user: result.user,
@@ -78,7 +88,8 @@ export class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      res.status(200).json({
+      successResponse({
+        res,
         message: 'Token refreshed successfully',
         data: {
           accessToken: tokens.accessToken,
@@ -101,9 +112,7 @@ export class AuthController {
         sameSite: 'none',
       });
 
-      res.status(200).json({
-        message: 'Logged out successfully',
-      });
+      successResponse({ res, message: 'Logged out successfully' });
     } catch (error) {
       next(error);
     }
@@ -114,9 +123,7 @@ export class AuthController {
       const userId = (req.user as any).id;
       await authService.logoutAll(userId);
 
-      res.status(200).json({
-        message: 'Logged out from all devices successfully',
-      });
+      successResponse({ res, message: 'Logged out from all devices successfully' });
     } catch (error) {
       next(error);
     }
@@ -127,10 +134,7 @@ export class AuthController {
       const { token } = req.body;
       const user = await authService.verifyEmail(token);
 
-      res.status(200).json({
-        message: 'Email verified successfully',
-        data: user,
-      });
+      successResponse({ res, message: 'Email verified successfully', data: user });
     } catch (error) {
       next(error);
     }
@@ -141,9 +145,7 @@ export class AuthController {
       const { email } = req.body;
       await authService.resendVerificationEmail(email);
 
-      res.status(200).json({
-        message: 'Verification email sent successfully',
-      });
+      successResponse({ res, message: 'Verification email sent successfully' });
     } catch (error) {
       next(error);
     }
@@ -154,9 +156,7 @@ export class AuthController {
       const { email } = req.body;
       await authService.requestPasswordReset(email);
 
-      res.status(200).json({
-        message: 'If the email exists, a password reset link has been sent',
-      });
+      successResponse({ res, message: 'If the email exists, a password reset link has been sent' });
     } catch (error) {
       next(error);
     }
@@ -167,9 +167,7 @@ export class AuthController {
       const { token, password } = req.body;
       await authService.resetPassword(token, password);
 
-      res.status(200).json({
-        message: 'Password reset successfully',
-      });
+      successResponse({ res, message: 'Password reset successfully' });
     } catch (error) {
       next(error);
     }
@@ -178,9 +176,8 @@ export class AuthController {
   async getProfile(req: Request, res: Response, next: NextFunction) {
     try {
       const user = req.user as any;
-      res.status(200).json({
-        data: toUserResponseDTO(user),
-      });
+
+      successResponse({ res, data: toUserResponseDTO(user) });
     } catch (error) {
       next(error);
     }

@@ -78,13 +78,13 @@ export class AuthService {
     // Find user
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
-      throw new UnauthorizedError('Invalid credentials');
+      throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
     }
 
     // Verify password
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      throw new UnauthorizedError('Invalid credentials');
+      throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
     }
 
     // Generate tokens
@@ -101,13 +101,13 @@ export class AuthService {
     const storedToken = await this.refreshTokenRepository.findByToken(refreshToken);
 
     if (!storedToken) {
-      throw new UnauthorizedError('Invalid refresh token');
+      throw new UnauthorizedError('Invalid refresh token', 'INVALID_REFRESH_TOKEN');
     }
 
     // Check if expired
     if (storedToken.expiresAt < new Date()) {
       await this.refreshTokenRepository.deleteByToken(refreshToken);
-      throw new UnauthorizedError('Refresh token expired');
+      throw new UnauthorizedError('Refresh token expired', 'REFRESH_TOKEN_EXPIRED');
     }
 
     // Verify JWT
@@ -115,7 +115,7 @@ export class AuthService {
       jwt.verify(refreshToken, process.env.JWT_SECRET!);
     } catch (error) {
       await this.refreshTokenRepository.deleteByToken(refreshToken);
-      throw new UnauthorizedError('Invalid refresh token');
+      throw new UnauthorizedError('Invalid refresh token', 'INVALID_REFRESH_TOKEN');
     }
 
     // Generate new token pair
