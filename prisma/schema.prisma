@@ -13,22 +13,620 @@ datasource db {
   provider = "postgresql"
 }
 
+// =====================================================
+// ENUMS
+// =====================================================
+enum UserRole {
+  admin
+  instructor
+  student
+}
 
+enum UserScope {
+  internal
+  external
+}
+
+enum UserStatus {
+  active
+  suspended
+}
+
+enum CourseLevel {
+  beginner
+  intermediate
+  advanced
+  expert
+}
+
+enum CourseEnrollmentStatus {
+  public
+  public_with_approval
+  internal
+  private
+}
+
+enum CourseStatus {
+  draft
+  pending
+  published
+  hidden
+  suspended
+}
+
+enum EnrollmentStatus {
+  pending
+  active
+  completed
+}
+
+enum UnitType {
+  lesson
+  excercise
+}
+
+enum ExcerciseType {
+  assignment
+  project
+  quiz
+  coding
+}
+
+enum LearningStatus {
+  not_started
+  completed
+  submitted
+  not_passed
+}
+
+enum PostType {
+  question
+  knowledge
+  discussion
+  experience
+  news
+  resource
+  announcement
+}
+
+enum PostStatus {
+  draft
+  pending
+  active
+  hidden
+  suspended
+}
+
+// =====================================================
+// USER DOMAIN
+// =====================================================
 model User {
-  id                String    @id @default(uuid())
-  email             String    @unique
-  password          String
-  name              String?
-  emailVerified     Boolean   @default(false)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  
-  refreshTokens     RefreshToken[]
+  id            String     @id @default(cuid())
+  email         String     @unique
+  passwordHash  String
+  fullname      String?
+  role          UserRole
+  scope         UserScope
+  status        UserStatus @default(active)
+  emailVerified Boolean    @default(false)
+
+  avatarId      String?
+  avatar        File?      @relation(name: "UserAvatar", fields: [avatarId], references: [id])
+
+  profile       UserProfile?
+  badges        UserBadge[]
+  followers     UserFollow[] @relation("Followers")
+  following     UserFollow[] @relation("Following")
+  tagFollows    TagFollow[]
+  courses       Course[]
+  reviews       Review[]
+  enrollments   Enrollment[]
+  savedCourses  SavedCourse[]
+  excerciseAttempts ExcerciseAttempt[]
+  learningProgress LearningProgress[]
+  posts         Post[]
+  comments      Comment[]
+  votes         Vote[]
+  savedPosts    SavedPost[]
+  refreshTokens RefreshToken[]
   verificationToken VerificationToken?
   passwordResetToken PasswordResetToken?
 
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([role])
+  @@index([scope])
+  @@index([status])
   @@map("users")
 }
+
+model UserProfile {
+  userId          String   @id
+  user            User     @relation(fields: [userId], references: [id])
+
+  bio             String?
+  school          String?
+  specialized     String?
+  githubUrl       String?
+  linkedinUrl     String?
+  websiteUrl      String?
+  skill           Json?
+  reputationPoint Int      @default(0)
+
+  updatedAt       DateTime @updatedAt
+
+  @@map("user_profiles")
+}
+
+model Badge {
+  id          String @id @default(cuid())
+  name        String
+  description String
+  icon        String
+
+  userBadges UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  userId    String
+  badgeId  String
+  awardedAt DateTime @default(now())
+
+  user   User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
+
+  @@id([userId, badgeId])
+  @@map("user_badges")
+}
+
+model UserFollow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Followers", fields: [followerId], references: [id])
+  following User @relation("Following", fields: [followingId], references: [id])
+
+  @@id([followerId, followingId])
+  @@map("user_follows")
+}
+
+// =====================================================
+// FILE & TAXONOMY DOMAIN
+// =====================================================
+model File {
+  id       String @id @default(cuid())
+  url      String
+  type     String
+  size     Int
+  mimeType String
+
+  userAvatars   User[] @relation("UserAvatar")
+  courseImages  Course[] @relation("CourseImage")
+  coursePromoVideos Course[] @relation("CoursePromoVideo")
+  materials     Material[]
+  excerciseAttachments ExcerciseAttachment[]
+  postAttachments PostAttachment[]
+
+  @@map("files")
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  parentId    String?
+  parent      Category? @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+
+  name        String
+  slug        String     @unique
+  description String?
+
+  courses     Course[] @relation("CourseCategory")
+  subCategoryCourses Course[] @relation("CourseSubCategory")
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+model Tag {
+  id          String @id @default(cuid())
+  name        String
+  slug        String @unique
+  description String?
+
+  follows     TagFollow[]
+  courseTags  CourseTag[]
+  postTags    PostTag[]
+
+  @@map("tags")
+}
+
+model TagFollow {
+  userId String
+  tagId  String
+
+  user User @relation(fields: [userId], references: [id])
+  tag  Tag  @relation(fields: [tagId], references: [id])
+
+  @@id([userId, tagId])
+  @@map("tag_follows")
+}
+
+// =====================================================
+// COURSE DOMAIN
+// =====================================================
+model Course {
+  id               String @id @default(cuid())
+  instructorId     String
+  categoryId       String
+  subCategoryId    String?
+
+  instructor       User     @relation(fields: [instructorId], references: [id])
+  category         Category @relation("CourseCategory", fields: [categoryId], references: [id])
+  subCategory      Category? @relation("CourseSubCategory", fields: [subCategoryId], references: [id])
+
+  title            String
+  slug             String   @unique
+  shortDescription String
+  description      String
+  level            CourseLevel
+
+  imgId            String?
+  promoVideoId     String?
+  img              File?    @relation("CourseImage", fields: [imgId], references: [id])
+  promoVideo       File?    @relation("CoursePromoVideo", fields: [promoVideoId], references: [id])
+
+  totalDuration    Int
+  avgRating        Float    @default(0)
+  reviewCount      Int      @default(0)
+
+  enrollmentStatus CourseEnrollmentStatus
+  status           CourseStatus
+
+  requirements     Json
+  keyTakeaway      Json
+
+  tags             CourseTag[]
+  reviews          Review[]
+  enrollments      Enrollment[]
+  savedCourses     SavedCourse[]
+  sections         Section[]
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([instructorId])
+  @@index([categoryId])
+  @@index([status])
+  @@map("courses")
+}
+
+model CourseTag {
+  courseId String
+  tagId    String
+
+  course Course @relation(fields: [courseId], references: [id])
+  tag    Tag    @relation(fields: [tagId], references: [id])
+
+  @@id([courseId, tagId])
+  @@map("course_tags")
+}
+
+model Review {
+  courseId String
+  userId   String
+  rating   Int
+  comment  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@id([courseId, userId])
+  @@map("reviews")
+}
+
+model Enrollment {
+  courseId  String
+  userId    String
+  status    EnrollmentStatus
+  enrolledAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@id([courseId, userId])
+  @@map("enrollments")
+}
+
+model SavedCourse {
+  courseId String
+  userId   String
+  createdAt DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@id([courseId, userId])
+  @@map("saved_courses")
+}
+
+// =====================================================
+// LEARNING STRUCTURE DOMAIN
+// =====================================================
+model Section {
+  id          String @id @default(cuid())
+  courseId    String
+  title       String
+  description String
+  objectives  Json
+  order       Int
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id])
+  units  Unit[]
+
+  @@index([courseId])
+  @@map("sections")
+}
+
+model Unit {
+  id          String @id @default(cuid())
+  sectionId   String
+  type        UnitType
+  title       String
+  description String?
+  order       Int
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  section Section @relation(fields: [sectionId], references: [id])
+  steps   Step[]
+  excercises Excercise[]
+  materials Material[]
+
+  @@index([sectionId])
+  @@map("units")
+}
+
+model Step {
+  id       String @id @default(cuid())
+  lessonId String
+  title    String
+  content  Json
+  order    Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lesson Unit @relation(fields: [lessonId], references: [id])
+  learningProgress LearningProgress[]
+
+  @@index([lessonId])
+  @@map("steps")
+}
+
+model Excercise {
+  id           String @id @default(cuid())
+  unitId       String
+  type         ExcerciseType
+  title        String
+  description  String
+  content      Json
+  deadline     DateTime?
+  duration     Int?
+  passingScore Float?
+
+  unit Unit @relation(fields: [unitId], references: [id])
+  excerciseQuizzes ExcerciseQuiz[]
+  attempts ExcerciseAttempt[]
+  learningProgress LearningProgress[]
+
+  @@index([unitId])
+  @@map("excercises")
+}
+
+model Material {
+  id        String @id @default(cuid())
+  unitId    String
+  fileId    String
+  createdAt DateTime @default(now())
+
+  unit Unit @relation(fields: [unitId], references: [id])
+  file File @relation(fields: [fileId], references: [id])
+
+  @@map("materials")
+}
+
+// =====================================================
+// QUIZ & ATTEMPT DOMAIN
+// =====================================================
+model Quiz {
+  id           String @id @default(cuid())
+  question     Json
+  options      Json
+  explaination String?
+
+  excerciseQuizzes ExcerciseQuiz[]
+
+  @@map("quizzes")
+}
+
+model ExcerciseQuiz {
+  id          String @id @default(cuid())
+  excerciseId String
+  quizId      String
+
+  excercise Excercise @relation(fields: [excerciseId], references: [id])
+  quiz      Quiz      @relation(fields: [quizId], references: [id])
+
+  @@map("excercise_quizzes")
+}
+
+model ExcerciseAttempt {
+  id          String @id @default(cuid())
+  excerciseId String
+  studentId   String
+  score       Float?
+  comment     String?
+  quizResults Json
+  demoUrl     Json?
+  note        String?
+
+  excercise Excercise @relation(fields: [excerciseId], references: [id])
+  student   User      @relation(fields: [studentId], references: [id])
+  attachments ExcerciseAttachment[]
+
+  @@index([studentId])
+  @@map("excercise_attempts")
+}
+
+model ExcerciseAttachment {
+  id       String @id @default(cuid())
+  attempId String
+  fileId   String
+
+  attempt ExcerciseAttempt @relation(fields: [attempId], references: [id])
+  file    File             @relation(fields: [fileId], references: [id])
+
+  @@map("excercise_attachments")
+}
+
+model LearningProgress {
+  id          String @id @default(cuid())
+  studentId   String
+  stepId      String?
+  excerciseId String?
+  status      LearningStatus
+  updatedAt   DateTime @updatedAt
+
+  student   User      @relation(fields: [studentId], references: [id])
+  step      Step?     @relation(fields: [stepId], references: [id])
+  excercise Excercise? @relation(fields: [excerciseId], references: [id])
+
+  @@unique([studentId, stepId])
+  @@unique([studentId, excerciseId])
+  @@map("learning_progress")
+}
+
+// =====================================================
+// FORUM DOMAIN
+// =====================================================
+model Post {
+  id        String @id @default(cuid())
+  userId    String
+  title     String
+  slug      String @unique
+  content   Json
+  type      PostType
+  status    PostStatus
+  views     Int @default(0)
+  upvotes   Int @default(0)
+  downvotes Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  attachments PostAttachment[]
+  tags PostTag[]
+  savedPosts SavedPost[]
+  comments Comment[]
+  votes Vote[]
+
+  @@index([type])
+  @@index([status])
+  @@map("posts")
+}
+
+model PostAttachment {
+  id     String @id @default(cuid())
+  postId String
+  fileId String
+
+  post Post @relation(fields: [postId], references: [id])
+  file File @relation(fields: [fileId], references: [id])
+
+  @@map("post_attachments")
+}
+
+model PostTag {
+  postId String
+  tagId  String
+
+  post Post @relation(fields: [postId], references: [id])
+  tag  Tag  @relation(fields: [tagId], references: [id])
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
+
+model SavedPost {
+  postId String
+  userId String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@id([postId, userId])
+  @@map("saved_posts")
+}
+
+model Comment {
+  id        String @id @default(cuid())
+  userId    String
+  postId    String
+  parentId  String?
+  content   Json
+  isAccepted Boolean @default(false)
+  upvotes   Int @default(0)
+  downvotes Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id])
+  post     Post     @relation(fields: [postId], references: [id])
+  parent   Comment? @relation("CommentTree", fields: [parentId], references: [id])
+  children Comment[] @relation("CommentTree")
+  votes    Vote[]
+
+  @@index([postId])
+  @@map("comments")
+}
+
+model Vote {
+  id        String @id @default(cuid())
+  userId    String
+  postId    String?
+  commentId String?
+  isUpvote  Boolean
+  createdAt DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id])
+  post    Post?    @relation(fields: [postId], references: [id])
+  comment Comment? @relation(fields: [commentId], references: [id])
+
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+  @@map("votes")
+}
+
+// =====================================================
+// TOKENS
+// =====================================================
 
 model RefreshToken {
   id        String   @id @default(uuid())

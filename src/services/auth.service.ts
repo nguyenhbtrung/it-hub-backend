@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { User } from '@/generated/prisma/client';
+import { User, UserRole, UserScope } from '@/generated/prisma/client';
 import { UserRepository } from '../repositories/user.repository';
 import { RefreshTokenRepository } from '../repositories/refreshToken.repository';
 import { VerificationTokenRepository } from '../repositories/verificationToken.repository';
@@ -31,7 +31,7 @@ export class AuthService {
   async register(
     email: string,
     password: string,
-    name?: string
+    fullname?: string
   ): Promise<{ user: UserResponseDTO; accessToken: string; refreshToken: string }> {
     // Check if user exists
     const existingUser = await this.userRepository.findByEmail(email);
@@ -45,8 +45,10 @@ export class AuthService {
     // Create user
     const user = await this.userRepository.create({
       email,
-      password: hashedPassword,
-      name,
+      passwordHash: hashedPassword,
+      fullname: fullname,
+      role: UserRole.student,
+      scope: UserScope.external,
     });
 
     // Generate verification token
@@ -63,7 +65,7 @@ export class AuthService {
     // await this.emailService.sendVerificationEmail(user.email, verificationToken);
 
     // Generate tokens
-    const tokens = await this.generateTokenPair(user.id, user.email);
+    const tokens = await this.generateTokenPair(user.id, user.email, user.role, user.scope);
 
     return {
       user: toUserResponseDTO(user),
@@ -82,13 +84,13 @@ export class AuthService {
     }
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
       throw new UnauthorizedError('Invalid credentials', 'INVALID_CREDENTIALS');
     }
 
     // Generate tokens
-    const tokens = await this.generateTokenPair(user.id, user.email);
+    const tokens = await this.generateTokenPair(user.id, user.email, user.role, user.scope);
 
     return {
       user: toUserResponseDTO(user),
@@ -119,7 +121,12 @@ export class AuthService {
     }
 
     // Generate new token pair
-    const tokens = await this.generateTokenPair(storedToken.userId, storedToken.user.email);
+    const tokens = await this.generateTokenPair(
+      storedToken.userId,
+      storedToken.user.email,
+      storedToken.user.role,
+      storedToken.user.scope
+    );
 
     // Delete old refresh token
     await this.refreshTokenRepository.deleteByToken(refreshToken);
@@ -242,12 +249,14 @@ export class AuthService {
     await this.refreshTokenRepository.deleteAllByUserId(resetToken.userId);
   }
 
-  private async generateTokenPair(userId: string, email: string): Promise<TokenPair> {
+  private async generateTokenPair(userId: string, email: string, role: UserRole, scope: UserScope): Promise<TokenPair> {
     // Generate access token
-    const accessToken = jwt.sign({ id: userId, email }, process.env.JWT_SECRET!, { expiresIn: ACCESS_TOKEN_EXPIRY });
+    const accessToken = jwt.sign({ id: userId, email, role, scope }, process.env.JWT_SECRET!, {
+      expiresIn: ACCESS_TOKEN_EXPIRY,
+    });
 
     // Generate refresh token
-    const refreshToken = jwt.sign({ id: userId, email, type: 'refresh' }, process.env.JWT_SECRET!, {
+    const refreshToken = jwt.sign({ id: userId, type: 'refresh' }, process.env.JWT_SECRET!, {
       expiresIn: REFRESH_TOKEN_EXPIRY,
     });
 

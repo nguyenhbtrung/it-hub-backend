@@ -20,8 +20,8 @@ const authService = new AuthService(
 export class AuthController {
   async register(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password, name } = req.body;
-      const result = await authService.register(email, password, name);
+      const { email, password, fullname } = req.body;
+      const result = await authService.register(email, password, fullname);
 
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
@@ -38,13 +38,6 @@ export class AuthController {
           accessToken: result.accessToken,
         },
       });
-      // res.status(200).json({
-      //   message: 'User registered successfully. Please check your email to verify your account.',
-      //   data: {
-      //     user: result.user,
-      //     accessToken: result.accessToken,
-      //   },
-      // });
     } catch (error) {
       next(error);
     }
