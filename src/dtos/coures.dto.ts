@@ -1,4 +1,4 @@
-import { Course } from '@/generated/prisma/client';
+import { Course, CourseStatus } from '@/generated/prisma/client';
 import { z } from 'zod';
 
 export const createCourseSchema = z.object({
@@ -24,3 +24,28 @@ export function toCreateCourseResponseDTO(course: Course): CreateCourseResponseD
     subCategoryId: course.subCategoryId,
   };
 }
+
+export interface CreatedCourseResponseDTO {
+  id: string;
+  title: string;
+  category: string;
+  subCategory: string | undefined;
+  imgUrl: string | null;
+  students: number;
+  status: CourseStatus;
+}
+export const getMyCreatedCoursesSchema = z.object({
+  page: z.string().regex(/^\d+$/).optional().transform(Number),
+  limit: z.string().regex(/^\d+$/).optional().transform(Number),
+  status: z
+    .enum([
+      CourseStatus.draft,
+      CourseStatus.pending,
+      CourseStatus.published,
+      CourseStatus.hidden,
+      CourseStatus.suspended,
+    ])
+    .optional(),
+});
+
+export type GetMyCreatedCoursesDTO = z.infer<typeof getMyCreatedCoursesSchema>;

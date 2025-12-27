@@ -1,4 +1,10 @@
-import { CreateCourseDTO, CreateCourseResponseDTO, toCreateCourseResponseDTO } from '@/dtos/coures.dto';
+import {
+  CreateCourseDTO,
+  CreateCourseResponseDTO,
+  CreatedCourseResponseDTO,
+  GetMyCreatedCoursesDTO,
+  toCreateCourseResponseDTO,
+} from '@/dtos/coures.dto';
 import { CourseEnrollmentStatus, CourseLevel, CourseStatus } from '@/generated/prisma/enums';
 import { CourseRepository } from '@/repositories/course.repository';
 
@@ -33,5 +39,17 @@ export class CourseService {
     });
 
     return toCreateCourseResponseDTO(newCourse);
+  }
+
+  async getMyCreatedCourses(
+    query: GetMyCreatedCoursesDTO,
+    instructorId: string
+  ): Promise<{ data: CreatedCourseResponseDTO[]; meta: any }> {
+    const { page = 1, limit = 10, status } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const [data, total] = await this.courseRepository.getInstructorCreatedCourses(take, skip, status, instructorId);
+
+    return { data, meta: { total, page: Number(page), limit: Number(limit) } };
   }
 }

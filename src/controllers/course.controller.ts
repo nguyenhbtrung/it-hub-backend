@@ -1,4 +1,4 @@
-import { CreateCourseDTO } from '@/dtos/coures.dto';
+import { CreateCourseDTO, GetMyCreatedCoursesDTO } from '@/dtos/coures.dto';
 import { UnauthorizedError } from '@/errors';
 import { CourseRepository } from '@/repositories/course.repository';
 import { CourseService } from '@/services/course.service';
@@ -18,6 +18,18 @@ export class CourseController {
       message: 'Course created successfully',
       data: result,
       status: 201,
+    });
+  }
+
+  async getMyCreatedCourses(req: Request, res: Response, next: NextFunction) {
+    const query = req.query as unknown as GetMyCreatedCoursesDTO;
+    const instructorId = req?.user?.id;
+    if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
+    const result = await courseService.getMyCreatedCourses(query, instructorId);
+    successResponse({
+      res,
+      data: result.data,
+      meta: result.meta,
     });
   }
 }
