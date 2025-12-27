@@ -97,6 +97,12 @@ enum PostStatus {
   suspended
 }
 
+enum FileStatus {
+  unused
+  temporary
+  active
+}
+
 // =====================================================
 // USER DOMAIN
 // =====================================================
@@ -115,6 +121,7 @@ model User {
 
   profile       UserProfile?
   badges        UserBadge[]
+  files         File[] @relation("OwnerFile")
   followers     UserFollow[] @relation("Followers")
   following     UserFollow[] @relation("Following")
   tagFollows    TagFollow[]
@@ -199,10 +206,17 @@ model UserFollow {
 // =====================================================
 model File {
   id       String @id @default(cuid())
+  name     String
   url      String
   type     String
-  size     Int
+  size     BigInt
   mimeType String
+  extension String
+  status   FileStatus
+  metadata Json
+
+  ownerId   String
+  owner     User @relation("OwnerFile", fields: [ownerId], references: [id])
 
   userAvatars   User[] @relation("UserAvatar")
   courseImages  Course[] @relation("CourseImage")
@@ -210,6 +224,9 @@ model File {
   materials     Material[]
   excerciseAttachments ExcerciseAttachment[]
   postAttachments PostAttachment[]
+
+  createdAt     DateTime   @default(now())
+  deletedAt     DateTime
 
   @@map("files")
 }
