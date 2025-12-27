@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import passportConfig from './config/passport';
 import authRoutes from './routes/auth.routes';
+import categoryRoutes from './routes/category.routes';
 import { errorHandler } from './middleware/errorHandler.middleware';
 import { apiLimiter } from './middleware/rateLimiter.middleware';
 import { NotFoundError } from './errors';
@@ -26,6 +27,7 @@ app.use('/api/', apiLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
