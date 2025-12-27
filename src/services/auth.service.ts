@@ -9,6 +9,7 @@ import { PasswordResetTokenRepository } from '../repositories/passwordResetToken
 import { EmailService } from './email.service';
 import { ConflictError, UnauthorizedError, BadRequestError, NotFoundError } from '../errors';
 import { toUserResponseDTO, UserResponseDTO } from '../dtos/user.dto';
+import { UserPayload } from '@/type';
 
 const SALT_ROUNDS = 12;
 const ACCESS_TOKEN_EXPIRY = '15m';
@@ -251,7 +252,8 @@ export class AuthService {
 
   private async generateTokenPair(userId: string, email: string, role: UserRole, scope: UserScope): Promise<TokenPair> {
     // Generate access token
-    const accessToken = jwt.sign({ id: userId, email, role, scope }, process.env.JWT_SECRET!, {
+    const payload: UserPayload = { id: userId, email, role, scope };
+    const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
       expiresIn: ACCESS_TOKEN_EXPIRY,
     });
 
