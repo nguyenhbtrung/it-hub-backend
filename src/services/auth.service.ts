@@ -12,7 +12,7 @@ import { toUserResponseDTO, UserResponseDTO } from '../dtos/user.dto';
 import { UserPayload } from '@/type';
 
 const SALT_ROUNDS = 12;
-const ACCESS_TOKEN_EXPIRY = '15m';
+const ACCESS_TOKEN_EXPIRY = '7d';
 const REFRESH_TOKEN_EXPIRY = '7d';
 
 interface TokenPair {

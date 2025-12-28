@@ -26,7 +26,7 @@ export class AuthController {
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: false,
-        sameSite: 'none',
+        sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
       successResponse({
@@ -46,12 +46,13 @@ export class AuthController {
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password } = req.body;
+      console.log('email', email);
       const result = await authService.login(email, password);
 
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: false,
-        sameSite: 'none',
+        sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
@@ -71,13 +72,14 @@ export class AuthController {
   async refreshToken(req: Request, res: Response, next: NextFunction) {
     try {
       const refreshToken = req.cookies.refreshToken;
+      console.log('refreshToken', refreshToken);
       if (!refreshToken) throw new UnauthorizedError('Refresh token is required');
       const tokens = await authService.refreshAccessToken(refreshToken);
 
       res.cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
         secure: false,
-        sameSite: 'none',
+        sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
@@ -102,7 +104,7 @@ export class AuthController {
       res.clearCookie('refreshToken', {
         httpOnly: true,
         secure: false,
-        sameSite: 'none',
+        sameSite: 'lax',
       });
 
       successResponse({ res, message: 'Logged out successfully' });
