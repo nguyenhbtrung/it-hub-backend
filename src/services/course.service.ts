@@ -7,12 +7,13 @@ import {
 } from '@/dtos/coures.dto';
 import { CourseEnrollmentStatus, CourseLevel, CourseStatus } from '@/generated/prisma/enums';
 import { CourseRepository } from '@/repositories/course.repository';
+import slugify from 'slugify';
 
 export class CourseService {
   constructor(private courseRepository: CourseRepository) {}
   async createCourse(payload: CreateCourseDTO, instructorId: string): Promise<CreateCourseResponseDTO> {
     const { title, categoryId, subCategoryId } = payload;
-    const slug = '';
+    const slug = slugify(title, { lower: true, strict: true, locale: 'vi' }) + '-' + Date.now();
     const shortDescription = '';
     const description = '';
     const level = CourseLevel.beginner;
