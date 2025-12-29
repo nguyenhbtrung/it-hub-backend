@@ -59,6 +59,7 @@ export type GetCourseDetailByInstructorParamsDTO = z.infer<typeof GetCourseDetai
 export interface GetCourseDetailByInstructorResponseDTO {
   id: string;
   title: string;
+  slug: string;
   shortDescription: string;
   description: unknown;
   category: { id: string; name: string };

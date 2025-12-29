@@ -55,6 +55,7 @@ export class CourseRepository {
       select: {
         id: true,
         title: true,
+        slug: true,
         shortDescription: true,
         description: true,
         category: { select: { id: true, name: true } },
@@ -79,6 +80,7 @@ export class CourseRepository {
     return {
       id: course.id,
       title: course.title,
+      slug: course.slug,
       shortDescription: course.shortDescription,
       description: course.description,
       category: course.category,
