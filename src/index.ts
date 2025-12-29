@@ -4,6 +4,7 @@ import passportConfig from './config/passport';
 import authRoutes from './routes/auth.routes';
 import categoryRoutes from './routes/category.routes';
 import courseRoutes from './routes/course.routes';
+import tagRoutes from './routes/tag.routes';
 import { errorHandler } from './middleware/errorHandler.middleware';
 import { apiLimiter } from './middleware/rateLimiter.middleware';
 import { NotFoundError } from './errors';
@@ -29,6 +30,7 @@ app.use('/api/', apiLimiter);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/tags', tagRoutes);
 app.use('/api/courses', courseRoutes);
 
 // Health check
