@@ -49,3 +49,21 @@ export const getMyCreatedCoursesSchema = z.object({
 });
 
 export type GetMyCreatedCoursesDTO = z.infer<typeof getMyCreatedCoursesSchema>;
+
+export const GetCourseDetailByInstructorParamsSchema = z.object({
+  id: z.uuid().optional(),
+});
+
+export type GetCourseDetailByInstructorParamsDTO = z.infer<typeof GetCourseDetailByInstructorParamsSchema>;
+
+export interface GetCourseDetailByInstructorResponseDTO {
+  id: string;
+  title: string;
+  shortDescription: string;
+  description: string;
+  category: string;
+  subCategory: string | undefined;
+  imgUrl: string | null;
+  students: number;
+  status: CourseStatus;
+}

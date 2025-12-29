@@ -15,7 +15,7 @@ export class CourseService {
     const { title, categoryId, subCategoryId } = payload;
     const slug = slugify(title, { lower: true, strict: true, locale: 'vi' }) + '-' + Date.now();
     const shortDescription = '';
-    const description = '';
+    const description = {};
     const level = CourseLevel.beginner;
     const totalDuration = 0;
     const enrollmentStatus = CourseEnrollmentStatus.public;
@@ -53,4 +53,16 @@ export class CourseService {
 
     return { data, meta: { total, page: Number(page), limit: Number(limit) } };
   }
+
+  // async getCourseDetailByInstructor(
+  //   id: string,
+  //   instructorId: string
+  // ): Promise<{ data: CreatedCourseResponseDTO[]; meta: any }> {
+  //   const { page = 1, limit = 10, status } = query;
+  //   const take = Number(limit);
+  //   const skip = (page - 1) * limit;
+  //   const [data, total] = await this.courseRepository.getInstructorCreatedCourses(take, skip, status, instructorId);
+
+  //   return { data, meta: { total, page: Number(page), limit: Number(limit) } };
+  // }
 }

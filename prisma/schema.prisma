@@ -288,7 +288,7 @@ model Course {
   title            String
   slug             String   @unique
   shortDescription String
-  description      String
+  description      Json
   level            CourseLevel
 
   imgId            String?

@@ -1,4 +1,4 @@
-import { CreateCourseDTO, GetMyCreatedCoursesDTO } from '@/dtos/coures.dto';
+import { CreateCourseDTO, GetCourseDetailByInstructorParamsDTO, GetMyCreatedCoursesDTO } from '@/dtos/coures.dto';
 import { UnauthorizedError } from '@/errors';
 import { CourseRepository } from '@/repositories/course.repository';
 import { CourseService } from '@/services/course.service';
@@ -32,4 +32,15 @@ export class CourseController {
       meta: result.meta,
     });
   }
+  // async getCourseDetailByInstructor(req: Request, res: Response, next: NextFunction) {
+  //   const { id: courseId } = req.params as GetCourseDetailByInstructorParamsDTO;
+  //   const instructorId = req?.user?.id;
+  //   if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
+  //   const result = await courseService.getMyCreatedCourses(query, instructorId);
+  //   successResponse({
+  //     res,
+  //     data: result.data,
+  //     meta: result.meta,
+  //   });
+  // }
 }
