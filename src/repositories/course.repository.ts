@@ -1,4 +1,4 @@
-import { CreatedCourseResponseDTO } from '@/dtos/coures.dto';
+import { CreatedCourseResponseDTO, GetCourseDetailByInstructorResponseDTO } from '@/dtos/coures.dto';
 import { Course, CourseStatus, Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 
@@ -47,5 +47,48 @@ export class CourseRepository {
     }));
 
     return [data, total];
+  }
+
+  async getCourseDetailByInstructor(id: string, instructorId: string): Promise<GetCourseDetailByInstructorResponseDTO> {
+    const course = await prisma.course.findUnique({
+      where: { id, instructorId },
+      select: {
+        id: true,
+        title: true,
+        shortDescription: true,
+        description: true,
+        category: { select: { id: true, name: true } },
+        subCategory: { select: { id: true, name: true } },
+        level: true,
+        keyTakeaway: true,
+        requirements: true,
+        tags: {
+          select: {
+            tag: { select: { name: true } },
+          },
+        },
+        img: { select: { url: true } },
+        promoVideo: { select: { url: true } },
+      },
+    });
+
+    if (!course) {
+      throw new Error('Course not found');
+    }
+
+    return {
+      id: course.id,
+      title: course.title,
+      shortDescription: course.shortDescription,
+      description: course.description,
+      category: course.category,
+      subCategory: course.subCategory ?? undefined,
+      level: course.level,
+      keyTakeaway: course.keyTakeaway,
+      requirements: course.requirements,
+      tags: course.tags.map((t) => t.tag.name),
+      imgUrl: course.img?.url ?? null,
+      promoVideoUrl: course.promoVideo?.url ?? null,
+    };
   }
 }

@@ -5,7 +5,7 @@ export const getCategoriesQuerySchema = z.object({
     .union([z.literal('true'), z.literal('false'), z.boolean()])
     .optional()
     .transform((val) => val === 'true' || val === true),
-  parentId: z.uuid().optional(),
+  parentId: z.string().optional(),
   page: z.string().regex(/^\d+$/).optional().transform(Number),
   limit: z.string().regex(/^\d+$/).optional().transform(Number),
   all: z

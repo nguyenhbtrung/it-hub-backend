@@ -32,15 +32,14 @@ export class CourseController {
       meta: result.meta,
     });
   }
-  // async getCourseDetailByInstructor(req: Request, res: Response, next: NextFunction) {
-  //   const { id: courseId } = req.params as GetCourseDetailByInstructorParamsDTO;
-  //   const instructorId = req?.user?.id;
-  //   if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-  //   const result = await courseService.getMyCreatedCourses(query, instructorId);
-  //   successResponse({
-  //     res,
-  //     data: result.data,
-  //     meta: result.meta,
-  //   });
-  // }
+  async getCourseDetailByInstructor(req: Request, res: Response, next: NextFunction) {
+    const { id: courseId } = req.params as GetCourseDetailByInstructorParamsDTO;
+    const instructorId = req?.user?.id;
+    if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
+    const result = await courseService.getCourseDetailByInstructor(courseId, instructorId);
+    successResponse({
+      res,
+      data: result,
+    });
+  }
 }

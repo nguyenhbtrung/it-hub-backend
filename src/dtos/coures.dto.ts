@@ -1,4 +1,4 @@
-import { Course, CourseStatus } from '@/generated/prisma/client';
+import { Course, CourseLevel, CourseStatus } from '@/generated/prisma/client';
 import { z } from 'zod';
 
 export const createCourseSchema = z.object({
@@ -51,7 +51,7 @@ export const getMyCreatedCoursesSchema = z.object({
 export type GetMyCreatedCoursesDTO = z.infer<typeof getMyCreatedCoursesSchema>;
 
 export const GetCourseDetailByInstructorParamsSchema = z.object({
-  id: z.uuid().optional(),
+  id: z.string(),
 });
 
 export type GetCourseDetailByInstructorParamsDTO = z.infer<typeof GetCourseDetailByInstructorParamsSchema>;
@@ -60,10 +60,13 @@ export interface GetCourseDetailByInstructorResponseDTO {
   id: string;
   title: string;
   shortDescription: string;
-  description: string;
-  category: string;
-  subCategory: string | undefined;
+  description: unknown;
+  category: { id: string; name: string };
+  subCategory: { id: string; name: string } | undefined;
+  level: CourseLevel;
+  keyTakeaway: unknown;
+  requirements: unknown;
+  tags: string[];
   imgUrl: string | null;
-  students: number;
-  status: CourseStatus;
+  promoVideoUrl: string | null;
 }

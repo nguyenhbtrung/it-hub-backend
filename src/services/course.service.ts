@@ -2,6 +2,7 @@ import {
   CreateCourseDTO,
   CreateCourseResponseDTO,
   CreatedCourseResponseDTO,
+  GetCourseDetailByInstructorResponseDTO,
   GetMyCreatedCoursesDTO,
   toCreateCourseResponseDTO,
 } from '@/dtos/coures.dto';
@@ -54,15 +55,7 @@ export class CourseService {
     return { data, meta: { total, page: Number(page), limit: Number(limit) } };
   }
 
-  // async getCourseDetailByInstructor(
-  //   id: string,
-  //   instructorId: string
-  // ): Promise<{ data: CreatedCourseResponseDTO[]; meta: any }> {
-  //   const { page = 1, limit = 10, status } = query;
-  //   const take = Number(limit);
-  //   const skip = (page - 1) * limit;
-  //   const [data, total] = await this.courseRepository.getInstructorCreatedCourses(take, skip, status, instructorId);
-
-  //   return { data, meta: { total, page: Number(page), limit: Number(limit) } };
-  // }
+  async getCourseDetailByInstructor(id: string, instructorId: string): Promise<GetCourseDetailByInstructorResponseDTO> {
+    return await this.courseRepository.getCourseDetailByInstructor(id, instructorId);
+  }
 }
