@@ -21,8 +21,8 @@ export class CourseService {
     const totalDuration = 0;
     const enrollmentStatus = CourseEnrollmentStatus.public;
     const status = CourseStatus.draft;
-    const keyTakeaway = {};
-    const requirements = {};
+    const keyTakeaway: string[] = [];
+    const requirements: string[] = [];
 
     const newCourse = await this.courseRepository.create({
       title,
