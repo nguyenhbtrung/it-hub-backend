@@ -5,16 +5,22 @@ import {
   GetCourseDetailByInstructorResponseDTO,
   GetMyCreatedCoursesDTO,
   toCreateCourseResponseDTO,
+  UpdateCourseDetailDTO,
 } from '@/dtos/coures.dto';
+import { ForbiddenError, NotFoundError } from '@/errors';
 import { CourseEnrollmentStatus, CourseLevel, CourseStatus } from '@/generated/prisma/enums';
 import { CourseRepository } from '@/repositories/course.repository';
-import slugify from 'slugify';
+import { TagRepository } from '@/repositories/tag.repository';
+import { generateCourseSlug, generateTagSlug } from '@/utils/slug';
 
 export class CourseService {
-  constructor(private courseRepository: CourseRepository) {}
+  constructor(
+    private courseRepository: CourseRepository,
+    private tagRepository: TagRepository
+  ) {}
   async createCourse(payload: CreateCourseDTO, instructorId: string): Promise<CreateCourseResponseDTO> {
     const { title, categoryId, subCategoryId } = payload;
-    const slug = slugify(title, { lower: true, strict: true, locale: 'vi' }) + '-' + Date.now();
+    const slug = generateCourseSlug(title);
     const shortDescription = '';
     const description = {};
     const level = CourseLevel.beginner;
@@ -41,6 +47,60 @@ export class CourseService {
     });
 
     return toCreateCourseResponseDTO(newCourse);
+  }
+
+  async updateCourseDetail(courseId: string, instructorId: string, payload: UpdateCourseDetailDTO): Promise<void> {
+    const { title, categoryId, subCategoryId, description, shortDescription, level, requirements, keyTakeaway, tags } =
+      payload;
+
+    const course = await this.courseRepository.getCourseInstructorId(courseId);
+
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+    if (course.instructorId !== instructorId) {
+      throw new ForbiddenError('Permission denied: You are not the owner of this course');
+    }
+
+    const slug = generateCourseSlug(title);
+    const tagSlugs = tags.map(generateTagSlug);
+    const originalTagNameMap: Record<string, string> = tags.reduce(
+      (acc, tag) => {
+        acc[generateTagSlug(tag)] = tag;
+        return acc;
+      },
+      {} as Record<string, string>
+    );
+
+    const existingTags = await this.tagRepository.getTagsBySlugs(tagSlugs);
+
+    const existingTagSlugs = new Set(existingTags.map((t) => t.slug));
+
+    const newTags = tagSlugs
+      .filter((slug) => !existingTagSlugs.has(slug))
+      .map((slug) => ({
+        name: originalTagNameMap[slug],
+        slug,
+      }));
+
+    await this.courseRepository.updateCourseDetail(
+      courseId,
+      {
+        title,
+        slug,
+        categoryId,
+        subCategoryId,
+        description,
+        shortDescription,
+        level,
+        requirements,
+        keyTakeaway,
+      },
+      {
+        newTags,
+        tagSlugs,
+      }
+    );
   }
 
   async getMyCreatedCourses(

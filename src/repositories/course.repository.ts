@@ -1,10 +1,61 @@
 import { CreatedCourseResponseDTO, GetCourseDetailByInstructorResponseDTO } from '@/dtos/coures.dto';
-import { Course, CourseStatus, Prisma } from '@/generated/prisma/client';
+import { Course, CourseLevel, CourseStatus, Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
+
+interface UpdateCourseDetailData {
+  title: string;
+  slug: string;
+  categoryId: string;
+  subCategoryId: string;
+  description: Prisma.InputJsonValue;
+  shortDescription: string;
+  level: CourseLevel;
+  requirements: string[];
+  keyTakeaway: string[];
+}
+
+interface UpdateCourseTagData {
+  newTags: { name: string; slug: string }[];
+  tagSlugs: string[];
+}
 
 export class CourseRepository {
   async create(data: Prisma.CourseCreateInput): Promise<Course> {
     return prisma.course.create({ data });
+  }
+
+  async updateCourseDetail(id: string, data: UpdateCourseDetailData, tagData: UpdateCourseTagData): Promise<Course> {
+    return prisma.$transaction(async (tx) => {
+      if (tagData.newTags.length) {
+        await tx.tag.createMany({
+          data: tagData.newTags,
+          skipDuplicates: true,
+        });
+      }
+      const allTags = await tx.tag.findMany({
+        where: { slug: { in: tagData.tagSlugs } },
+      });
+
+      await tx.courseTag.deleteMany({
+        where: { courseId: id },
+      });
+
+      await tx.courseTag.createMany({
+        data: allTags.map((tag) => ({
+          courseId: id,
+          tagId: tag.id,
+        })),
+      });
+
+      return tx.course.update({ where: { id }, data });
+    });
+  }
+
+  async getCourseInstructorId(courseId: string) {
+    return prisma.course.findUnique({
+      where: { id: courseId },
+      select: { instructorId: true },
+    });
   }
 
   async getInstructorCreatedCourses(

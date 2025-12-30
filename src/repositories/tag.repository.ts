@@ -16,4 +16,10 @@ export class TagRepository {
     ]);
     return [tags, total];
   }
+
+  async getTagsBySlugs(slugs: string[]): Promise<Tag[]> {
+    return prisma.tag.findMany({
+      where: { slug: { in: slugs } },
+    });
+  }
 }

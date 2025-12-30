@@ -25,6 +25,23 @@ export function toCreateCourseResponseDTO(course: Course): CreateCourseResponseD
   };
 }
 
+export const updateCourseDetailSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(60, 'Title must not exceed 60 characters'),
+  categoryId: z.string().min(1, 'CategoryId is required'),
+  subCategoryId: z.string().min(1, 'SubCategoryId is required'),
+  description: z.any(),
+  shortDescription: z
+    .string()
+    .min(1, 'shortDescription is required')
+    .max(120, 'shortDescription must not exceed 120 characters'),
+  level: z.enum([CourseLevel.beginner, CourseLevel.intermediate, CourseLevel.advanced, CourseLevel.expert]),
+  requirements: z.array(z.string()).default([]),
+  keyTakeaway: z.array(z.string()).default([]),
+  tags: z.array(z.string()).default([]),
+});
+
+export type UpdateCourseDetailDTO = z.infer<typeof updateCourseDetailSchema>;
+
 export interface CreatedCourseResponseDTO {
   id: string;
   title: string;

@@ -1,11 +1,17 @@
-import { CreateCourseDTO, GetCourseDetailByInstructorParamsDTO, GetMyCreatedCoursesDTO } from '@/dtos/coures.dto';
+import {
+  CreateCourseDTO,
+  GetCourseDetailByInstructorParamsDTO,
+  GetMyCreatedCoursesDTO,
+  UpdateCourseDetailDTO,
+} from '@/dtos/coures.dto';
 import { UnauthorizedError } from '@/errors';
 import { CourseRepository } from '@/repositories/course.repository';
+import { TagRepository } from '@/repositories/tag.repository';
 import { CourseService } from '@/services/course.service';
 import { successResponse } from '@/utils/response';
 import { Request, Response, NextFunction } from 'express';
 
-const courseService = new CourseService(new CourseRepository());
+const courseService = new CourseService(new CourseRepository(), new TagRepository());
 
 export class CourseController {
   async createCourse(req: Request, res: Response, next: NextFunction) {
@@ -18,6 +24,18 @@ export class CourseController {
       message: 'Course created successfully',
       data: result,
       status: 201,
+    });
+  }
+
+  async updateCourseDetail(req: Request, res: Response, next: NextFunction) {
+    const { id: courseId } = req.params;
+    const payload = req.body as UpdateCourseDetailDTO;
+    const instructorId = req?.user?.id;
+    if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
+    await courseService.updateCourseDetail(courseId, instructorId, payload);
+    successResponse({
+      res,
+      message: 'Course updated successfully',
     });
   }
 
