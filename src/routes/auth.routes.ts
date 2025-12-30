@@ -11,6 +11,7 @@ import {
   requestPasswordResetSchema,
   resetPasswordSchema,
 } from '../dtos/auth.dto';
+import { requireAuth } from '@/middleware/auth.middleware';
 
 const router = Router();
 const authController = new AuthController();
@@ -37,15 +38,8 @@ router.post(
 );
 router.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword.bind(authController));
 // Protected routes
-router.post('/logout', passport.authenticate('jwt', { session: false }), authController.logout.bind(authController));
-router.post(
-  '/logout-all',
-  passport.authenticate('jwt', { session: false }),
-  authController.logoutAll.bind(authController)
-);
-router.get(
-  '/profile',
-  passport.authenticate('jwt', { session: false }),
-  authController.getProfile.bind(authController)
-);
+router.post('/logout', requireAuth, authController.logout.bind(authController));
+router.post('/logout-all', requireAuth, authController.logoutAll.bind(authController));
+router.get('/profile', requireAuth, authController.getProfile.bind(authController));
+
 export default router;

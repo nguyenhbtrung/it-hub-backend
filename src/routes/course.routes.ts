@@ -5,24 +5,23 @@ import {
   updateCourseDetailSchema,
 } from '@/dtos/coures.dto';
 import { UserRole } from '@/generated/prisma/enums';
-import { authorize } from '@/middleware/authorize.middleware';
+import { authorize, requireAuth } from '@/middleware/auth.middleware';
 import { validate, validateParams, validateQuery } from '@/middleware/validate.middleware';
 import { Router } from 'express';
-import passport from 'passport';
 
 const router = Router();
 const courseController = new CourseController();
 
 router.post(
   '/',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   authorize([UserRole.admin, UserRole.instructor]),
   courseController.createCourse.bind(courseController)
 );
 
 router.patch(
   '/:id',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   authorize([UserRole.admin, UserRole.instructor]),
   validate(updateCourseDetailSchema),
   courseController.updateCourseDetail.bind(courseController)
@@ -30,7 +29,7 @@ router.patch(
 
 router.get(
   '/me/created',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   authorize([UserRole.admin, UserRole.instructor]),
   validateQuery(getMyCreatedCoursesSchema),
   courseController.getMyCreatedCourses.bind(courseController)
@@ -38,7 +37,7 @@ router.get(
 
 router.get(
   '/:id/by-instructor',
-  passport.authenticate('jwt', { session: false }),
+  requireAuth,
   authorize([UserRole.admin, UserRole.instructor]),
   validateParams(GetCourseDetailByInstructorParamsSchema),
   courseController.getCourseDetailByInstructor.bind(courseController)
