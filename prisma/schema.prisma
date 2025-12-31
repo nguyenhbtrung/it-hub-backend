@@ -226,7 +226,7 @@ model File {
   postAttachments PostAttachment[]
 
   createdAt     DateTime   @default(now())
-  deletedAt     DateTime
+  deletedAt     DateTime?
 
   @@map("files")
 }

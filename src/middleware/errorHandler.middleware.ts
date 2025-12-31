@@ -3,6 +3,7 @@ import { AppError } from '../errors';
 import { ZodError } from 'zod';
 import { JWSSignatureVerificationFailed, JWTExpired } from 'jose/errors';
 import { errorResponse } from '@/utils/response';
+import multer from 'multer';
 
 export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
   // Log error for debugging
@@ -58,6 +59,21 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
 
   if (err instanceof JWTExpired) {
     return errorResponse({ res, status: 401, message: 'Token expired', code: 'TOKEN_EXPIRED' });
+  }
+
+  if (err instanceof multer.MulterError) {
+    let message = err.message;
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      message = 'File size too large (max 500MB)';
+    }
+    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      message = 'Too many files';
+    }
+    return errorResponse({ res, status: 400, message, code: err.code });
+  }
+
+  if (err.message === 'Invalid file type') {
+    return errorResponse({ res, status: 400, message: 'Invalid file type', code: 'INVALID_FILE_TYPE' });
   }
 
   // Default to 500 internal server error
