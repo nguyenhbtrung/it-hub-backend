@@ -1,11 +1,12 @@
 import { CourseController } from '@/controllers/course.controller';
 import {
-  GetCourseDetailByInstructorParamsSchema,
+  getCourseDetailParamsScheme,
+  getCourseDetailQueryScheme,
   getMyCreatedCoursesSchema,
   updateCourseDetailSchema,
 } from '@/dtos/coures.dto';
 import { UserRole } from '@/generated/prisma/enums';
-import { authorize, requireAuth } from '@/middleware/auth.middleware';
+import { authorize, optionalAuth, requireAuth } from '@/middleware/auth.middleware';
 import { validate, validateParams, validateQuery } from '@/middleware/validate.middleware';
 import { Router } from 'express';
 
@@ -36,11 +37,11 @@ router.get(
 );
 
 router.get(
-  '/:id/by-instructor',
-  requireAuth,
-  authorize([UserRole.admin, UserRole.instructor]),
-  validateParams(GetCourseDetailByInstructorParamsSchema),
-  courseController.getCourseDetailByInstructor.bind(courseController)
+  '/:id',
+  optionalAuth,
+  validateParams(getCourseDetailParamsScheme),
+  validateQuery(getCourseDetailQueryScheme),
+  courseController.getCourseDetail.bind(courseController)
 );
 
 export default router;

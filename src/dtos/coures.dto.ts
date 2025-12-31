@@ -67,13 +67,19 @@ export const getMyCreatedCoursesSchema = z.object({
 
 export type GetMyCreatedCoursesDTO = z.infer<typeof getMyCreatedCoursesSchema>;
 
-export const GetCourseDetailByInstructorParamsSchema = z.object({
+export const getCourseDetailParamsScheme = z.object({
   id: z.string(),
 });
 
-export type GetCourseDetailByInstructorParamsDTO = z.infer<typeof GetCourseDetailByInstructorParamsSchema>;
+export type GetCourseDetailParamsDTO = z.infer<typeof getCourseDetailParamsScheme>;
 
-export interface GetCourseDetailByInstructorResponseDTO {
+export const getCourseDetailQueryScheme = z.object({
+  view: z.enum(['instructor', 'student']).optional(),
+});
+
+export type GetCourseDetailQueryDTO = z.infer<typeof getCourseDetailQueryScheme>;
+
+export interface GetCourseDetailInstructorViewResponseDTO {
   id: string;
   title: string;
   slug: string;

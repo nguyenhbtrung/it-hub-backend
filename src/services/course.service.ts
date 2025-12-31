@@ -2,7 +2,7 @@ import {
   CreateCourseDTO,
   CreateCourseResponseDTO,
   CreatedCourseResponseDTO,
-  GetCourseDetailByInstructorResponseDTO,
+  GetCourseDetailInstructorViewResponseDTO,
   GetMyCreatedCoursesDTO,
   toCreateCourseResponseDTO,
   UpdateCourseDetailDTO,
@@ -115,7 +115,15 @@ export class CourseService {
     return { data, meta: { total, page: Number(page), limit: Number(limit) } };
   }
 
-  async getCourseDetailByInstructor(id: string, instructorId: string): Promise<GetCourseDetailByInstructorResponseDTO> {
-    return await this.courseRepository.getCourseDetailByInstructor(id, instructorId);
+  async getCourseDetail(
+    id: string,
+    instructorId: string,
+    view: 'instructor' | 'student' = 'student'
+  ): Promise<GetCourseDetailInstructorViewResponseDTO | null> {
+    if (view === 'instructor') {
+      console.log(view);
+      return await this.courseRepository.getCourseDetailByInstructor(id, instructorId);
+    }
+    return null;
   }
 }

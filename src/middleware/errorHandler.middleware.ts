@@ -62,6 +62,7 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
 
   // Default to 500 internal server error
   res.status(500).json({
+    success: false,
     message: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error',
     code: 'INTERNAL_ERROR',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),

@@ -1,6 +1,7 @@
 import {
   CreateCourseDTO,
-  GetCourseDetailByInstructorParamsDTO,
+  GetCourseDetailParamsDTO,
+  GetCourseDetailQueryDTO,
   GetMyCreatedCoursesDTO,
   UpdateCourseDetailDTO,
 } from '@/dtos/coures.dto';
@@ -50,11 +51,11 @@ export class CourseController {
       meta: result.meta,
     });
   }
-  async getCourseDetailByInstructor(req: Request, res: Response, next: NextFunction) {
-    const { id: courseId } = req.params as GetCourseDetailByInstructorParamsDTO;
+  async getCourseDetail(req: Request, res: Response, next: NextFunction) {
+    const { view } = req.query as GetCourseDetailQueryDTO;
+    const { id: courseId } = req.params as GetCourseDetailParamsDTO;
     const instructorId = req?.user?.id;
-    if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    const result = await courseService.getCourseDetailByInstructor(courseId, instructorId);
+    const result = await courseService.getCourseDetail(courseId, instructorId || '', view);
     successResponse({
       res,
       data: result,

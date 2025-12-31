@@ -1,4 +1,5 @@
-import { CreatedCourseResponseDTO, GetCourseDetailByInstructorResponseDTO } from '@/dtos/coures.dto';
+import { CreatedCourseResponseDTO, GetCourseDetailInstructorViewResponseDTO } from '@/dtos/coures.dto';
+import { NotFoundError } from '@/errors';
 import { Course, CourseLevel, CourseStatus, Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 
@@ -100,9 +101,12 @@ export class CourseRepository {
     return [data, total];
   }
 
-  async getCourseDetailByInstructor(id: string, instructorId: string): Promise<GetCourseDetailByInstructorResponseDTO> {
+  async getCourseDetailByInstructor(
+    id: string,
+    instructorId: string
+  ): Promise<GetCourseDetailInstructorViewResponseDTO> {
     const course = await prisma.course.findUnique({
-      where: { id, instructorId },
+      where: { id, OR: [{ status: 'published' }, { instructorId }] },
       select: {
         id: true,
         title: true,
@@ -125,7 +129,7 @@ export class CourseRepository {
     });
 
     if (!course) {
-      throw new Error('Course not found');
+      throw new NotFoundError('Course not found');
     }
 
     return {
