@@ -14,12 +14,6 @@ export interface FileMetadata {
   [key: string]: any;
 }
 
-export interface UploadFileDto {
-  file: Express.Multer.File;
-  userId: string;
-  isPermanent?: boolean;
-}
-
 export interface VideoStreamOptions {
   range?: string;
   fileId: string;

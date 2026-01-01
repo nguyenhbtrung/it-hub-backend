@@ -4,10 +4,12 @@ import path from 'path';
 import fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadConfig } from '../config/upload.config';
-import { FileType, UploadFileDto, FileMetadata } from '../types/file.types';
+import { FileType, FileMetadata } from '../types/file.types';
 import { prisma } from '@/lib/prisma';
 import { FileStatus } from '@/generated/prisma/enums';
 import { NotFoundError } from '@/errors';
+import { toAbsoluteURL } from '@/utils/file';
+import { toFileResponseDto, UploadFileDto } from '@/dtos/file.dto';
 
 export class FileService {
   /**
@@ -147,7 +149,7 @@ export class FileService {
       },
     });
 
-    return fileRecord;
+    return toFileResponseDto(fileRecord);
   }
 
   /**
@@ -175,7 +177,7 @@ export class FileService {
       },
     });
 
-    return updatedFile;
+    return toFileResponseDto(updatedFile);
   }
 
   /**
@@ -191,7 +193,7 @@ export class FileService {
       },
     });
     if (!file) throw new NotFoundError('File not found');
-    return file;
+    return toFileResponseDto(file);
   }
 
   /**
