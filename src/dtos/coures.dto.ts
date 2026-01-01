@@ -94,3 +94,15 @@ export interface GetCourseDetailInstructorViewResponseDTO {
   imgUrl: string | null;
   promoVideoUrl: string | null;
 }
+
+export const updateCourseImageScheme = z.object({
+  imageId: z.string().min(1, 'imageId is required'),
+});
+
+export type UpdateCourseImageDto = z.infer<typeof updateCourseImageScheme>;
+
+export const updateCoursePromoVideoScheme = z.object({
+  promoVideoId: z.string().min(1, 'promoVideoId is required'),
+});
+
+export type UpdateCoursePromoVideoDto = z.infer<typeof updateCoursePromoVideoScheme>;

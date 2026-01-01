@@ -11,6 +11,7 @@ import { ForbiddenError, NotFoundError } from '@/errors';
 import { CourseEnrollmentStatus, CourseLevel, CourseStatus } from '@/generated/prisma/enums';
 import { CourseRepository } from '@/repositories/course.repository';
 import { TagRepository } from '@/repositories/tag.repository';
+import { toAbsoluteURL } from '@/utils/file';
 import { generateCourseSlug, generateTagSlug } from '@/utils/slug';
 
 export class CourseService {
@@ -121,9 +122,39 @@ export class CourseService {
     view: 'instructor' | 'student' = 'student'
   ): Promise<GetCourseDetailInstructorViewResponseDTO | null> {
     if (view === 'instructor') {
-      console.log(view);
-      return await this.courseRepository.getCourseDetailByInstructor(id, instructorId);
+      const course = await this.courseRepository.getCourseDetailByInstructor(id, instructorId);
+      return {
+        ...course,
+        imgUrl: course?.imgUrl ? toAbsoluteURL(course.imgUrl) : '',
+        promoVideoUrl: course.promoVideoUrl ? toAbsoluteURL(course.promoVideoUrl) : '',
+      };
     }
     return null;
+  }
+
+  async updateCourseImage(courseId: string, imageId: string, instructorId: string): Promise<void> {
+    const course = await this.courseRepository.getCourseInstructorId(courseId);
+
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+    if (course.instructorId !== instructorId) {
+      throw new ForbiddenError('Permission denied: You are not the owner of this course');
+    }
+
+    await this.courseRepository.updateCourseImage(courseId, imageId);
+  }
+
+  async updatePromoVideoImage(courseId: string, promoVideoId: string, instructorId: string): Promise<void> {
+    const course = await this.courseRepository.getCourseInstructorId(courseId);
+
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+    if (course.instructorId !== instructorId) {
+      throw new ForbiddenError('Permission denied: You are not the owner of this course');
+    }
+
+    await this.courseRepository.updateCoursePromoVideo(courseId, promoVideoId);
   }
 }

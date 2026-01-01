@@ -4,6 +4,8 @@ import {
   getCourseDetailQueryScheme,
   getMyCreatedCoursesSchema,
   updateCourseDetailSchema,
+  updateCourseImageScheme,
+  updateCoursePromoVideoScheme,
 } from '@/dtos/coures.dto';
 import { UserRole } from '@/generated/prisma/enums';
 import { authorize, optionalAuth, requireAuth } from '@/middleware/auth.middleware';
@@ -26,6 +28,22 @@ router.patch(
   authorize([UserRole.admin, UserRole.instructor]),
   validate(updateCourseDetailSchema),
   courseController.updateCourseDetail.bind(courseController)
+);
+
+router.patch(
+  '/:id/image',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  validate(updateCourseImageScheme),
+  courseController.updateCourseImage.bind(courseController)
+);
+
+router.patch(
+  '/:id/promo-video',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  validate(updateCoursePromoVideoScheme),
+  courseController.updateCoursePromoVideo.bind(courseController)
 );
 
 router.get(

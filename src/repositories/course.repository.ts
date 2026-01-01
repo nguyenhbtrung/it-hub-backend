@@ -52,6 +52,14 @@ export class CourseRepository {
     });
   }
 
+  async updateCourseImage(courseId: string, imgId: string): Promise<any> {
+    return prisma.course.update({ where: { id: courseId }, data: { imgId } });
+  }
+
+  async updateCoursePromoVideo(courseId: string, promoVideoId: string): Promise<any> {
+    return prisma.course.update({ where: { id: courseId }, data: { promoVideoId } });
+  }
+
   async getCourseInstructorId(courseId: string) {
     return prisma.course.findUnique({
       where: { id: courseId },

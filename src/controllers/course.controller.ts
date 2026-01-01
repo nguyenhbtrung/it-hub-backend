@@ -4,6 +4,8 @@ import {
   GetCourseDetailQueryDTO,
   GetMyCreatedCoursesDTO,
   UpdateCourseDetailDTO,
+  UpdateCourseImageDto,
+  UpdateCoursePromoVideoDto,
 } from '@/dtos/coures.dto';
 import { UnauthorizedError } from '@/errors';
 import { CourseRepository } from '@/repositories/course.repository';
@@ -59,6 +61,30 @@ export class CourseController {
     successResponse({
       res,
       data: result,
+    });
+  }
+
+  async updateCourseImage(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const { imageId } = req.body as UpdateCourseImageDto;
+    const instructorId = req?.user?.id;
+    if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
+    await courseService.updateCourseImage(courseId, imageId, instructorId);
+    successResponse({
+      res,
+      message: 'Course image updated successfully',
+    });
+  }
+
+  async updateCoursePromoVideo(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const { promoVideoId } = req.body as UpdateCoursePromoVideoDto;
+    const instructorId = req?.user?.id;
+    if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
+    await courseService.updatePromoVideoImage(courseId, promoVideoId, instructorId);
+    successResponse({
+      res,
+      message: 'Course promo video updated successfully',
     });
   }
 }
