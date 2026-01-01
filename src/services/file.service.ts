@@ -42,41 +42,32 @@ export class FileService {
    * Tạo thumbnails cho video (multiple frames)
    */
   private async generateVideoThumbnails(filePath: string): Promise<string[]> {
-    return new Promise((resolve) => {
-      const thumbnails: string[] = [];
-      const baseFilename = path.basename(filePath, path.extname(filePath));
+    const baseFilename = path.basename(filePath, path.extname(filePath));
+    const timestamps = ['1', '10%', '50%', '90%'];
 
-      // Tạo 3 thumbnails ở các thời điểm khác nhau
-      const timestamps = ['10%', '50%', '90%'];
-      let completed = 0;
-
-      timestamps.forEach((timestamp, index) => {
-        const thumbnailFilename = `thumb_${baseFilename}_${index}.jpg`;
-        const thumbnailPath = path.join(uploadConfig.THUMBNAIL_DIR, thumbnailFilename);
-
+    const promises = timestamps.map((timestamp, index) => {
+      const thumbnailFilename = `thumb_${baseFilename}_${index}.jpg`;
+      return new Promise<string>((resolve, reject) => {
         ffmpeg(filePath)
           .screenshots({
             timestamps: [timestamp],
             filename: thumbnailFilename,
             folder: uploadConfig.THUMBNAIL_DIR,
-            size: '400x?',
+            size: index > 0 ? '400x?' : '1280x?',
           })
-          .on('end', () => {
-            thumbnails.push(`/thumbnails/${thumbnailFilename}`);
-            completed++;
-            if (completed === timestamps.length) {
-              resolve(thumbnails);
-            }
-          })
+          .on('end', () => resolve(`/uploads/thumbnails/${thumbnailFilename}`))
           .on('error', (err) => {
-            console.error('Error generating thumbnail:', err);
-            completed++;
-            if (completed === timestamps.length) {
-              resolve(thumbnails);
-            }
+            console.error(`Error generating thumbnail at ${timestamp}:`, err);
+            reject(err);
           });
       });
     });
+
+    const results = await Promise.allSettled(promises);
+
+    return results.map((result, index) =>
+      result.status === 'fulfilled' ? result.value : `/thumbnails/error_thumb_${baseFilename}_${index}.jpg`
+    );
   }
 
   /**
@@ -257,6 +248,11 @@ export class FileService {
 
     const dir = file.status === FileStatus.active ? 'permanent' : 'temp';
     return path.join(uploadConfig.UPLOAD_DIR, dir, path.basename(file.url));
+  }
+
+  async getFileAsoluteUrl(fileId: string): Promise<string> {
+    const filePath = await this.getFilePath(fileId);
+    return toAbsoluteURL(filePath);
   }
 
   /**

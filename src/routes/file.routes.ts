@@ -31,6 +31,7 @@ router.delete('/:fileId', requireAuth, fileController.deleteFile.bind(fileContro
 router.get('/stream/:fileId', fileController.streamVideo.bind(fileController));
 
 router.get('/serve/:fileId', fileController.serveFile.bind(fileController));
+router.get('/url/:fileId', fileController.getFileUrl.bind(fileController));
 
 // Thumbnails
 router.get('/thumbnails/:filename', fileController.getThumbnail.bind(fileController));

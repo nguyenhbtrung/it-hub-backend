@@ -12,6 +12,13 @@ export const toFileResponseDto = <T extends Record<string, any>>(obj: T) => {
     }
   }
 
+  if (result?.metadata?.thumbnails && Array.isArray(result.metadata.thumbnails)) {
+    result.metadata = {
+      ...result.metadata,
+      thumbnails: result.metadata.thumbnails.map((thumb: string) => toAbsoluteURL(thumb)),
+    };
+  }
+
   return result as T;
 };
 

@@ -151,6 +151,12 @@ export class FileController {
     res.sendFile(filePath);
   }
 
+  async getFileUrl(req: Request, res: Response) {
+    const { fileId } = req.params;
+    const url = await fileService.getFileAsoluteUrl(fileId);
+    successResponse({ res, data: url });
+  }
+
   /**
    * Get thumbnail
    */
