@@ -1,3 +1,4 @@
+import { UpdateSectionDto } from '@/dtos/section.dto';
 import { prisma } from '@/lib/prisma';
 
 export class SectionRepository {
@@ -9,6 +10,14 @@ export class SectionRepository {
       },
     });
     return section?.course;
+  }
+
+  async updateSection(sectionId: string, data: UpdateSectionDto) {
+    const section = await prisma.section.update({
+      where: { id: sectionId },
+      data,
+    });
+    return section;
   }
 
   async deleteSection(sectionId: string) {
