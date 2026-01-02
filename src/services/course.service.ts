@@ -1,4 +1,5 @@
 import {
+  AddSectionDto,
   CreateCourseDTO,
   CreateCourseResponseDTO,
   CreatedCourseResponseDTO,
@@ -138,6 +139,38 @@ export class CourseService {
       return courseContent;
     }
     return null;
+  }
+
+  async addSection(courseId: string, instructorId: string, payload: AddSectionDto) {
+    const { title, description, objectives } = payload;
+    const course = await this.courseRepository.getCourseInstructorId(courseId);
+
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+    if (course.instructorId !== instructorId) {
+      throw new ForbiddenError('Permission denied: You are not the owner of this course');
+    }
+
+    const maxOrder = await this.courseRepository.getMaxSectionOrder(courseId);
+    const nextOrder = (maxOrder._max.order ?? 0) + 1;
+
+    const newSection = await this.courseRepository.addSection({
+      course: { connect: { id: courseId } },
+      title,
+      description,
+      objectives,
+      order: nextOrder,
+    });
+    return {
+      id: newSection.id,
+      courseId: newSection.courseId,
+      title: newSection.title,
+      description: newSection.description,
+      objectives: newSection.objectives,
+      order: newSection.order,
+      units: [],
+    };
   }
 
   async updateCourseImage(courseId: string, imageId: string, instructorId: string): Promise<void> {

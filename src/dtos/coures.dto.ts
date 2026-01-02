@@ -1,4 +1,4 @@
-import { Course, CourseLevel, CourseStatus } from '@/generated/prisma/client';
+import { Course, CourseLevel, CourseStatus, Unit } from '@/generated/prisma/client';
 import { z } from 'zod';
 
 export const createCourseSchema = z.object({
@@ -112,3 +112,11 @@ export const updateCoursePromoVideoScheme = z.object({
 });
 
 export type UpdateCoursePromoVideoDto = z.infer<typeof updateCoursePromoVideoScheme>;
+
+export const addSectionScheme = z.object({
+  title: z.string().min(1, 'Title is required').max(60, 'Title must not exceed 60 characters'),
+  description: z.string().min(0, 'Description is required').max(120, 'Description must not exceed 120 characters'),
+  objectives: z.array(z.string()).default([]),
+});
+
+export type AddSectionDto = z.infer<typeof addSectionScheme>;

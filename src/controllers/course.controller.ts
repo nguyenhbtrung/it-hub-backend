@@ -1,4 +1,5 @@
 import {
+  AddSectionDto,
   CreateCourseDTO,
   GetCourseContentQueryDTO,
   GetCourseDetailParamsDTO,
@@ -74,6 +75,15 @@ export class CourseController {
       res,
       data: result,
     });
+  }
+
+  async addSection(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const payload = req.body as AddSectionDto;
+    const instructorId = req?.user?.id;
+    if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
+    const result = await courseService.addSection(courseId, instructorId, payload);
+    successResponse({ res, status: 201, message: 'Add section successfully', data: result });
   }
 
   async updateCourseImage(req: Request, res: Response) {

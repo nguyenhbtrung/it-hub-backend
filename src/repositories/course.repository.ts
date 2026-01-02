@@ -1,6 +1,6 @@
 import { CreatedCourseResponseDTO, GetCourseDetailInstructorViewResponseDTO } from '@/dtos/coures.dto';
 import { NotFoundError } from '@/errors';
-import { Course, CourseLevel, CourseStatus, Prisma } from '@/generated/prisma/client';
+import { Course, CourseLevel, CourseStatus, Prisma, Section } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 
 interface UpdateCourseDetailData {
@@ -50,6 +50,16 @@ export class CourseRepository {
 
       return tx.course.update({ where: { id }, data });
     });
+  }
+
+  async getMaxSectionOrder(courseId: string) {
+    const maxOrder = await prisma.section.aggregate({ where: { courseId: courseId }, _max: { order: true } });
+    return maxOrder;
+  }
+
+  async addSection(data: Prisma.SectionCreateInput): Promise<Section> {
+    const newSection = await prisma.section.create({ data });
+    return newSection;
   }
 
   async updateCourseImage(courseId: string, imgId: string): Promise<any> {

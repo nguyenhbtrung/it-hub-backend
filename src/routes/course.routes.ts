@@ -1,5 +1,6 @@
 import { CourseController } from '@/controllers/course.controller';
 import {
+  addSectionScheme,
   getCourseContentQueryScheme,
   getCourseDetailParamsScheme,
   getCourseDetailQueryScheme,
@@ -21,6 +22,14 @@ router.post(
   requireAuth,
   authorize([UserRole.admin, UserRole.instructor]),
   courseController.createCourse.bind(courseController)
+);
+
+router.post(
+  '/:id/section',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  validate(addSectionScheme),
+  courseController.addSection.bind(courseController)
 );
 
 router.patch(
