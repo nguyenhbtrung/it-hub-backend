@@ -390,7 +390,7 @@ model Section {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  course Course @relation(fields: [courseId], references: [id])
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   units  Unit[]
 
   @@index([courseId])
@@ -408,7 +408,7 @@ model Unit {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  section Section @relation(fields: [sectionId], references: [id])
+  section Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   steps   Step[]
   excercises Excercise[]
   materials Material[]
@@ -427,7 +427,7 @@ model Step {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  lesson Unit @relation(fields: [lessonId], references: [id])
+  lesson Unit @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   learningProgress LearningProgress[]
 
   @@index([lessonId])
@@ -445,7 +445,7 @@ model Excercise {
   duration     Int?
   passingScore Float?
 
-  unit Unit @relation(fields: [unitId], references: [id])
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
   excerciseQuizzes ExcerciseQuiz[]
   attempts ExcerciseAttempt[]
   learningProgress LearningProgress[]
@@ -460,8 +460,8 @@ model Material {
   fileId    String
   createdAt DateTime @default(now())
 
-  unit Unit @relation(fields: [unitId], references: [id])
-  file File @relation(fields: [fileId], references: [id])
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
   @@map("materials")
 }
