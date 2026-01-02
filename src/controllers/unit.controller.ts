@@ -16,4 +16,12 @@ export class UnitController {
     const result = await unitService.updateUnit(unitId, instructorId, payload);
     successResponse({ res, message: 'Update unit successfully', data: result });
   }
+
+  async deleteUnit(req: Request, res: Response) {
+    const { id: unitId } = req.params;
+    const instructorId = req?.user?.id;
+    if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
+    await unitService.deleteUnit(instructorId, unitId);
+    successResponse({ res, message: 'Delete unit successfully' });
+  }
 }

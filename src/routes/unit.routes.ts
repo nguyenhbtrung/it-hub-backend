@@ -25,11 +25,11 @@ router.patch(
   unitController.updateUnit.bind(unitController)
 );
 
-// router.delete(
-//   '/:id',
-//   requireAuth,
-//   authorize([UserRole.admin, UserRole.instructor]),
-//   sectionController.deleteSection.bind(sectionController)
-// );
+router.delete(
+  '/:id',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  unitController.deleteUnit.bind(unitController)
+);
 
 export default router;

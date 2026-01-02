@@ -25,4 +25,10 @@ export class UnitRepository {
     });
     return unit;
   }
+
+  async deleteUnit(unitId: string) {
+    await prisma.unit.delete({
+      where: { id: unitId },
+    });
+  }
 }
