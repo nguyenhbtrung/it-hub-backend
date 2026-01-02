@@ -125,8 +125,8 @@ export class CourseService {
       const course = await this.courseRepository.getCourseDetailByInstructor(id, instructorId);
       return {
         ...course,
-        imgUrl: course?.imgUrl ? toAbsoluteURL(course.imgUrl) : '',
-        promoVideoUrl: course.promoVideoUrl ? toAbsoluteURL(course.promoVideoUrl) : '',
+        img: course.img ? { ...course.img, url: toAbsoluteURL(course.img.url) } : null,
+        promoVideo: course.promoVideo ? { ...course.promoVideo, url: toAbsoluteURL(course.promoVideo.url) } : null,
       };
     }
     return null;

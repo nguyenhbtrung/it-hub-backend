@@ -91,8 +91,8 @@ export interface GetCourseDetailInstructorViewResponseDTO {
   keyTakeaway: unknown;
   requirements: unknown;
   tags: string[];
-  imgUrl: string | null;
-  promoVideoUrl: string | null;
+  img: { id: string; url: string } | null;
+  promoVideo: { id: string; url: string } | null;
 }
 
 export const updateCourseImageScheme = z.object({

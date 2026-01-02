@@ -131,8 +131,8 @@ export class CourseRepository {
             tag: { select: { name: true } },
           },
         },
-        img: { select: { url: true } },
-        promoVideo: { select: { url: true } },
+        img: { select: { id: true, url: true } },
+        promoVideo: { select: { id: true, url: true } },
       },
     });
 
@@ -152,8 +152,8 @@ export class CourseRepository {
       keyTakeaway: course.keyTakeaway,
       requirements: course.requirements,
       tags: course.tags.map((t) => t.tag.name),
-      imgUrl: course.img?.url ?? null,
-      promoVideoUrl: course.promoVideo?.url ?? null,
+      img: course.img,
+      promoVideo: course.promoVideo,
     };
   }
 }
