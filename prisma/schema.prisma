@@ -117,7 +117,7 @@ model User {
   emailVerified Boolean    @default(false)
 
   avatarId      String?
-  avatar        File?      @relation(name: "UserAvatar", fields: [avatarId], references: [id])
+  avatar        File?      @relation(name: "UserAvatar", fields: [avatarId], references: [id], onDelete: SetNull) 
 
   profile       UserProfile?
   badges        UserBadge[]
@@ -150,7 +150,7 @@ model User {
 
 model UserProfile {
   userId          String   @id
-  user            User     @relation(fields: [userId], references: [id])
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   bio             String?
   school          String?
@@ -182,8 +182,8 @@ model UserBadge {
   badgeId  String
   awardedAt DateTime @default(now())
 
-  user   User  @relation(fields: [userId], references: [id])
-  badge Badge @relation(fields: [badgeId], references: [id])
+  user   User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
 
   @@id([userId, badgeId])
   @@map("user_badges")
@@ -194,8 +194,8 @@ model UserFollow {
   followingId String
   createdAt   DateTime @default(now())
 
-  follower  User @relation("Followers", fields: [followerId], references: [id])
-  following User @relation("Following", fields: [followingId], references: [id])
+  follower  User @relation("Followers", fields: [followerId], references: [id], onDelete: Cascade) 
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade) 
 
   @@id([followerId, followingId])
   @@map("user_follows")
@@ -216,7 +216,7 @@ model File {
   metadata Json
 
   ownerId   String
-  owner     User @relation("OwnerFile", fields: [ownerId], references: [id])
+  owner     User @relation("OwnerFile", fields: [ownerId], references: [id], onDelete: Cascade)
 
   userAvatars   User[] @relation("UserAvatar")
   courseImages  Course[] @relation("CourseImage")
@@ -234,7 +234,7 @@ model File {
 model Category {
   id          String     @id @default(cuid())
   parentId    String?
-  parent      Category? @relation("CategoryTree", fields: [parentId], references: [id])
+  parent      Category? @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
   children    Category[] @relation("CategoryTree")
 
   name        String
@@ -265,8 +265,8 @@ model TagFollow {
   userId String
   tagId  String
 
-  user User @relation(fields: [userId], references: [id])
-  tag  Tag  @relation(fields: [tagId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade) 
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade) 
 
   @@id([userId, tagId])
   @@map("tag_follows")
@@ -281,9 +281,9 @@ model Course {
   categoryId       String
   subCategoryId    String?
 
-  instructor       User     @relation(fields: [instructorId], references: [id])
-  category         Category @relation("CourseCategory", fields: [categoryId], references: [id])
-  subCategory      Category? @relation("CourseSubCategory", fields: [subCategoryId], references: [id])
+  instructor       User     @relation(fields: [instructorId], references: [id], onDelete: Restrict) 
+  category         Category @relation("CourseCategory", fields: [categoryId], references: [id], onDelete: Restrict) 
+  subCategory      Category? @relation("CourseSubCategory", fields: [subCategoryId], references: [id], onDelete: SetNull) 
 
   title            String
   slug             String   @unique
@@ -293,8 +293,8 @@ model Course {
 
   imgId            String?
   promoVideoId     String?
-  img              File?    @relation("CourseImage", fields: [imgId], references: [id])
-  promoVideo       File?    @relation("CoursePromoVideo", fields: [promoVideoId], references: [id])
+  img              File?    @relation("CourseImage", fields: [imgId], references: [id], onDelete: SetNull)
+  promoVideo       File?    @relation("CoursePromoVideo", fields: [promoVideoId], references: [id], onDelete: SetNull)
 
   totalDuration    Int
   avgRating        Float    @default(0)
@@ -325,8 +325,8 @@ model CourseTag {
   courseId String
   tagId    String
 
-  course Course @relation(fields: [courseId], references: [id])
-  tag    Tag    @relation(fields: [tagId], references: [id])
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([courseId, tagId])
   @@map("course_tags")
@@ -341,8 +341,8 @@ model Review {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  course Course @relation(fields: [courseId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade) 
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([courseId, userId])
   @@map("reviews")
@@ -357,8 +357,8 @@ model Enrollment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  course Course @relation(fields: [courseId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade) 
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([courseId, userId])
   @@map("enrollments")
@@ -369,8 +369,8 @@ model SavedCourse {
   userId   String
   createdAt DateTime @default(now())
 
-  course Course @relation(fields: [courseId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade) 
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([courseId, userId])
   @@map("saved_courses")
@@ -445,7 +445,7 @@ model Excercise {
   duration     Int?
   passingScore Float?
 
-  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade) 
   excerciseQuizzes ExcerciseQuiz[]
   attempts ExcerciseAttempt[]
   learningProgress LearningProgress[]
@@ -460,8 +460,8 @@ model Material {
   fileId    String
   createdAt DateTime @default(now())
 
-  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade) 
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade) 
 
   @@map("materials")
 }
@@ -485,8 +485,8 @@ model ExcerciseQuiz {
   excerciseId String
   quizId      String
 
-  excercise Excercise @relation(fields: [excerciseId], references: [id])
-  quiz      Quiz      @relation(fields: [quizId], references: [id])
+  excercise Excercise @relation(fields: [excerciseId], references: [id], onDelete: Cascade)
+  quiz      Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade) 
 
   @@map("excercise_quizzes")
 }
@@ -501,8 +501,8 @@ model ExcerciseAttempt {
   demoUrl     Json?
   note        String?
 
-  excercise Excercise @relation(fields: [excerciseId], references: [id])
-  student   User      @relation(fields: [studentId], references: [id])
+  excercise Excercise @relation(fields: [excerciseId], references: [id], onDelete: Cascade) 
+  student   User      @relation(fields: [studentId], references: [id], onDelete: Cascade) 
   attachments ExcerciseAttachment[]
 
   @@index([studentId])
@@ -514,8 +514,8 @@ model ExcerciseAttachment {
   attempId String
   fileId   String
 
-  attempt ExcerciseAttempt @relation(fields: [attempId], references: [id])
-  file    File             @relation(fields: [fileId], references: [id])
+  attempt ExcerciseAttempt @relation(fields: [attempId], references: [id], onDelete: Cascade) 
+  file    File             @relation(fields: [fileId], references: [id], onDelete: Cascade) 
 
   @@map("excercise_attachments")
 }
@@ -528,9 +528,9 @@ model LearningProgress {
   status      LearningStatus
   updatedAt   DateTime @updatedAt
 
-  student   User      @relation(fields: [studentId], references: [id])
-  step      Step?     @relation(fields: [stepId], references: [id])
-  excercise Excercise? @relation(fields: [excerciseId], references: [id])
+  student   User      @relation(fields: [studentId], references: [id], onDelete: Cascade) 
+  step      Step?     @relation(fields: [stepId], references: [id], onDelete: Cascade) 
+  excercise Excercise? @relation(fields: [excerciseId], references: [id], onDelete: Cascade) 
 
   @@unique([studentId, stepId])
   @@unique([studentId, excerciseId])
@@ -555,7 +555,7 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade) 
   attachments PostAttachment[]
   tags PostTag[]
   savedPosts SavedPost[]
@@ -572,8 +572,8 @@ model PostAttachment {
   postId String
   fileId String
 
-  post Post @relation(fields: [postId], references: [id])
-  file File @relation(fields: [fileId], references: [id])
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade) 
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
   @@map("post_attachments")
 }
@@ -582,8 +582,8 @@ model PostTag {
   postId String
   tagId  String
 
-  post Post @relation(fields: [postId], references: [id])
-  tag  Tag  @relation(fields: [tagId], references: [id])
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade) 
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade) 
 
   @@id([postId, tagId])
   @@map("post_tags")
@@ -594,8 +594,8 @@ model SavedPost {
   userId String
   createdAt DateTime @default(now())
 
-  post Post @relation(fields: [postId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade) 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade) 
 
   @@id([postId, userId])
   @@map("saved_posts")
@@ -603,7 +603,7 @@ model SavedPost {
 
 model Comment {
   id        String @id @default(cuid())
-  userId    String
+  userId    String?
   postId    String
   parentId  String?
   content   Json
@@ -614,9 +614,9 @@ model Comment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  user     User     @relation(fields: [userId], references: [id])
-  post     Post     @relation(fields: [postId], references: [id])
-  parent   Comment? @relation("CommentTree", fields: [parentId], references: [id])
+  user     User?     @relation(fields: [userId], references: [id], onDelete: SetNull) 
+  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade) 
+  parent   Comment? @relation("CommentTree", fields: [parentId], references: [id], onDelete: Cascade)
   children Comment[] @relation("CommentTree")
   votes    Vote[]
 
@@ -632,9 +632,9 @@ model Vote {
   isUpvote  Boolean
   createdAt DateTime @default(now())
 
-  user    User     @relation(fields: [userId], references: [id])
-  post    Post?    @relation(fields: [postId], references: [id])
-  comment Comment? @relation(fields: [commentId], references: [id])
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade) 
+  post    Post?    @relation(fields: [postId], references: [id], onDelete: Cascade) 
+  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
   @@unique([userId, commentId])
@@ -644,7 +644,6 @@ model Vote {
 // =====================================================
 // TOKENS
 // =====================================================
-
 model RefreshToken {
   id        String   @id @default(uuid())
   token     String   @unique
@@ -661,7 +660,7 @@ model VerificationToken {
   id        String   @id @default(uuid())
   token     String   @unique
   userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade) 
   expiresAt DateTime
   createdAt DateTime @default(now())
 
@@ -672,7 +671,7 @@ model PasswordResetToken {
   id        String   @id @default(uuid())
   token     String   @unique
   userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade) 
   expiresAt DateTime
   createdAt DateTime @default(now())
 
