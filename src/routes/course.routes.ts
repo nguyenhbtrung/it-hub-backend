@@ -1,5 +1,6 @@
 import { CourseController } from '@/controllers/course.controller';
 import {
+  getCourseContentQueryScheme,
   getCourseDetailParamsScheme,
   getCourseDetailQueryScheme,
   getMyCreatedCoursesSchema,
@@ -60,6 +61,12 @@ router.get(
   validateParams(getCourseDetailParamsScheme),
   validateQuery(getCourseDetailQueryScheme),
   courseController.getCourseDetail.bind(courseController)
+);
+router.get(
+  '/:id/content',
+  optionalAuth,
+  validateQuery(getCourseContentQueryScheme),
+  courseController.getCourseContent.bind(courseController)
 );
 
 export default router;

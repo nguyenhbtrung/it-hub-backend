@@ -132,6 +132,14 @@ export class CourseService {
     return null;
   }
 
+  async getCourseContent(id: string, instructorId: string, view: 'instructor' | 'student' = 'student'): Promise<any> {
+    if (view === 'instructor') {
+      const courseContent = await this.courseRepository.getCourseContentByInstructor(id, instructorId);
+      return courseContent;
+    }
+    return null;
+  }
+
   async updateCourseImage(courseId: string, imageId: string, instructorId: string): Promise<void> {
     const course = await this.courseRepository.getCourseInstructorId(courseId);
 

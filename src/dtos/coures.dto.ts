@@ -95,6 +95,12 @@ export interface GetCourseDetailInstructorViewResponseDTO {
   promoVideo: { id: string; url: string } | null;
 }
 
+export const getCourseContentQueryScheme = z.object({
+  view: z.enum(['instructor', 'student']).optional(),
+});
+
+export type GetCourseContentQueryDTO = z.infer<typeof getCourseContentQueryScheme>;
+
 export const updateCourseImageScheme = z.object({
   imageId: z.string().min(1, 'imageId is required'),
 });

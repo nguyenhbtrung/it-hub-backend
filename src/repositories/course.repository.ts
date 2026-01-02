@@ -156,4 +156,41 @@ export class CourseRepository {
       promoVideo: course.promoVideo,
     };
   }
+
+  async getCourseContentByInstructor(courseId: string, instructorId: string) {
+    const courseContent = await prisma.course.findUnique({
+      where: { id: courseId, OR: [{ status: 'published' }, { instructorId }] },
+      select: {
+        sections: {
+          select: {
+            id: true,
+            courseId: true,
+            title: true,
+            description: true,
+            objectives: true,
+            order: true,
+            units: {
+              select: {
+                id: true,
+                sectionId: true,
+                title: true,
+                description: true,
+                order: true,
+                type: true,
+                steps: {
+                  select: {
+                    id: true,
+                    lessonId: true,
+                    title: true,
+                    order: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    return courseContent;
+  }
 }

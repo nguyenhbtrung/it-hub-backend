@@ -1,5 +1,6 @@
 import {
   CreateCourseDTO,
+  GetCourseContentQueryDTO,
   GetCourseDetailParamsDTO,
   GetCourseDetailQueryDTO,
   GetMyCreatedCoursesDTO,
@@ -58,6 +59,17 @@ export class CourseController {
     const { id: courseId } = req.params as GetCourseDetailParamsDTO;
     const instructorId = req?.user?.id;
     const result = await courseService.getCourseDetail(courseId, instructorId || '', view);
+    successResponse({
+      res,
+      data: result,
+    });
+  }
+
+  async getCourseContent(req: Request, res: Response) {
+    const { view } = req.query as GetCourseContentQueryDTO;
+    const { id: courseId } = req.params;
+    const instructorId = req?.user?.id;
+    const result = await courseService.getCourseContent(courseId, instructorId || '', view);
     successResponse({
       res,
       data: result,
