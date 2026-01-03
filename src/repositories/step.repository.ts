@@ -2,6 +2,12 @@ import { UpdateStepDto } from '@/dtos/step.dto';
 import { prisma } from '@/lib/prisma';
 
 export class StepRepository {
+  async getStepById(id: string) {
+    const step = await prisma.step.findUnique({
+      where: { id },
+    });
+    return step;
+  }
   async getCourseByStepId(stepId: string) {
     const step = await prisma.step.findUnique({
       where: { id: stepId },

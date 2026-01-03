@@ -9,6 +9,8 @@ import { Router } from 'express';
 const router = Router();
 const stepController = new StepController();
 
+router.get('/:id', requireAuth, stepController.getStepById.bind(stepController));
+
 router.patch(
   '/:id',
   requireAuth,
