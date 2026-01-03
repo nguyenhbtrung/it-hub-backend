@@ -159,6 +159,28 @@ export class CourseService {
     return null;
   }
 
+  async getCourseContentOutline(id: string, userId: string, role?: UserRole) {
+    const courseContent = await this.courseRepository.getCourseContentOutline(id, userId, role);
+    const sectionsWithDuration = courseContent?.sections.map((section) => ({
+      ...section,
+      units: section.units.map((unit) => {
+        const stepDuration = unit.steps.reduce((sum, s) => sum + (s.duration ?? 0), 0);
+        const excerciseDuration = unit.excercises.reduce((sum, e) => sum + (e.duration ?? 0), 0);
+        const totalDuration = stepDuration + excerciseDuration;
+
+        return {
+          ...unit,
+          totalDuration,
+        };
+      }),
+    }));
+
+    return {
+      ...courseContent,
+      sections: sectionsWithDuration,
+    };
+  }
+
   async addSection(courseId: string, instructorId: string, payload: AddSectionDto) {
     const { title, description, objectives } = payload;
     const course = await this.courseRepository.getCourseInstructorId(courseId);

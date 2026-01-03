@@ -90,6 +90,17 @@ export class CourseController {
     });
   }
 
+  async getCourseContentOutline(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const userId = req?.user?.id;
+    const role = req?.user?.role;
+    const result = await courseService.getCourseContentOutline(courseId, userId || '', role);
+    successResponse({
+      res,
+      data: result,
+    });
+  }
+
   async addSection(req: Request, res: Response) {
     const { id: courseId } = req.params;
     const payload = req.body as AddSectionDto;

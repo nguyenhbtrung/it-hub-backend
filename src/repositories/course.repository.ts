@@ -285,6 +285,37 @@ export class CourseRepository {
     return courseContent;
   }
 
+  async getCourseContentOutline(id: string, userId: string, role?: string) {
+    const isAdmin = role === 'admin';
+    const courseContent = await prisma.course.findUnique({
+      where: { id, OR: isAdmin ? [] : [{ status: 'published' }, { instructorId: userId }] },
+      select: {
+        totalDuration: true,
+        sections: {
+          select: {
+            id: true,
+            title: true,
+            units: {
+              select: {
+                id: true,
+                title: true,
+                type: true,
+                steps: {
+                  select: { duration: true },
+                },
+                excercises: {
+                  select: { duration: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return courseContent;
+  }
+
   async getUnitIdsByCourseId(courseId: string): Promise<string[]> {
     const units = await prisma.unit.findMany({
       where: { section: { courseId } },

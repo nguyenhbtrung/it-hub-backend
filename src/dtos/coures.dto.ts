@@ -33,8 +33,7 @@ export const updateCourseDetailSchema = z.object({
   shortDescription: z
     .string()
     .min(0, 'shortDescription is required')
-    .max(120, 'shortDescription must not exceed 120 characters')
-    .optional(),
+    .max(120, 'shortDescription must not exceed 120 characters'),
   level: z.enum([CourseLevel.beginner, CourseLevel.intermediate, CourseLevel.advanced, CourseLevel.expert]),
   requirements: z.array(z.string()).default([]),
   keyTakeaway: z.array(z.string()).default([]),

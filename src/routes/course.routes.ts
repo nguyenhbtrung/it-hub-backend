@@ -87,4 +87,6 @@ router.get(
   courseController.getCourseContent.bind(courseController)
 );
 
+router.get('/:id/content/outline', optionalAuth, courseController.getCourseContentOutline.bind(courseController));
+
 export default router;
