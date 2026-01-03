@@ -61,15 +61,22 @@ export class CourseController {
       meta: result.meta,
     });
   }
-  async getCourseDetail(req: Request, res: Response, next: NextFunction) {
+  async getCourseDetail(req: Request, res: Response) {
     const { view } = req.query as GetCourseDetailQueryDTO;
     const { id: courseId } = req.params as GetCourseDetailParamsDTO;
-    const instructorId = req?.user?.id;
-    const result = await courseService.getCourseDetail(courseId, instructorId || '', view);
+    const userId = req?.user?.id;
+    const role = req?.user?.role;
+    const result = await courseService.getCourseDetail(courseId, userId || '', role, view);
     successResponse({
       res,
       data: result,
     });
+  }
+
+  async getCourseIdBySlug(req: Request, res: Response) {
+    const { slug } = req.params;
+    const result = await courseService.getCourseIdBySlug(slug);
+    successResponse({ res, data: result });
   }
 
   async getCourseContent(req: Request, res: Response) {

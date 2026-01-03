@@ -1,7 +1,8 @@
 import { CreatedCourseResponseDTO, GetCourseDetailInstructorViewResponseDTO } from '@/dtos/coures.dto';
 import { NotFoundError } from '@/errors';
-import { Course, CourseLevel, CourseStatus, Prisma, Section } from '@/generated/prisma/client';
+import { Course, CourseLevel, CourseStatus, Prisma, Section, UserRole } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
+import { toAbsoluteURL } from '@/utils/file';
 
 interface UpdateCourseDetailData {
   title: string;
@@ -23,6 +24,17 @@ interface UpdateCourseTagData {
 export class CourseRepository {
   async create(data: Prisma.CourseCreateInput): Promise<Course> {
     return prisma.course.create({ data });
+  }
+
+  async getCourseIdBySlug(slug: string) {
+    const course = await prisma.course.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+    return course.id;
   }
 
   async updateCourseDetail(id: string, data: UpdateCourseDetailData, tagData: UpdateCourseTagData): Promise<Course> {
@@ -121,10 +133,12 @@ export class CourseRepository {
 
   async getCourseDetailByInstructor(
     id: string,
-    instructorId: string
+    instructorId: string,
+    role?: UserRole
   ): Promise<GetCourseDetailInstructorViewResponseDTO> {
+    const isAdmin = role === 'admin';
     const course = await prisma.course.findUnique({
-      where: { id, OR: [{ status: 'published' }, { instructorId }] },
+      where: { id, OR: isAdmin ? [] : [{ status: 'published' }, { instructorId }] },
       select: {
         id: true,
         title: true,
@@ -164,6 +178,73 @@ export class CourseRepository {
       tags: course.tags.map((t) => t.tag.name),
       img: course.img,
       promoVideo: course.promoVideo,
+    };
+  }
+
+  async getCourseDetailByStudent(id: string, instructorId: string, role: string | undefined) {
+    const isAdmin = role === 'admin';
+    const course = await prisma.course.findUnique({
+      where: { id, OR: isAdmin ? [] : [{ status: 'published' }, { instructorId }] },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        shortDescription: true,
+        description: true,
+        category: { select: { id: true, name: true, slug: true } },
+        subCategory: { select: { id: true, name: true, slug: true } },
+        instructor: {
+          select: {
+            id: true,
+            fullname: true,
+            avatar: {
+              select: {
+                url: true,
+              },
+            },
+          },
+        },
+        level: true,
+        totalDuration: true,
+        keyTakeaway: true,
+        requirements: true,
+        tags: {
+          select: {
+            tag: { select: { id: true, name: true, slug: true } },
+          },
+        },
+        img: { select: { id: true, url: true } },
+        promoVideo: { select: { id: true, url: true, metadata: true } },
+        avgRating: true,
+        reviewCount: true,
+        updatedAt: true,
+      },
+    });
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+    const lessonCount = await prisma.unit.count({
+      where: { section: { courseId: id }, type: 'lesson' },
+    });
+    const materialCount = await prisma.material.count({
+      where: { unit: { section: { courseId: id } } },
+    });
+    const students = await prisma.enrollment.count({
+      where: { courseId: id, status: { in: ['active', 'completed'] } },
+    });
+
+    return {
+      ...course,
+      subCategory: course.subCategory ?? undefined,
+      lessons: lessonCount,
+      materials: materialCount,
+      tags: course.tags.map((t) => t.tag),
+      students,
+      instructor: {
+        id: course.instructor.id,
+        fullname: course.instructor.fullname,
+        avatarUrl: course.instructor.avatar?.url ? toAbsoluteURL(course.instructor.avatar?.url) : null,
+      },
     };
   }
 

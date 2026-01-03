@@ -8,8 +8,9 @@ import {
   toCreateCourseResponseDTO,
   UpdateCourseDetailDTO,
 } from '@/dtos/coures.dto';
+import { toFileResponseDto } from '@/dtos/file.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
-import { CourseEnrollmentStatus, CourseLevel, CourseStatus } from '@/generated/prisma/enums';
+import { CourseEnrollmentStatus, CourseLevel, CourseStatus, UserRole } from '@/generated/prisma/enums';
 import { CourseRepository } from '@/repositories/course.repository';
 import { TagRepository } from '@/repositories/tag.repository';
 import { toAbsoluteURL } from '@/utils/file';
@@ -109,6 +110,11 @@ export class CourseService {
     );
   }
 
+  async getCourseIdBySlug(slug: string): Promise<string> {
+    const id = await this.courseRepository.getCourseIdBySlug(slug);
+    return id;
+  }
+
   async getMyCreatedCourses(
     query: GetMyCreatedCoursesDTO,
     instructorId: string
@@ -121,20 +127,21 @@ export class CourseService {
     return { data, meta: { total, page: Number(page), limit: Number(limit) } };
   }
 
-  async getCourseDetail(
-    id: string,
-    instructorId: string,
-    view: 'instructor' | 'student' = 'student'
-  ): Promise<GetCourseDetailInstructorViewResponseDTO | null> {
+  async getCourseDetail(id: string, userId: string, role?: UserRole, view: 'instructor' | 'student' = 'student') {
     if (view === 'instructor') {
-      const course = await this.courseRepository.getCourseDetailByInstructor(id, instructorId);
+      const course = await this.courseRepository.getCourseDetailByInstructor(id, userId, role);
       return {
         ...course,
-        img: course.img ? { ...course.img, url: toAbsoluteURL(course.img.url) } : null,
-        promoVideo: course.promoVideo ? { ...course.promoVideo, url: toAbsoluteURL(course.promoVideo.url) } : null,
+        img: course.img ? toFileResponseDto(course.img) : null,
+        promoVideo: course.promoVideo ? toFileResponseDto(course.promoVideo) : null,
       };
     }
-    return null;
+    const course = await this.courseRepository.getCourseDetailByStudent(id, userId, role);
+    return {
+      ...course,
+      img: course.img ? toFileResponseDto(course.img) : null,
+      promoVideo: course.promoVideo ? toFileResponseDto(course.promoVideo) : null,
+    };
   }
 
   async getCourseContent(id: string, instructorId: string, view: 'instructor' | 'student' = 'student'): Promise<any> {

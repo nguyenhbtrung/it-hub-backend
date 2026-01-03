@@ -71,6 +71,8 @@ router.get(
   courseController.getMyCreatedCourses.bind(courseController)
 );
 
+router.get('/slug/:slug/courseId', courseController.getCourseIdBySlug.bind(courseController));
+
 router.get(
   '/:id',
   optionalAuth,
