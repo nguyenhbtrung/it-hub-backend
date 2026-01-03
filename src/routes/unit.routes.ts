@@ -1,21 +1,21 @@
 import { UnitController } from '@/controllers/unit.controller';
 
-import { updateUnitScheme } from '@/dtos/unit.dto';
+import { addStepScheme, updateUnitScheme } from '@/dtos/unit.dto';
 import { UserRole } from '@/generated/prisma/enums';
 import { authorize, requireAuth } from '@/middleware/auth.middleware';
-import { validate, validateQuery } from '@/middleware/validate.middleware';
+import { validate } from '@/middleware/validate.middleware';
 import { Router } from 'express';
 
 const router = Router();
 const unitController = new UnitController();
 
-// router.post(
-//   '/:id/unit',
-//   requireAuth,
-//   authorize([UserRole.admin, UserRole.instructor]),
-//   validate(addUnitScheme),
-//   sectionController.addUnit.bind(sectionController)
-// );
+router.post(
+  '/:id/step',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  validate(addStepScheme),
+  unitController.addStep.bind(unitController)
+);
 
 router.patch(
   '/:id',

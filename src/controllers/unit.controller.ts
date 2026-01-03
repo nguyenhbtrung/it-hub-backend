@@ -1,4 +1,4 @@
-import { UpdateUnitDto } from '@/dtos/unit.dto';
+import { AddStepDto, UpdateUnitDto } from '@/dtos/unit.dto';
 import { UnauthorizedError } from '@/errors';
 import { UnitRepository } from '@/repositories/unit.repository';
 import { UnitService } from '@/services/unit.service';
@@ -23,5 +23,14 @@ export class UnitController {
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
     await unitService.deleteUnit(instructorId, unitId);
     successResponse({ res, message: 'Delete unit successfully' });
+  }
+
+  async addStep(req: Request, res: Response) {
+    const { id: unitId } = req.params;
+    const payload = req.body as AddStepDto;
+    const instructorId = req?.user?.id;
+    if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
+    const result = await unitService.addStep(unitId, instructorId, payload);
+    successResponse({ res, status: 201, message: 'Add step successfully', data: result });
   }
 }

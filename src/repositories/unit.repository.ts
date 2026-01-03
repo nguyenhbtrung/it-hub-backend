@@ -1,4 +1,5 @@
 import { UpdateUnitDto } from '@/dtos/unit.dto';
+import { Prisma, Step } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export class UnitRepository {
@@ -16,6 +17,16 @@ export class UnitRepository {
       },
     });
     return unit?.section?.course;
+  }
+
+  async getMaxStepOrder(lessonId: string) {
+    const maxOrder = await prisma.step.aggregate({ where: { lessonId }, _max: { order: true } });
+    return maxOrder;
+  }
+
+  async addStep(data: Prisma.StepCreateInput): Promise<Step> {
+    const newStep = await prisma.step.create({ data });
+    return newStep;
   }
 
   async updateUnit(unitId: string, data: UpdateUnitDto) {

@@ -11,3 +11,9 @@ export const updateUnitScheme = z.object({
 });
 
 export type UpdateUnitDto = z.infer<typeof updateUnitScheme>;
+
+export const addStepScheme = z.object({
+  title: z.string().min(1, 'Title is required').max(60, 'Title must not exceed 60 characters'),
+});
+
+export type AddStepDto = z.infer<typeof addStepScheme>;
