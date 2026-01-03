@@ -20,6 +20,14 @@ export class SectionRepository {
 
   async addUnit(data: Prisma.UnitCreateInput): Promise<Unit> {
     const newUnit = await prisma.unit.create({ data });
+    const content = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+        },
+      ],
+    };
     if (data.type === 'excercise') {
       const excercise = await prisma.excercise.create({
         data: {
@@ -27,7 +35,7 @@ export class SectionRepository {
           type: 'assignment',
           title: '',
           description: '',
-          content: {},
+          content,
         },
       });
     }

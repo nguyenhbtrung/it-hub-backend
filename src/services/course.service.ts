@@ -25,7 +25,14 @@ export class CourseService {
     const { title, categoryId, subCategoryId } = payload;
     const slug = generateCourseSlug(title);
     const shortDescription = '';
-    const description = {};
+    const description = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+        },
+      ],
+    };
     const level = CourseLevel.beginner;
     const totalDuration = 0;
     const enrollmentStatus = CourseEnrollmentStatus.public;

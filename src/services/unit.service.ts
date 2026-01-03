@@ -17,9 +17,17 @@ export class UnitService {
     const maxOrder = await this.unitRepository.getMaxStepOrder(unitId);
     const nextOrder = (maxOrder._max.order ?? 0) + 1;
 
+    const content = {
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+        },
+      ],
+    };
     const newStep = await this.unitRepository.addStep({
       lesson: { connect: { id: unitId } },
-      content: {},
+      content,
       title,
       order: nextOrder,
     });
