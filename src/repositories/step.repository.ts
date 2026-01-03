@@ -1,3 +1,4 @@
+import { UpdateStepDto } from '@/dtos/step.dto';
 import { prisma } from '@/lib/prisma';
 
 export class StepRepository {
@@ -19,6 +20,14 @@ export class StepRepository {
       },
     });
     return step?.lesson?.section?.course;
+  }
+
+  async updateStep(stepId: string, data: UpdateStepDto) {
+    const step = await prisma.step.update({
+      where: { id: stepId },
+      data,
+    });
+    return step;
   }
 
   async deleteStep(stepId: string) {

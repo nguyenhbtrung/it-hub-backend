@@ -1,4 +1,3 @@
-import { UnitType } from '@/generated/prisma/enums';
 import z from 'zod';
 
 export const updateUnitScheme = z.object({
