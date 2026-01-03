@@ -33,6 +33,13 @@ router.post(
 );
 
 router.patch(
+  '/:id/duration',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  courseController.updateCourseTotalDuration.bind(courseController)
+);
+
+router.patch(
   '/:id',
   requireAuth,
   authorize([UserRole.admin, UserRole.instructor]),

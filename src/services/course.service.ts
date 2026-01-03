@@ -51,6 +51,10 @@ export class CourseService {
     return toCreateCourseResponseDTO(newCourse);
   }
 
+  async updateCourseTotalDuration(courseId: string) {
+    return this.courseRepository.recalcAndUpdateCourseTotalDuration(courseId);
+  }
+
   async updateCourseDetail(courseId: string, instructorId: string, payload: UpdateCourseDetailDTO): Promise<void> {
     const { title, categoryId, subCategoryId, description, shortDescription, level, requirements, keyTakeaway, tags } =
       payload;

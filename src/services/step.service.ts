@@ -2,6 +2,9 @@ import { UpdateStepDto } from '@/dtos/step.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { StepRepository } from '@/repositories/step.repository';
+import { estimateDurationFromContent, extractPlainText } from '@/utils/content';
+import { title } from 'node:process';
+import { duration } from 'node_modules/zod/v4/classic/iso.cjs';
 
 export class StepService {
   constructor(
@@ -30,6 +33,15 @@ export class StepService {
     }
     if (course.instructorId !== instructorId) {
       throw new ForbiddenError('Permission denied: You are not the owner of this course');
+    }
+    if (payload.content) {
+      const duration = estimateDurationFromContent(payload.content);
+      const step = await this.stepRepository.updateStep(stepId, {
+        title: payload.title,
+        content: payload.content,
+        duration: duration.durationSeconds,
+      });
+      return step;
     }
     const step = await this.stepRepository.updateStep(stepId, payload);
     return step;

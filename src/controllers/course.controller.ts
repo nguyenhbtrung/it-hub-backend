@@ -32,6 +32,12 @@ export class CourseController {
     });
   }
 
+  async updateCourseTotalDuration(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const result = await courseService.updateCourseTotalDuration(courseId);
+    successResponse({ res, message: 'Course duration updated successfully.', data: { duration: result } });
+  }
+
   async updateCourseDetail(req: Request, res: Response, next: NextFunction) {
     const { id: courseId } = req.params;
     const payload = req.body as UpdateCourseDetailDTO;

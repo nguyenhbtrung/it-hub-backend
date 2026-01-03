@@ -203,4 +203,58 @@ export class CourseRepository {
     });
     return courseContent;
   }
+
+  async getUnitIdsByCourseId(courseId: string): Promise<string[]> {
+    const units = await prisma.unit.findMany({
+      where: { section: { courseId } },
+      select: { id: true },
+    });
+    return units.map((u) => u.id);
+  }
+
+  async sumStepsDurationByUnitIds(unitIds: string[]): Promise<number> {
+    if (!unitIds || unitIds.length === 0) return 0;
+    const res = await prisma.step.aggregate({
+      _sum: { duration: true },
+      where: { lessonId: { in: unitIds } },
+    });
+    return res._sum.duration ?? 0;
+  }
+
+  async sumExcercisesDurationByUnitIds(unitIds: string[]): Promise<number> {
+    if (!unitIds || unitIds.length === 0) return 0;
+    const res = await prisma.excercise.aggregate({
+      _sum: { duration: true },
+      where: { unitId: { in: unitIds } },
+    });
+    return res._sum.duration ?? 0;
+  }
+
+  async recalcAndUpdateCourseTotalDuration(courseId: string): Promise<number> {
+    const unitIds = await this.getUnitIdsByCourseId(courseId);
+
+    if (unitIds.length === 0) {
+      await prisma.course.update({
+        where: { id: courseId },
+        data: { totalDuration: 0 },
+      });
+      return 0;
+    }
+
+    const [stepsSum, excSum] = await Promise.all([
+      this.sumStepsDurationByUnitIds(unitIds),
+      this.sumExcercisesDurationByUnitIds(unitIds),
+    ]);
+
+    const total = stepsSum + excSum;
+
+    await prisma.$transaction([
+      prisma.course.update({
+        where: { id: courseId },
+        data: { totalDuration: total },
+      }),
+    ]);
+
+    return total;
+  }
 }
