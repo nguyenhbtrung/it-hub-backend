@@ -1,8 +1,17 @@
 import { CreatedCourseResponseDTO, GetCourseDetailInstructorViewResponseDTO } from '@/dtos/coures.dto';
 import { NotFoundError } from '@/errors';
-import { Course, CourseLevel, CourseStatus, Prisma, Section, UserRole } from '@/generated/prisma/client';
+import {
+  Course,
+  CourseLevel,
+  CourseStatus,
+  LearningStatus,
+  Prisma,
+  Section,
+  UserRole,
+} from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { toAbsoluteURL } from '@/utils/file';
+import { title } from 'node:process';
 
 interface UpdateCourseDetailData {
   title: string;
@@ -20,6 +29,8 @@ interface UpdateCourseTagData {
   newTags: { name: string; slug: string }[];
   tagSlugs: string[];
 }
+
+type WithStatus<T> = T & { status: LearningStatus | 'not_started' };
 
 export class CourseRepository {
   async create(data: Prisma.CourseCreateInput): Promise<Course> {
@@ -181,7 +192,7 @@ export class CourseRepository {
     };
   }
 
-  async getCourseDetailByStudent(id: string, instructorId: string, role: string | undefined) {
+  async getCourseDetailByStudent(id: string, instructorId: string, role: UserRole | undefined) {
     const isAdmin = role === 'admin';
     const course = await prisma.course.findUnique({
       where: { id, OR: isAdmin ? [] : [{ status: 'published' }, { instructorId }] },
@@ -248,11 +259,16 @@ export class CourseRepository {
     };
   }
 
-  async getCourseContentByInstructor(courseId: string, instructorId: string) {
+  async getCourseContentByInstructor(courseId: string, instructorId: string, role: UserRole | undefined) {
+    const isAdmin = role === 'admin';
     const courseContent = await prisma.course.findUnique({
-      where: { id: courseId, OR: [{ status: 'published' }, { instructorId }] },
+      where: {
+        id: courseId,
+        OR: isAdmin ? [] : [{ status: 'published' }, { instructorId }],
+      },
       select: {
         sections: {
+          orderBy: { order: 'asc' },
           select: {
             id: true,
             courseId: true,
@@ -261,6 +277,7 @@ export class CourseRepository {
             objectives: true,
             order: true,
             units: {
+              orderBy: { order: 'asc' },
               select: {
                 id: true,
                 sectionId: true,
@@ -269,6 +286,7 @@ export class CourseRepository {
                 order: true,
                 type: true,
                 steps: {
+                  orderBy: { order: 'asc' },
                   select: {
                     id: true,
                     lessonId: true,
@@ -285,17 +303,117 @@ export class CourseRepository {
     return courseContent;
   }
 
-  async getCourseContentOutline(id: string, userId: string, role?: string) {
+  async getCourseContentByStudent(id: string, userId: string, role: UserRole | undefined) {
+    const isAdmin = role === 'admin';
+
+    const course = await prisma.course.findUnique({
+      where: { id, OR: isAdmin ? [] : [{ status: 'published' }, { instructorId: userId }] },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        sections: {
+          orderBy: { order: 'asc' },
+          select: {
+            id: true,
+            title: true,
+            order: true,
+            units: {
+              orderBy: { order: 'asc' },
+              select: {
+                id: true,
+                title: true,
+                type: true,
+                order: true,
+                steps: {
+                  orderBy: { order: 'asc' },
+                  select: {
+                    id: true,
+                    title: true,
+                    order: true,
+                    learningProgress: {
+                      where: { studentId: userId },
+                      select: { status: true },
+                    },
+                  },
+                },
+                excercises: {
+                  orderBy: { title: 'asc' },
+                  select: {
+                    id: true,
+                    title: true,
+                    learningProgress: {
+                      where: { studentId: userId },
+                      select: { status: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!course) return null;
+
+    const courseWithStatus = {
+      ...course,
+      sections: course.sections.map((section) => ({
+        ...section,
+        units: section.units.map((unit) => {
+          // compute step statuses
+          const stepsWithStatus: WithStatus<(typeof unit.steps)[number]>[] = unit.steps.map((s) => {
+            const lp = s.learningProgress?.[0];
+            const status = lp ? (lp.status as LearningStatus) : 'not_started';
+            return { ...s, status };
+          });
+
+          // compute excercise statuses
+          const excsWithStatus: WithStatus<(typeof unit.excercises)[number]>[] = unit.excercises.map((e) => {
+            const lp = e.learningProgress?.[0];
+            const status = lp ? (lp.status as LearningStatus) : 'not_started';
+            return { ...e, status };
+          });
+
+          // compute unit status for lessons: completed only if ALL steps completed
+          let unitStatus: LearningStatus | 'not_started' = 'not_started';
+          if (unit.type === 'lesson') {
+            if (stepsWithStatus.length > 0 && stepsWithStatus.every((st) => st.status === 'completed')) {
+              unitStatus = 'completed';
+            } else {
+              unitStatus = 'not_started';
+            }
+          } else if (unit.type === 'excercise') {
+            unitStatus = excsWithStatus.length > 0 ? excsWithStatus[0].status : 'not_started';
+          }
+
+          return {
+            ...unit,
+            steps: stepsWithStatus,
+            excercises: excsWithStatus,
+            status: unitStatus,
+          };
+        }),
+      })),
+    };
+
+    return courseWithStatus;
+  }
+
+  async getCourseContentOutline(id: string, userId: string, role: UserRole | undefined) {
     const isAdmin = role === 'admin';
     const courseContent = await prisma.course.findUnique({
       where: { id, OR: isAdmin ? [] : [{ status: 'published' }, { instructorId: userId }] },
       select: {
         totalDuration: true,
         sections: {
+          orderBy: { order: 'asc' },
           select: {
             id: true,
             title: true,
             units: {
+              orderBy: { order: 'asc' },
               select: {
                 id: true,
                 title: true,
@@ -314,6 +432,92 @@ export class CourseRepository {
     });
 
     return courseContent;
+  }
+
+  async getContentBreadcrumb(contentId: string, type: 'section' | 'unit' | 'step') {
+    if (type === 'section') {
+      const section = await prisma.section.findUnique({
+        where: { id: contentId },
+        select: {
+          id: true,
+          title: true,
+          order: true,
+        },
+      });
+      return {
+        section,
+      };
+    }
+    if (type === 'unit') {
+      const unit = await prisma.unit.findUnique({
+        where: { id: contentId },
+        select: {
+          id: true,
+          title: true,
+          order: true,
+          section: {
+            select: {
+              id: true,
+              title: true,
+              order: true,
+            },
+          },
+        },
+      });
+      return {
+        section: {
+          id: unit?.section.id,
+          title: unit?.section.title,
+          order: unit?.section.order,
+        },
+        unit: {
+          id: unit?.id,
+          title: unit?.title,
+          order: unit?.order,
+        },
+      };
+    }
+    if (type === 'step') {
+      const step = await prisma.step.findUnique({
+        where: { id: contentId },
+        select: {
+          id: true,
+          title: true,
+          order: true,
+          lesson: {
+            select: {
+              id: true,
+              title: true,
+              order: true,
+              section: {
+                select: {
+                  id: true,
+                  title: true,
+                  order: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      return {
+        section: {
+          id: step?.lesson?.section.id,
+          title: step?.lesson?.section.title,
+          order: step?.lesson?.section.order,
+        },
+        unit: {
+          id: step?.lesson?.id,
+          title: step?.lesson?.title,
+          order: step?.lesson?.order,
+        },
+        step: {
+          id: step?.id,
+          title: step?.title,
+          order: step?.order,
+        },
+      };
+    }
   }
 
   async getUnitIdsByCourseId(courseId: string): Promise<string[]> {

@@ -1,6 +1,7 @@
 import {
   AddSectionDto,
   CreateCourseDTO,
+  GetCourseContentBreadcrumbQueryDTO,
   GetCourseContentQueryDTO,
   GetCourseDetailParamsDTO,
   GetCourseDetailQueryDTO,
@@ -83,7 +84,8 @@ export class CourseController {
     const { view } = req.query as GetCourseContentQueryDTO;
     const { id: courseId } = req.params;
     const instructorId = req?.user?.id;
-    const result = await courseService.getCourseContent(courseId, instructorId || '', view);
+    const role = req?.user?.role;
+    const result = await courseService.getCourseContent(courseId, instructorId || '', role, view);
     successResponse({
       res,
       data: result,
@@ -95,6 +97,16 @@ export class CourseController {
     const userId = req?.user?.id;
     const role = req?.user?.role;
     const result = await courseService.getCourseContentOutline(courseId, userId || '', role);
+    successResponse({
+      res,
+      data: result,
+    });
+  }
+
+  async getCourseContentBreadcrumb(req: Request, res: Response) {
+    const { contentId } = req.params;
+    const { type } = req.query as GetCourseContentBreadcrumbQueryDTO;
+    const result = await courseService.getContentBreadcrumb(contentId, type);
     successResponse({
       res,
       data: result,

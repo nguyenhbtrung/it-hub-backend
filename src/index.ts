@@ -44,7 +44,7 @@ app.use(
 );
 
 // Apply rate limiting to all API routes
-app.use('/api/', apiLimiter);
+// app.use('/api/', apiLimiter);
 
 // Routes
 app.use('/api/auth', authRoutes);

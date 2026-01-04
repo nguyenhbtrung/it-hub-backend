@@ -15,6 +15,7 @@ import { CourseRepository } from '@/repositories/course.repository';
 import { TagRepository } from '@/repositories/tag.repository';
 import { toAbsoluteURL } from '@/utils/file';
 import { generateCourseSlug, generateTagSlug } from '@/utils/slug';
+import { ParsedQs } from 'qs';
 
 export class CourseService {
   constructor(
@@ -151,12 +152,13 @@ export class CourseService {
     };
   }
 
-  async getCourseContent(id: string, instructorId: string, view: 'instructor' | 'student' = 'student'): Promise<any> {
+  async getCourseContent(id: string, userId: string, role?: UserRole, view: 'instructor' | 'student' = 'student') {
     if (view === 'instructor') {
-      const courseContent = await this.courseRepository.getCourseContentByInstructor(id, instructorId);
+      const courseContent = await this.courseRepository.getCourseContentByInstructor(id, userId, role);
       return courseContent;
     }
-    return null;
+    const courseContent = await this.courseRepository.getCourseContentByStudent(id, userId, role);
+    return courseContent;
   }
 
   async getCourseContentOutline(id: string, userId: string, role?: UserRole) {
@@ -179,6 +181,11 @@ export class CourseService {
       ...courseContent,
       sections: sectionsWithDuration,
     };
+  }
+
+  async getContentBreadcrumb(contentId: string, type: 'section' | 'unit' | 'step') {
+    const contentBreadcrumb = await this.courseRepository.getContentBreadcrumb(contentId, type);
+    return contentBreadcrumb;
   }
 
   async addSection(courseId: string, instructorId: string, payload: AddSectionDto) {

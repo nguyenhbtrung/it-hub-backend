@@ -1,6 +1,7 @@
 import { CourseController } from '@/controllers/course.controller';
 import {
   addSectionScheme,
+  getCourseContentBreadcrumbQueryScheme,
   getCourseContentQueryScheme,
   getCourseDetailParamsScheme,
   getCourseDetailQueryScheme,
@@ -88,5 +89,11 @@ router.get(
 );
 
 router.get('/:id/content/outline', optionalAuth, courseController.getCourseContentOutline.bind(courseController));
+router.get(
+  '/content/:contentId/breadcrumb',
+  optionalAuth,
+  validateQuery(getCourseContentBreadcrumbQueryScheme),
+  courseController.getCourseContentBreadcrumb.bind(courseController)
+);
 
 export default router;

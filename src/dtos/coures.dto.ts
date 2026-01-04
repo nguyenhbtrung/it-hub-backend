@@ -120,3 +120,9 @@ export const addSectionScheme = z.object({
 });
 
 export type AddSectionDto = z.infer<typeof addSectionScheme>;
+
+export const getCourseContentBreadcrumbQueryScheme = z.object({
+  type: z.enum(['section', 'unit', 'step']),
+});
+
+export type GetCourseContentBreadcrumbQueryDTO = z.infer<typeof getCourseContentBreadcrumbQueryScheme>;
