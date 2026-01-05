@@ -1,13 +1,23 @@
 import { AddUnitDto, UpdateSectionDto } from '@/dtos/section.dto';
 import { UnauthorizedError } from '@/errors';
+import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { SectionRepository } from '@/repositories/section.repository';
 import { SectionService } from '@/services/section.service';
 import { successResponse } from '@/utils/response';
 import { Request, Response } from 'express';
 
-const sectionService = new SectionService(new SectionRepository());
+const sectionService = new SectionService(new SectionRepository(), new EnrollmentRepository());
 
 export class SectionController {
+  async getSectionById(req: Request, res: Response) {
+    const { id: sectionId } = req.params;
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedError('InstructorId is missing');
+    const role = req?.user?.role;
+    const result = await sectionService.getSectionById(sectionId, userId, role);
+    successResponse({ res, data: result });
+  }
+
   async updateSection(req: Request, res: Response) {
     const { id: sectionId } = req.params;
     const payload = req.body as UpdateSectionDto;

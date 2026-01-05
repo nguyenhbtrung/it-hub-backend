@@ -1,5 +1,6 @@
 import { UpdateStepDto } from '@/dtos/step.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
+import { UserRole } from '@/generated/prisma/enums';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { StepRepository } from '@/repositories/step.repository';
 import { estimateDurationFromContent, extractPlainText } from '@/utils/content';
@@ -12,7 +13,7 @@ export class StepService {
     private enrollmentRepository: EnrollmentRepository
   ) {}
 
-  async getStepById(stepId: string, userId: string) {
+  async getStepById(stepId: string, userId: string, role?: UserRole) {
     const course = await this.stepRepository.getCourseByStepId(stepId);
     if (!course) {
       throw new NotFoundError('Course not found');

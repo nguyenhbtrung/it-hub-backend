@@ -9,6 +9,8 @@ import { Router } from 'express';
 const router = Router();
 const sectionController = new SectionController();
 
+router.get('/:id', requireAuth, sectionController.getSectionById.bind(sectionController));
+
 router.post(
   '/:id/unit',
   requireAuth,

@@ -13,7 +13,8 @@ export class StepController {
     const { id: stepId } = req.params;
     const userId = req?.user?.id;
     if (!userId) throw new UnauthorizedError('InstructorId is missing');
-    const result = await stepService.getStepById(stepId, userId);
+    const role = req?.user?.role;
+    const result = await stepService.getStepById(stepId, userId, role);
     successResponse({ res, data: result });
   }
 
