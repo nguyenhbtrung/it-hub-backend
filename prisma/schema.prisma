@@ -128,6 +128,7 @@ model User {
   courses       Course[]
   reviews       Review[]
   enrollments   Enrollment[]
+  courseLastAccess   CourseLastAccess[]
   savedCourses  SavedCourse[]
   excerciseAttempts ExcerciseAttempt[]
   learningProgress LearningProgress[]
@@ -309,6 +310,7 @@ model Course {
   tags             CourseTag[]
   reviews          Review[]
   enrollments      Enrollment[]
+  courseLastAccess      CourseLastAccess[]
   savedCourses     SavedCourse[]
   sections         Section[]
 
@@ -364,6 +366,26 @@ model Enrollment {
   @@map("enrollments")
 }
 
+model CourseLastAccess {
+  courseId    String
+  userId      String
+  stepId      String?
+  unitId      String?
+  sectionId   String?
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade) 
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  step  Step?   @relation(fields: [stepId], references: [id], onDelete: SetNull)
+  unit  Unit?   @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  section  Section?   @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+
+  accessAt DateTime @default(now())
+
+  @@id([courseId, userId])
+  @@map("course_last_access")
+}
+
 model SavedCourse {
   courseId String
   userId   String
@@ -392,6 +414,7 @@ model Section {
 
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   units  Unit[]
+  courseLastAccess CourseLastAccess[]
 
   @@index([courseId])
   @@map("sections")
@@ -412,6 +435,7 @@ model Unit {
   steps   Step[]
   excercises Excercise[]
   materials Material[]
+  courseLastAccess CourseLastAccess[]
 
   @@index([sectionId])
   @@map("units")
@@ -430,6 +454,7 @@ model Step {
 
   lesson Unit @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   learningProgress LearningProgress[]
+  courseLastAccess CourseLastAccess[]
 
   @@index([lessonId])
   @@map("steps")
