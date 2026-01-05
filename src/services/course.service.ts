@@ -12,6 +12,7 @@ import { toFileResponseDto } from '@/dtos/file.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
 import { CourseEnrollmentStatus, CourseLevel, CourseStatus, UserRole } from '@/generated/prisma/enums';
 import { CourseRepository } from '@/repositories/course.repository';
+import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { TagRepository } from '@/repositories/tag.repository';
 import { toAbsoluteURL } from '@/utils/file';
 import { generateCourseSlug, generateTagSlug } from '@/utils/slug';
@@ -20,7 +21,8 @@ import { ParsedQs } from 'qs';
 export class CourseService {
   constructor(
     private courseRepository: CourseRepository,
-    private tagRepository: TagRepository
+    private tagRepository: TagRepository,
+    private enrollmentRepository: EnrollmentRepository
   ) {}
   async createCourse(payload: CreateCourseDTO, instructorId: string): Promise<CreateCourseResponseDTO> {
     const { title, categoryId, subCategoryId } = payload;
@@ -116,6 +118,29 @@ export class CourseService {
         tagSlugs,
       }
     );
+  }
+
+  async getUserEnrollmentStatus(courseId: string, userId: string, role?: UserRole) {
+    if (role !== 'admin') {
+      const course = await this.courseRepository.getCourseInstructorId(courseId);
+      if (!course) {
+        throw new NotFoundError('Course not found');
+      }
+      if (course.instructorId !== userId) {
+        const enrollment = await this.enrollmentRepository.getEnrollment(courseId, userId);
+        if (!enrollment || enrollment.status === 'pending') return { status: enrollment?.status || null };
+        const lastAccess = await this.courseRepository.getLastAccess(courseId, userId);
+        return {
+          status: enrollment?.status,
+          lastAccess,
+        };
+      }
+    }
+    const lastAccess = await this.courseRepository.getLastAccess(courseId, userId);
+    return {
+      status: 'active',
+      lastAccess,
+    };
   }
 
   async getCourseIdBySlug(slug: string): Promise<string> {

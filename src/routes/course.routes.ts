@@ -65,6 +65,12 @@ router.patch(
 );
 
 router.get(
+  '/:id/user-enrollment-status',
+  optionalAuth,
+  courseController.getUserEnrollmentStatus.bind(courseController)
+);
+
+router.get(
   '/me/created',
   requireAuth,
   authorize([UserRole.admin, UserRole.instructor]),

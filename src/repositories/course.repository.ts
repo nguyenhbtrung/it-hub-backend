@@ -37,6 +37,28 @@ export class CourseRepository {
     return prisma.course.create({ data });
   }
 
+  async getLastAccess(courseId: string, userId: string) {
+    const lastAccess = await prisma.courseLastAccess.findUnique({
+      where: { courseId_userId: { courseId, userId } },
+    });
+    if (!lastAccess) {
+      const course = await prisma.course.findUnique({
+        where: { id: courseId },
+        select: {
+          sections: { select: { id: true } },
+        },
+      });
+      return {
+        courseId: courseId,
+        userId: userId,
+        stepId: null,
+        unitId: null,
+        sectionId: course?.sections?.[0].id,
+      };
+    }
+    return lastAccess;
+  }
+
   async getCourseIdBySlug(slug: string) {
     const course = await prisma.course.findUnique({
       where: { slug },

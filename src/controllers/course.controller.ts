@@ -12,12 +12,13 @@ import {
 } from '@/dtos/coures.dto';
 import { UnauthorizedError } from '@/errors';
 import { CourseRepository } from '@/repositories/course.repository';
+import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { TagRepository } from '@/repositories/tag.repository';
 import { CourseService } from '@/services/course.service';
 import { successResponse } from '@/utils/response';
 import { Request, Response, NextFunction } from 'express';
 
-const courseService = new CourseService(new CourseRepository(), new TagRepository());
+const courseService = new CourseService(new CourseRepository(), new TagRepository(), new EnrollmentRepository());
 
 export class CourseController {
   async createCourse(req: Request, res: Response, next: NextFunction) {
@@ -51,7 +52,19 @@ export class CourseController {
     });
   }
 
-  async getMyCreatedCourses(req: Request, res: Response, next: NextFunction) {
+  async getUserEnrollmentStatus(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedError('InstructorId is missing');
+    const role = req?.user?.role;
+    const result = await courseService.getUserEnrollmentStatus(courseId, userId || '', role);
+    successResponse({
+      res,
+      data: result,
+    });
+  }
+
+  async getMyCreatedCourses(req: Request, res: Response) {
     const query = req.query as unknown as GetMyCreatedCoursesDTO;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
