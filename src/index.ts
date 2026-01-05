@@ -9,6 +9,7 @@ import unitRoutes from './routes/unit.routes';
 import stepRoutes from './routes/step.routes';
 import tagRoutes from './routes/tag.routes';
 import fileRoutes from './routes/file.routes';
+import aiRoutes from './routes/ai.routes';
 import { errorHandler } from './middleware/errorHandler.middleware';
 import { apiLimiter } from './middleware/rateLimiter.middleware';
 import { NotFoundError } from './errors';
@@ -55,6 +56,7 @@ app.use('/api/sections', sectionRoutes);
 app.use('/api/units', unitRoutes);
 app.use('/api/steps', stepRoutes);
 app.use('/api/files', fileRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
