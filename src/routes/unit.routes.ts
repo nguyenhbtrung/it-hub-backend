@@ -9,6 +9,8 @@ import { Router } from 'express';
 const router = Router();
 const unitController = new UnitController();
 
+router.get('/:id', requireAuth, unitController.getUnitById.bind(unitController));
+
 router.post(
   '/:id/step',
   requireAuth,

@@ -3,6 +3,12 @@ import { Prisma, Step } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export class UnitRepository {
+  async getUnitById(id: string) {
+    const unit = await prisma.unit.findUnique({
+      where: { id },
+    });
+    return unit;
+  }
   async getCourseByUnitId(unitId: string) {
     const unit = await prisma.unit.findUnique({
       where: { id: unitId },

@@ -1,9 +1,28 @@
 import { AddStepDto, UpdateUnitDto } from '@/dtos/unit.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
+import { UserRole } from '@/generated/prisma/enums';
+import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { UnitRepository } from '@/repositories/unit.repository';
 
 export class UnitService {
-  constructor(private unitRepository: UnitRepository) {}
+  constructor(
+    private unitRepository: UnitRepository,
+    private enrollmentRepository: EnrollmentRepository
+  ) {}
+
+  async getUnitById(unitId: string, userId: string, role?: UserRole) {
+    const course = await this.unitRepository.getCourseByUnitId(unitId);
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+    if (course.instructorId !== userId && role !== 'admin') {
+      const enrollment = await this.enrollmentRepository.getEnrollment(course.id, userId);
+      if (!enrollment || (enrollment.status !== 'active' && enrollment.status !== 'completed'))
+        throw new ForbiddenError('Permission denied: You do not have permission to access this content.');
+    }
+    const section = await this.unitRepository.getUnitById(unitId);
+    return section;
+  }
 
   async addStep(unitId: string, instructorId: string, payload: AddStepDto) {
     const { title } = payload;
