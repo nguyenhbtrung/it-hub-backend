@@ -6,6 +6,7 @@ import { Router } from 'express';
 const router = Router();
 const categoryController = new CategoryController();
 
+router.get('/tree', categoryController.getCategoryTree.bind(categoryController));
 router.get('/', validateQuery(getCategoriesQuerySchema), categoryController.getCategories.bind(categoryController));
 
 export default router;

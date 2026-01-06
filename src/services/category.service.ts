@@ -4,6 +4,11 @@ import { CategoryRepository } from '@/repositories/category.repository';
 
 export class CategoryService {
   constructor(private categoryRepository: CategoryRepository) {}
+  async getCategoryTree() {
+    const categories = await this.categoryRepository.getCategoryTree();
+    return categories;
+  }
+
   async getCategories(query: GetCategoriesQueryDTO): Promise<{ data: Category[]; meta: any }> {
     const { root, page = 1, limit = 20, all, parentId } = query;
 

@@ -7,7 +7,15 @@ import { Request, Response, NextFunction } from 'express';
 const categoryService = new CategoryService(new CategoryRepository());
 
 export class CategoryController {
-  async getCategories(req: Request, res: Response, next: NextFunction) {
+  async getCategoryTree(req: Request, res: Response) {
+    const result = await categoryService.getCategoryTree();
+    successResponse({
+      res,
+      data: result,
+    });
+  }
+
+  async getCategories(req: Request, res: Response) {
     const query = req.query as unknown as GetCategoriesQueryDTO;
     const result = await categoryService.getCategories(query);
     successResponse({
