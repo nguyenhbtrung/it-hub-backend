@@ -1,9 +1,17 @@
 import { CategoryResponseDTO, GetCategoriesQueryDTO } from '@/dtos/category.dto';
+import { NotFoundError } from '@/errors';
 import { Category } from '@/generated/prisma/client';
 import { CategoryRepository } from '@/repositories/category.repository';
 
 export class CategoryService {
   constructor(private categoryRepository: CategoryRepository) {}
+
+  async getCategoryIdBySlug(slug: string) {
+    const categoryId = await this.categoryRepository.getCategoryIdBySlug(slug);
+    if (!categoryId) throw new NotFoundError('Category not found');
+    return categoryId;
+  }
+
   async getCategoryTree() {
     const categories = await this.categoryRepository.getCategoryTree();
     return categories;
