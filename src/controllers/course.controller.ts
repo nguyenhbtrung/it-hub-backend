@@ -7,6 +7,7 @@ import {
   GetCourseDetailQueryDTO,
   GetFeaturedCoursesQueryDTO,
   GetMyCreatedCoursesDTO,
+  GetRecommendedCoursesQueryDto,
   UpdateCourseDetailDTO,
   UpdateCourseImageDto,
   UpdateCoursePromoVideoDto,
@@ -50,6 +51,16 @@ export class CourseController {
     successResponse({
       res,
       message: 'Course updated successfully',
+    });
+  }
+
+  async getRecommendedCourses(req: Request, res: Response) {
+    const { categoryId } = req.query as unknown as GetRecommendedCoursesQueryDto;
+    const userId = req?.user?.id;
+    const result = await courseService.getRecommendedCourses(categoryId, userId);
+    successResponse({
+      res,
+      data: result,
     });
   }
 

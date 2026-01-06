@@ -37,6 +37,38 @@ export class CourseRepository {
     return prisma.course.create({ data });
   }
 
+  async getRecommendedCoursesByCategory(categoryId: string) {
+    const courses = await prisma.course.findMany({
+      where: { OR: [{ categoryId }, { subCategoryId: categoryId }], status: CourseStatus.published },
+      take: 4,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        instructor: {
+          select: {
+            fullname: true,
+          },
+        },
+        status: true,
+        category: { select: { name: true } },
+        subCategory: { select: { name: true } },
+        level: true,
+        avgRating: true,
+        totalDuration: true,
+        img: { select: { url: true } },
+        _count: {
+          select: {
+            enrollments: {
+              where: { status: { in: ['active', 'completed'] } },
+            },
+          },
+        },
+      },
+    });
+    return courses;
+  }
+
   async getLastAccess(courseId: string, userId: string) {
     const lastAccess = await prisma.courseLastAccess.findUnique({
       where: { courseId_userId: { courseId, userId } },

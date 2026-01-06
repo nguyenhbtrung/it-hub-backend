@@ -7,6 +7,7 @@ import {
   getCourseDetailQueryScheme,
   getFeaturedCoursesQuerySchema,
   getMyCreatedCoursesSchema,
+  getRecommendedCoursesQuerySchema,
   updateCourseDetailSchema,
   updateCourseImageScheme,
   updateCoursePromoVideoScheme,
@@ -63,6 +64,13 @@ router.patch(
   authorize([UserRole.admin, UserRole.instructor]),
   validate(updateCoursePromoVideoScheme),
   courseController.updateCoursePromoVideo.bind(courseController)
+);
+
+router.get(
+  '/recommended',
+  optionalAuth,
+  validateQuery(getRecommendedCoursesQuerySchema),
+  courseController.getRecommendedCourses.bind(courseController)
 );
 
 router.get(

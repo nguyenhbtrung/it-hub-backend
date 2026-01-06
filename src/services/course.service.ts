@@ -118,6 +118,11 @@ export class CourseService {
     );
   }
 
+  async getRecommendedCourses(categoryId: string, userId?: string) {
+    const courses = await this.courseRepository.getRecommendedCoursesByCategory(categoryId);
+    return courses;
+  }
+
   async getFeaturedCourses(query: GetFeaturedCoursesQueryDTO): Promise<any> {
     const { page = 1, limit = 10 } = query;
     const take = Number(limit);

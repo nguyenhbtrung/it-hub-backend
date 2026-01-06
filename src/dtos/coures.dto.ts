@@ -133,3 +133,11 @@ export const getFeaturedCoursesQuerySchema = z.object({
 });
 
 export type GetFeaturedCoursesQueryDTO = z.infer<typeof getFeaturedCoursesQuerySchema>;
+
+export const getRecommendedCoursesQuerySchema = z.object({
+  categoryId: z.string().min(1, 'CategoryId is required'),
+  // page: z.string().regex(/^\d+$/).optional().transform(Number),
+  // limit: z.string().regex(/^\d+$/).optional().transform(Number),
+});
+
+export type GetRecommendedCoursesQueryDto = z.infer<typeof getRecommendedCoursesQuerySchema>;
