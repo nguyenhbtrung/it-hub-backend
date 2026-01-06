@@ -6,6 +6,11 @@ import { CategoryRepository } from '@/repositories/category.repository';
 export class CategoryService {
   constructor(private categoryRepository: CategoryRepository) {}
 
+  async getCategorySummary(id: string) {
+    const category = await this.categoryRepository.getCategorySummary(id);
+    return category;
+  }
+
   async getCategoryIdBySlug(slug: string) {
     const categoryId = await this.categoryRepository.getCategoryIdBySlug(slug);
     if (!categoryId) throw new NotFoundError('Category not found');
