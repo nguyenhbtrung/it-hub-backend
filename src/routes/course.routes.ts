@@ -5,6 +5,7 @@ import {
   getCourseContentQueryScheme,
   getCourseDetailParamsScheme,
   getCourseDetailQueryScheme,
+  getFeaturedCoursesQuerySchema,
   getMyCreatedCoursesSchema,
   updateCourseDetailSchema,
   updateCourseImageScheme,
@@ -62,6 +63,12 @@ router.patch(
   authorize([UserRole.admin, UserRole.instructor]),
   validate(updateCoursePromoVideoScheme),
   courseController.updateCoursePromoVideo.bind(courseController)
+);
+
+router.get(
+  '/featured',
+  validateQuery(getFeaturedCoursesQuerySchema),
+  courseController.getFeaturedCourses.bind(courseController)
 );
 
 router.get(

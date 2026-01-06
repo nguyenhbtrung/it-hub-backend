@@ -1,7 +1,7 @@
 import { AiController } from '@/controllers/ai.controller';
 import { askAiStepSchema } from '@/dtos/ai.dto';
 
-import { authorize, requireAuth } from '@/middleware/auth.middleware';
+import { requireAuth } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validate.middleware';
 import { Router } from 'express';
 

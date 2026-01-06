@@ -3,7 +3,7 @@ import {
   CreateCourseDTO,
   CreateCourseResponseDTO,
   CreatedCourseResponseDTO,
-  GetCourseDetailInstructorViewResponseDTO,
+  GetFeaturedCoursesQueryDTO,
   GetMyCreatedCoursesDTO,
   toCreateCourseResponseDTO,
   UpdateCourseDetailDTO,
@@ -14,9 +14,7 @@ import { CourseEnrollmentStatus, CourseLevel, CourseStatus, UserRole } from '@/g
 import { CourseRepository } from '@/repositories/course.repository';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { TagRepository } from '@/repositories/tag.repository';
-import { toAbsoluteURL } from '@/utils/file';
 import { generateCourseSlug, generateTagSlug } from '@/utils/slug';
-import { ParsedQs } from 'qs';
 
 export class CourseService {
   constructor(
@@ -118,6 +116,21 @@ export class CourseService {
         tagSlugs,
       }
     );
+  }
+
+  async getFeaturedCourses(query: GetFeaturedCoursesQueryDTO): Promise<any> {
+    const { page = 1, limit = 10 } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const { courses, total } = await this.courseRepository.getFeaturedCourses(take, skip);
+
+    return {
+      data: courses.map((course: any) => ({
+        ...course,
+        img: course.img ? toFileResponseDto(course.img) : null,
+      })),
+      meta: { total, page: Number(page), limit: Number(limit) },
+    };
   }
 
   async getUserEnrollmentStatus(courseId: string, userId: string, role?: UserRole) {

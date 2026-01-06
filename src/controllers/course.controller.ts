@@ -5,6 +5,7 @@ import {
   GetCourseContentQueryDTO,
   GetCourseDetailParamsDTO,
   GetCourseDetailQueryDTO,
+  GetFeaturedCoursesQueryDTO,
   GetMyCreatedCoursesDTO,
   UpdateCourseDetailDTO,
   UpdateCourseImageDto,
@@ -49,6 +50,16 @@ export class CourseController {
     successResponse({
       res,
       message: 'Course updated successfully',
+    });
+  }
+
+  async getFeaturedCourses(req: Request, res: Response) {
+    const query = req.query as unknown as GetFeaturedCoursesQueryDTO;
+    const result = await courseService.getFeaturedCourses(query);
+    successResponse({
+      res,
+      data: result.data,
+      meta: result.meta,
     });
   }
 

@@ -115,6 +115,52 @@ export class CourseRepository {
     return prisma.course.update({ where: { id: courseId }, data: { promoVideoId } });
   }
 
+  async getFeaturedCourses(take: number, skip: number) {
+    const where = { status: CourseStatus.published };
+
+    const [courses, total] = await Promise.all([
+      prisma.course.findMany({
+        where,
+        take,
+        skip,
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          instructor: {
+            select: {
+              fullname: true,
+            },
+          },
+          status: true,
+          category: { select: { name: true } },
+          subCategory: { select: { name: true } },
+          level: true,
+          avgRating: true,
+          totalDuration: true,
+          img: { select: { url: true } },
+          _count: {
+            select: {
+              enrollments: {
+                where: { status: { in: ['active', 'completed'] } },
+              },
+            },
+          },
+        },
+        orderBy: [
+          { avgRating: 'desc' },
+          {
+            enrollments: {
+              _count: 'desc',
+            },
+          },
+        ],
+      }),
+      prisma.course.count({ where }),
+    ]);
+    return { courses, total };
+  }
+
   async getCourseInstructorId(courseId: string) {
     return prisma.course.findUnique({
       where: { id: courseId },

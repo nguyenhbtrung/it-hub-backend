@@ -1,5 +1,4 @@
 import { SectionController } from '@/controllers/section.controller';
-import { getCategoriesQuerySchema } from '@/dtos/category.dto';
 import { addUnitScheme, updateSectionScheme } from '@/dtos/section.dto';
 import { UserRole } from '@/generated/prisma/enums';
 import { authorize, requireAuth } from '@/middleware/auth.middleware';

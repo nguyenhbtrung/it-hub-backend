@@ -2,7 +2,6 @@ import { AskAiStepDto } from '@/dtos/ai.dto';
 import { StepRepository } from '@/repositories/step.repository';
 import { AiService } from '@/services/ai.service';
 import { LlmService } from '@/services/llm.service';
-import { successResponse } from '@/utils/response';
 import { GoogleGenAI } from '@google/genai';
 import { Request, Response } from 'express';
 

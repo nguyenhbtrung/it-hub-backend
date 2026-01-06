@@ -126,3 +126,10 @@ export const getCourseContentBreadcrumbQueryScheme = z.object({
 });
 
 export type GetCourseContentBreadcrumbQueryDTO = z.infer<typeof getCourseContentBreadcrumbQueryScheme>;
+
+export const getFeaturedCoursesQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/).optional().transform(Number),
+  limit: z.string().regex(/^\d+$/).optional().transform(Number),
+});
+
+export type GetFeaturedCoursesQueryDTO = z.infer<typeof getFeaturedCoursesQuerySchema>;
