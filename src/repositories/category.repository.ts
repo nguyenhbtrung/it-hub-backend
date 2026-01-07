@@ -27,12 +27,15 @@ export class CategoryRepository {
       popular: { enrollments: { _count: 'desc' } },
     };
 
+    const durationConditions = durations ? durations.map((d) => ({ totalDuration: durationFilter[d] })) : [];
+
+    const categoryConditions = [{ categoryId }, { subCategoryId: categoryId }];
+
     const where = {
-      OR: [{ categoryId }, { subCategoryId: categoryId }],
       status: CourseStatus.published,
       level: levels ? { in: levels } : undefined,
       avgRating: { gte: Number(avgRating) },
-      ...(durations ? { OR: durations.map((d) => ({ totalDuration: durationFilter[d] })) } : {}),
+      AND: [{ OR: categoryConditions }, { OR: durationConditions }],
     };
 
     const [courses, total] = await Promise.all([
