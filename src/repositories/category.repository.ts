@@ -23,7 +23,7 @@ export class CategoryRepository {
 
     const orderBy: Record<string, any> = {
       rating: { avgRating: 'desc' },
-      newest: { createdAt: 'desc' },
+      newest: { updatedAt: 'desc' },
       popular: { enrollments: { _count: 'desc' } },
     };
 

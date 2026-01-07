@@ -42,6 +42,18 @@ export const updateCourseDetailSchema = z.object({
 
 export type UpdateCourseDetailDTO = z.infer<typeof updateCourseDetailSchema>;
 
+export const updateCourseStatusSchema = z.object({
+  status: z.enum([
+    CourseStatus.draft,
+    CourseStatus.pending,
+    CourseStatus.published,
+    CourseStatus.hidden,
+    CourseStatus.suspended,
+  ]),
+});
+
+export type UpdateCourseStatusDTO = z.infer<typeof updateCourseStatusSchema>;
+
 export interface CreatedCourseResponseDTO {
   id: string;
   title: string;

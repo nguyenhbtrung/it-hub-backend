@@ -61,11 +61,28 @@ export class CourseService {
     return toCreateCourseResponseDTO(newCourse);
   }
 
+  async updateCourseStatus(courseId: string, userId: string, role: string | undefined, status: CourseStatus) {
+    const course = await this.courseRepository.getCourseInstructorId(courseId);
+
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+    if (course.instructorId !== userId && role !== 'admin') {
+      throw new ForbiddenError('Permission denied: You are not the owner of this course');
+    }
+    await this.courseRepository.updateCourseStatus(courseId, status);
+  }
+
   async updateCourseTotalDuration(courseId: string) {
     return this.courseRepository.recalcAndUpdateCourseTotalDuration(courseId);
   }
 
-  async updateCourseDetail(courseId: string, instructorId: string, payload: UpdateCourseDetailDTO): Promise<void> {
+  async updateCourseDetail(
+    courseId: string,
+    instructorId: string,
+    role: UserRole | undefined,
+    payload: UpdateCourseDetailDTO
+  ): Promise<void> {
     const { title, categoryId, subCategoryId, description, shortDescription, level, requirements, keyTakeaway, tags } =
       payload;
 
@@ -74,7 +91,7 @@ export class CourseService {
     if (!course) {
       throw new NotFoundError('Course not found');
     }
-    if (course.instructorId !== instructorId) {
+    if (course.instructorId !== instructorId || role !== 'admin') {
       throw new ForbiddenError('Permission denied: You are not the owner of this course');
     }
 

@@ -12,6 +12,7 @@ import {
   updateCourseDetailSchema,
   updateCourseImageScheme,
   updateCoursePromoVideoScheme,
+  updateCourseStatusSchema,
 } from '@/dtos/coures.dto';
 import { UserRole } from '@/generated/prisma/enums';
 import { authorize, optionalAuth, requireAuth } from '@/middleware/auth.middleware';
@@ -41,6 +42,14 @@ router.patch(
   requireAuth,
   authorize([UserRole.admin, UserRole.instructor]),
   courseController.updateCourseTotalDuration.bind(courseController)
+);
+
+router.patch(
+  '/:id/status',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  validate(updateCourseStatusSchema),
+  courseController.updateCourseStatus.bind(courseController)
 );
 
 router.patch(

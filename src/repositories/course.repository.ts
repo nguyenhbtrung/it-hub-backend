@@ -38,6 +38,13 @@ export class CourseRepository {
     return prisma.course.create({ data });
   }
 
+  async updateCourseStatus(courseId: string, status: CourseStatus) {
+    await prisma.course.update({
+      where: { id: courseId },
+      data: { status, updatedAt: new Date() },
+    });
+  }
+
   async getCoursesByAdmin(
     take: number,
     skip: number,
@@ -65,7 +72,7 @@ export class CourseRepository {
         where,
         take,
         skip,
-        orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: 'desc' },
+        orderBy: sortBy ? { [sortBy]: sortOrder } : { updatedAt: 'desc' },
         select: {
           id: true,
           title: true,
@@ -115,7 +122,7 @@ export class CourseRepository {
 
     const orderBy: Record<string, any> = {
       rating: { avgRating: 'desc' },
-      newest: { createdAt: 'desc' },
+      newest: { updatedAt: 'desc' },
       popular: { enrollments: { _count: 'desc' } },
     };
 
