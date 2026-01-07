@@ -171,7 +171,9 @@ export const getCoursesQuerySchema = z.object({
     .regex(/^\d+(\.\d+)?$/)
     .optional()
     .transform(Number),
-  sortBy: z.enum(['popular', 'newest', 'rating']).optional(),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+  status: z.enum(CourseStatus).optional(),
 });
 
 export type GetCoursesQueryDTO = z.infer<typeof getCoursesQuerySchema>;

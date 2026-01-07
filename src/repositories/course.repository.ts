@@ -38,6 +38,66 @@ export class CourseRepository {
     return prisma.course.create({ data });
   }
 
+  async getCoursesByAdmin(
+    take: number,
+    skip: number,
+    q: string | undefined,
+    sortBy: string | undefined,
+    sortOrder: 'asc' | 'desc',
+    status: CourseStatus | undefined
+  ) {
+    const searchConditions = q
+      ? [
+          { title: { contains: q, mode: 'insensitive' as const } },
+          { category: { name: { contains: q, mode: 'insensitive' as const } } },
+          { subCategory: { name: { contains: q, mode: 'insensitive' as const } } },
+          { instructor: { fullname: { contains: q, mode: 'insensitive' as const } } },
+        ]
+      : [];
+
+    const where: Prisma.CourseWhereInput = {
+      status,
+      OR: q ? searchConditions : undefined,
+    };
+
+    const [courses, total] = await Promise.all([
+      prisma.course.findMany({
+        where,
+        take,
+        skip,
+        orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: 'desc' },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          instructor: {
+            select: {
+              fullname: true,
+              avatar: {
+                select: {
+                  url: true,
+                },
+              },
+            },
+          },
+          status: true,
+          category: { select: { name: true } },
+          subCategory: { select: { name: true } },
+          level: true,
+          totalDuration: true,
+          img: { select: { url: true } },
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+      prisma.course.count({ where }),
+    ]);
+
+    console.log('>>>>>>>>>>>>>', courses);
+
+    return { courses, total };
+  }
+
   async getCoursesByStudent(
     take: number,
     skip: number,
@@ -79,8 +139,6 @@ export class CourseRepository {
       avgRating: { gte: Number(avgRating) },
       AND: [{ OR: searchConditions }, { OR: durationConditions }],
     };
-
-    console.log('>>>>>where', where);
 
     const [courses, total] = await Promise.all([
       prisma.course.findMany({

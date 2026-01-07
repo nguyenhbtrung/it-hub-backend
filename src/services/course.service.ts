@@ -120,11 +120,45 @@ export class CourseService {
   }
 
   async getCourses(query: GetCoursesQueryDTO) {
-    const { view = 'student', page = 1, limit = 5, q, level, duration, avgRating = 0, sortBy = 'popular' } = query;
+    const {
+      view = 'student',
+      page = 1,
+      limit = 5,
+      q,
+      level,
+      duration,
+      avgRating = 0,
+      sortBy,
+      sortOrder = 'asc',
+      status,
+    } = query;
     const take = Number(limit);
     const skip = (page - 1) * limit;
     const levels = !level || Array.isArray(level) ? level : [level];
     const durations = !duration || Array.isArray(duration) ? duration : [duration];
+    if (view === 'admin') {
+      const { courses, total } = await this.courseRepository.getCoursesByAdmin(
+        take,
+        skip,
+        q,
+        sortBy,
+        sortOrder,
+        status
+      );
+
+      return {
+        data: courses.map((course: any) => ({
+          ...course,
+          img: course.img ? toFileResponseDto(course.img) : null,
+          instructor: {
+            ...course.instructor,
+            avatar: course.instructor?.avatar ? toFileResponseDto(course.instructor.avatar) : null,
+          },
+        })),
+        meta: { total, page: Number(page), limit: Number(limit) },
+      };
+    }
+    const orderBy = sortBy || 'popular';
     const { courses, total } = await this.courseRepository.getCoursesByStudent(
       take,
       skip,
@@ -132,7 +166,7 @@ export class CourseService {
       levels,
       durations,
       avgRating,
-      sortBy
+      orderBy
     );
     return {
       data: courses.map((course: any) => ({
