@@ -42,7 +42,7 @@ export class CourseController {
     successResponse({ res, message: 'Course duration updated successfully.', data: { duration: result } });
   }
 
-  async updateCourseDetail(req: Request, res: Response, next: NextFunction) {
+  async updateCourseDetail(req: Request, res: Response) {
     const { id: courseId } = req.params;
     const payload = req.body as UpdateCourseDetailDTO;
     const instructorId = req?.user?.id;

@@ -1,10 +1,35 @@
-import { CategoryResponseDTO, GetCategoriesQueryDTO } from '@/dtos/category.dto';
+import { GetCategoriesQueryDTO, GetCourseByCategoryIdQueryDto } from '@/dtos/category.dto';
+import { toFileResponseDto } from '@/dtos/file.dto';
 import { NotFoundError } from '@/errors';
 import { Category } from '@/generated/prisma/client';
 import { CategoryRepository } from '@/repositories/category.repository';
 
 export class CategoryService {
   constructor(private categoryRepository: CategoryRepository) {}
+
+  async getCourseByCategoryId(id: string, query: GetCourseByCategoryIdQueryDto) {
+    const { page = 1, limit = 5, level, duration, avgRating = 0, sortBy = 'popular' } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const levels = !level || Array.isArray(level) ? level : [level];
+    const durations = !duration || Array.isArray(duration) ? duration : [duration];
+    const { courses, total } = await this.categoryRepository.getCourseByCategoryId(
+      id,
+      take,
+      skip,
+      levels,
+      durations,
+      avgRating,
+      sortBy
+    );
+    return {
+      data: courses.map((course: any) => ({
+        ...course,
+        img: course.img ? toFileResponseDto(course.img) : null,
+      })),
+      meta: { total, page: Number(page), limit: Number(limit) },
+    };
+  }
 
   async getCategorySummary(id: string) {
     const category = await this.categoryRepository.getCategorySummary(id);
