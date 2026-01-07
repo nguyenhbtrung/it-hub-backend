@@ -88,7 +88,6 @@ export class CourseController {
   async getUserEnrollmentStatus(req: Request, res: Response) {
     const { id: courseId } = req.params;
     const userId = req?.user?.id;
-    if (!userId) throw new UnauthorizedError('InstructorId is missing');
     const role = req?.user?.role;
     const result = await courseService.getUserEnrollmentStatus(courseId, userId || '', role);
     successResponse({

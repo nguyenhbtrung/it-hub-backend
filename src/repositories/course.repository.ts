@@ -93,8 +93,6 @@ export class CourseRepository {
       prisma.course.count({ where }),
     ]);
 
-    console.log('>>>>>>>>>>>>>', courses);
-
     return { courses, total };
   }
 
@@ -228,7 +226,7 @@ export class CourseRepository {
         userId: userId,
         stepId: null,
         unitId: null,
-        sectionId: course?.sections?.[0].id,
+        sectionId: course?.sections?.[0]?.id,
       };
     }
     return lastAccess;
@@ -438,7 +436,7 @@ export class CourseRepository {
   async getCourseDetailByStudent(id: string, instructorId: string, role: UserRole | undefined) {
     const isAdmin = role === 'admin';
     const course = await prisma.course.findUnique({
-      where: { id, OR: isAdmin ? [] : [{ status: 'published' }, { instructorId }] },
+      where: { id, OR: isAdmin ? undefined : [{ status: 'published' }, { instructorId }] },
       select: {
         id: true,
         title: true,
@@ -647,7 +645,7 @@ export class CourseRepository {
   async getCourseContentOutline(id: string, userId: string, role: UserRole | undefined) {
     const isAdmin = role === 'admin';
     const courseContent = await prisma.course.findUnique({
-      where: { id, OR: isAdmin ? [] : [{ status: 'published' }, { instructorId: userId }] },
+      where: { id, OR: isAdmin ? undefined : [{ status: 'published' }, { instructorId: userId }] },
       select: {
         totalDuration: true,
         sections: {
