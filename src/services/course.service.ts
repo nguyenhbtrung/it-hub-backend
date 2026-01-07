@@ -3,6 +3,7 @@ import {
   CreateCourseDTO,
   CreateCourseResponseDTO,
   CreatedCourseResponseDTO,
+  GetCoursesQueryDTO,
   GetFeaturedCoursesQueryDTO,
   GetMyCreatedCoursesDTO,
   toCreateCourseResponseDTO,
@@ -116,6 +117,30 @@ export class CourseService {
         tagSlugs,
       }
     );
+  }
+
+  async getCourses(query: GetCoursesQueryDTO) {
+    const { view = 'student', page = 1, limit = 5, q, level, duration, avgRating = 0, sortBy = 'popular' } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const levels = !level || Array.isArray(level) ? level : [level];
+    const durations = !duration || Array.isArray(duration) ? duration : [duration];
+    const { courses, total } = await this.courseRepository.getCoursesByStudent(
+      take,
+      skip,
+      q,
+      levels,
+      durations,
+      avgRating,
+      sortBy
+    );
+    return {
+      data: courses.map((course: any) => ({
+        ...course,
+        img: course.img ? toFileResponseDto(course.img) : null,
+      })),
+      meta: { total, page: Number(page), limit: Number(limit) },
+    };
   }
 
   async getRecommendedCourses(categoryId: string, userId?: string) {

@@ -10,6 +10,7 @@ import {
   UserRole,
 } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
+import { CourseDuration } from '@/types/course.type';
 import { toAbsoluteURL } from '@/utils/file';
 import { title } from 'node:process';
 
@@ -35,6 +36,90 @@ type WithStatus<T> = T & { status: LearningStatus | 'not_started' };
 export class CourseRepository {
   async create(data: Prisma.CourseCreateInput): Promise<Course> {
     return prisma.course.create({ data });
+  }
+
+  async getCoursesByStudent(
+    take: number,
+    skip: number,
+    q: string | undefined,
+    levels: CourseLevel[] | undefined,
+    durations: CourseDuration[] | undefined,
+    avgRating: number,
+    sortBy: string
+  ) {
+    const durationFilter: Record<CourseDuration, { gte?: number; lt?: number }> = {
+      extraShort: { lt: 2 },
+      short: { gte: 2, lt: 5 },
+      medium: { gte: 5, lt: 10 },
+      long: { gte: 10, lt: 17 },
+      extraLong: { gte: 17 },
+    };
+
+    const orderBy: Record<string, any> = {
+      rating: { avgRating: 'desc' },
+      newest: { createdAt: 'desc' },
+      popular: { enrollments: { _count: 'desc' } },
+    };
+
+    const durationConditions = durations ? durations.map((d) => ({ totalDuration: durationFilter[d] })) : [];
+
+    const searchConditions = q
+      ? [
+          { title: { contains: q, mode: 'insensitive' as const } },
+          { shortDescription: { contains: q, mode: 'insensitive' as const } },
+          { category: { name: { contains: q, mode: 'insensitive' as const } } },
+          { subCategory: { name: { contains: q, mode: 'insensitive' as const } } },
+          { instructor: { fullname: { contains: q, mode: 'insensitive' as const } } },
+        ]
+      : [];
+
+    const where: Prisma.CourseWhereInput = {
+      status: CourseStatus.published,
+      level: levels ? { in: levels } : undefined,
+      avgRating: { gte: Number(avgRating) },
+      AND: [{ OR: searchConditions }, { OR: durationConditions }],
+    };
+
+    console.log('>>>>>where', where);
+
+    const [courses, total] = await Promise.all([
+      prisma.course.findMany({
+        where,
+        take,
+        skip,
+        orderBy: orderBy[sortBy],
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          shortDescription: true,
+          instructor: {
+            select: {
+              fullname: true,
+            },
+          },
+          status: true,
+          category: { select: { name: true } },
+          subCategory: { select: { name: true } },
+          level: true,
+          avgRating: true,
+          reviewCount: true,
+          totalDuration: true,
+          img: { select: { url: true } },
+          createdAt: true,
+          _count: {
+            select: {
+              enrollments: {
+                where: { status: { in: ['active', 'completed'] } },
+              },
+            },
+          },
+        },
+      }),
+      prisma.course.count({ where }),
+    ]);
+
+    return { courses, total };
   }
 
   async getRecommendedCoursesByCategory(categoryId: string) {

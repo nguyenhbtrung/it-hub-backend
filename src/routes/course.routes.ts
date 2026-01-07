@@ -5,6 +5,7 @@ import {
   getCourseContentQueryScheme,
   getCourseDetailParamsScheme,
   getCourseDetailQueryScheme,
+  getCoursesQuerySchema,
   getFeaturedCoursesQuerySchema,
   getMyCreatedCoursesSchema,
   getRecommendedCoursesQuerySchema,
@@ -65,6 +66,8 @@ router.patch(
   validate(updateCoursePromoVideoScheme),
   courseController.updateCoursePromoVideo.bind(courseController)
 );
+
+router.get('/', optionalAuth, validateQuery(getCoursesQuerySchema), courseController.getCourses.bind(courseController));
 
 router.get(
   '/recommended',

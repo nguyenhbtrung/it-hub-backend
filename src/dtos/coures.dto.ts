@@ -141,3 +141,37 @@ export const getRecommendedCoursesQuerySchema = z.object({
 });
 
 export type GetRecommendedCoursesQueryDto = z.infer<typeof getRecommendedCoursesQuerySchema>;
+
+export const getCoursesQuerySchema = z.object({
+  view: z.enum(['instructor', 'student', 'admin']).optional(),
+  page: z.string().regex(/^\d+$/).optional().transform(Number),
+  limit: z.string().regex(/^\d+$/).optional().transform(Number),
+  q: z.string().optional(),
+  level: z
+    .union([z.enum(CourseLevel), z.array(z.enum(CourseLevel))])
+    .optional()
+    .transform((val) => {
+      if (val === undefined) return undefined;
+      return Array.isArray(val) ? val : [val];
+    }),
+
+  duration: z
+    .union([
+      z.enum(['extraShort', 'short', 'medium', 'long', 'extraLong']),
+      z.array(z.enum(['extraShort', 'short', 'medium', 'long', 'extraLong'])),
+    ])
+    .optional()
+    .transform((val) => {
+      if (val === undefined) return undefined;
+      return Array.isArray(val) ? val : [val];
+    }),
+
+  avgRating: z
+    .string()
+    .regex(/^\d+(\.\d+)?$/)
+    .optional()
+    .transform(Number),
+  sortBy: z.enum(['popular', 'newest', 'rating']).optional(),
+});
+
+export type GetCoursesQueryDTO = z.infer<typeof getCoursesQuerySchema>;
