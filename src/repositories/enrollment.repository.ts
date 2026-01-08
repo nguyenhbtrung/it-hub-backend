@@ -1,3 +1,4 @@
+import { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export class EnrollmentRepository {
@@ -9,6 +10,14 @@ export class EnrollmentRepository {
           userId,
         },
       },
+    });
+    return enrollment;
+  }
+
+  async updateEnrollment(courseId: string, userId: string, payload: Prisma.EnrollmentUpdateInput) {
+    const enrollment = await prisma.enrollment.update({
+      where: { courseId_userId: { courseId, userId } },
+      data: payload,
     });
     return enrollment;
   }
