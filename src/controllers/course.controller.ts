@@ -67,6 +67,17 @@ export class CourseController {
     });
   }
 
+  async getStudentsByCourseId(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const userId = req?.user?.id;
+    const role = req?.user?.id;
+    const result = await courseService.getStudentsByCourseId(courseId, userId || '', role);
+    successResponse({
+      res,
+      data: result,
+    });
+  }
+
   async getCourses(req: Request, res: Response) {
     const query = req?.query as unknown as GetCoursesQueryDTO;
     const result = await courseService.getCourses(query);

@@ -45,6 +45,107 @@ export class CourseRepository {
     });
   }
 
+  async getStudentsByCourseId(courseId: string) {
+    const courseWithIds = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: {
+        sections: {
+          select: {
+            units: {
+              select: {
+                type: true,
+                steps: { select: { id: true } },
+                excercises: { select: { id: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // flatten ids
+    const stepIds: string[] = [];
+    const exerciseIds: string[] = [];
+    for (const s of courseWithIds?.sections ?? []) {
+      for (const u of s.units ?? []) {
+        if (u.steps) stepIds.push(...u.steps.map((x) => x.id));
+        if (u.excercises) exerciseIds.push(...u.excercises.map((x) => x.id));
+      }
+    }
+
+    const enrollments = await prisma.enrollment.findMany({
+      where: { courseId, status: { in: ['active', 'completed'] } },
+      select: {
+        enrolledAt: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            avatar: {
+              select: {
+                url: true,
+              },
+            },
+            learningProgress: {
+              where: {
+                OR: [{ stepId: { in: stepIds } }, { excerciseId: { in: exerciseIds } }],
+              },
+              select: {
+                id: true,
+                stepId: true,
+                excerciseId: true,
+                status: true,
+                updatedAt: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const result = enrollments.map((enrollment) => {
+      const user = enrollment.user;
+      const progress = user.learningProgress ?? [];
+      const total = stepIds.length + exerciseIds.length;
+      const completed = progress.filter((lp) => lp.status === 'completed').length;
+      const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+      return {
+        id: user.id,
+        email: user.email,
+        fullname: user.fullname,
+        avatar: user.avatar?.url ?? null,
+        progressPercent: percent,
+        enrolledAt: enrollment.enrolledAt,
+      };
+    });
+    return result;
+
+    // const course = await prisma.course.findUnique({
+    //   where: { id: courseId },
+    //   select: {
+    //     enrollments: {
+    //       where: { status: { in: ['active', 'completed'] } },
+    //       select: {
+    //         enrolledAt: true,
+    //         user: {
+    //           select: {
+    //             id: true,
+    //             email: true,
+    //             fullname: true,
+    //             avatar: {
+    //               select: {
+    //                 url: true,
+    //               },
+    //             },
+    //           },
+    //         },
+    //       },
+    //     },
+    //   },
+    // });
+  }
+
   async getCoursesByAdmin(
     take: number,
     skip: number,

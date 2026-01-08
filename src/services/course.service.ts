@@ -15,6 +15,7 @@ import { CourseEnrollmentStatus, CourseLevel, CourseStatus, UserRole } from '@/g
 import { CourseRepository } from '@/repositories/course.repository';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { TagRepository } from '@/repositories/tag.repository';
+import { toAbsoluteURL } from '@/utils/file';
 import { generateCourseSlug, generateTagSlug } from '@/utils/slug';
 
 export class CourseService {
@@ -91,7 +92,7 @@ export class CourseService {
     if (!course) {
       throw new NotFoundError('Course not found');
     }
-    if (course.instructorId !== instructorId || role !== 'admin') {
+    if (course.instructorId !== instructorId && role !== 'admin') {
       throw new ForbiddenError('Permission denied: You are not the owner of this course');
     }
 
@@ -134,6 +135,22 @@ export class CourseService {
         tagSlugs,
       }
     );
+  }
+
+  async getStudentsByCourseId(courseId: string, userId: string, role?: string) {
+    const course = await this.courseRepository.getCourseInstructorId(courseId);
+
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+    if (course.instructorId !== userId && role !== 'admin') {
+      throw new ForbiddenError('Permission denied: You are not the owner of this course');
+    }
+    const students = await this.courseRepository.getStudentsByCourseId(courseId);
+    return students.map((student) => ({
+      ...student,
+      avatar: student.avatar ? toAbsoluteURL(student.avatar) : null,
+    }));
   }
 
   async getCourses(query: GetCoursesQueryDTO) {
