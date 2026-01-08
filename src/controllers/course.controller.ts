@@ -73,7 +73,7 @@ export class CourseController {
     const { id: courseId } = req.params;
     const query = req?.query as unknown as GetRegistrationsByCourseIdQueryDto;
     const userId = req?.user?.id;
-    const role = req?.user?.id;
+    const role = req?.user?.role;
     const result = await courseService.getRegistrationsByCoursesId(courseId, userId || '', role, query);
     successResponse({
       res,
@@ -86,7 +86,7 @@ export class CourseController {
     const { id: courseId } = req.params;
     const query = req?.query as unknown as GetStudentsByCourseIdQueryDto;
     const userId = req?.user?.id;
-    const role = req?.user?.id;
+    const role = req?.user?.role;
     const result = await courseService.getStudentsByCourseId(courseId, userId || '', role, query);
     successResponse({
       res,

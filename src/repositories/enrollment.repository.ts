@@ -21,4 +21,10 @@ export class EnrollmentRepository {
     });
     return enrollment;
   }
+
+  async deleteEnrollment(courseId: string, userId: string) {
+    await prisma.enrollment.delete({
+      where: { courseId_userId: { courseId, userId } },
+    });
+  }
 }

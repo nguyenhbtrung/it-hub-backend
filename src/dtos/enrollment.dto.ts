@@ -6,3 +6,9 @@ export const updateEnrollmentSchema = z.object({
 });
 
 export type UpdateEnrollmentDto = z.infer<typeof updateEnrollmentSchema>;
+
+export const deleteEnrollmentQuerySchema = z.object({
+  userId: z.string().optional(),
+});
+
+export type DeleteEnrollmentQueryDto = z.infer<typeof deleteEnrollmentQuerySchema>;

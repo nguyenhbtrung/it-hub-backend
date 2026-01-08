@@ -26,5 +26,23 @@ export class EnrollmentService {
     }
 
     const enrollment = await this.enrollmentRepository.updateEnrollment(courseId, userId, payload);
+    return enrollment;
+  }
+
+  async deleteEnrollment(courseId: string, userId: string | undefined, myId: string, role: string | undefined) {
+    if (userId) {
+      const course = await this.courseRepository.getCourseInstructorId(courseId);
+
+      if (!course) {
+        throw new NotFoundError('Course not found');
+      }
+
+      if (course.instructorId !== myId && role !== 'admin') {
+        throw new ForbiddenError('Permission denied');
+      }
+    }
+    userId = myId;
+
+    await this.enrollmentRepository.deleteEnrollment(courseId, userId);
   }
 }

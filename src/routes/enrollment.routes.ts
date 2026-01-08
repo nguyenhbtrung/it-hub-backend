@@ -17,4 +17,6 @@ router.patch(
   enrollmentController.updateEnrollment.bind(enrollmentController)
 );
 
+router.delete('/:courseId/:userId', requireAuth, enrollmentController.deleteEnrollment.bind(enrollmentController));
+
 export default router;
