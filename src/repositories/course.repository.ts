@@ -45,6 +45,39 @@ export class CourseRepository {
     });
   }
 
+  async getRegistrationsByCoursesId(courseId: string, take: number, skip: number) {
+    const where: Prisma.EnrollmentWhereInput = { courseId, status: 'pending' };
+    const [enrollments, total] = await Promise.all([
+      prisma.enrollment.findMany({
+        where,
+        skip,
+        take,
+        select: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              fullname: true,
+              avatar: {
+                select: {
+                  url: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.enrollment.count({ where }),
+    ]);
+    return {
+      registrations: enrollments.map((enrollment) => ({
+        ...enrollment.user,
+        avatar: enrollment.user?.avatar ? toAbsoluteURL(enrollment.user.avatar.url) : null,
+      })),
+      total,
+    };
+  }
+
   async getStudentsByCourseId(courseId: string, take: number, skip: number) {
     const courseWithIds = await prisma.course.findUnique({
       where: { id: courseId },

@@ -9,7 +9,8 @@ import {
   GetFeaturedCoursesQueryDTO,
   GetMyCreatedCoursesDTO,
   GetRecommendedCoursesQueryDto,
-  GetStudentByCourseIdQueryDto,
+  GetRegistrationsByCourseIdQueryDto,
+  GetStudentsByCourseIdQueryDto,
   UpdateCourseDetailDTO,
   UpdateCourseImageDto,
   UpdateCoursePromoVideoDto,
@@ -68,15 +69,29 @@ export class CourseController {
     });
   }
 
+  async getRegistrationsByCoursesId(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const query = req?.query as unknown as GetRegistrationsByCourseIdQueryDto;
+    const userId = req?.user?.id;
+    const role = req?.user?.id;
+    const result = await courseService.getRegistrationsByCoursesId(courseId, userId || '', role, query);
+    successResponse({
+      res,
+      data: result.data,
+      meta: result.meta,
+    });
+  }
+
   async getStudentsByCourseId(req: Request, res: Response) {
     const { id: courseId } = req.params;
-    const query = req?.query as unknown as GetStudentByCourseIdQueryDto;
+    const query = req?.query as unknown as GetStudentsByCourseIdQueryDto;
     const userId = req?.user?.id;
     const role = req?.user?.id;
     const result = await courseService.getStudentsByCourseId(courseId, userId || '', role, query);
     successResponse({
       res,
-      data: result,
+      data: result.data,
+      meta: result.meta,
     });
   }
 

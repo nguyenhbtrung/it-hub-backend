@@ -6,7 +6,7 @@ import {
   GetCoursesQueryDTO,
   GetFeaturedCoursesQueryDTO,
   GetMyCreatedCoursesDTO,
-  GetStudentByCourseIdQueryDto,
+  GetStudentsByCourseIdQueryDto,
   toCreateCourseResponseDTO,
   UpdateCourseDetailDTO,
 } from '@/dtos/coures.dto';
@@ -141,11 +141,35 @@ export class CourseService {
     );
   }
 
+  async getRegistrationsByCoursesId(
+    courseId: string,
+    userId: string,
+    role: string | undefined,
+    query: GetStudentsByCourseIdQueryDto
+  ) {
+    const course = await this.courseRepository.getCourseInstructorId(courseId);
+
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+    if (course.instructorId !== userId && role !== 'admin') {
+      throw new ForbiddenError('Permission denied: You are not the owner of this course');
+    }
+    const { page = 1, limit = 5 } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const { registrations, total } = await this.courseRepository.getRegistrationsByCoursesId(courseId, take, skip);
+    return {
+      data: registrations,
+      meta: { total, page: Number(page), limit: Number(limit) },
+    };
+  }
+
   async getStudentsByCourseId(
     courseId: string,
     userId: string,
     role: string | undefined,
-    query: GetStudentByCourseIdQueryDto
+    query: GetStudentsByCourseIdQueryDto
   ) {
     const course = await this.courseRepository.getCourseInstructorId(courseId);
 
@@ -160,7 +184,7 @@ export class CourseService {
     const skip = (page - 1) * limit;
     const { students, total } = await this.courseRepository.getStudentsByCourseId(courseId, take, skip);
     return {
-      students: students.map((student) => ({
+      data: students.map((student) => ({
         ...student,
         avatar: student.avatar ? toAbsoluteURL(student.avatar) : null,
       })),

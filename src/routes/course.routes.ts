@@ -9,6 +9,8 @@ import {
   getFeaturedCoursesQuerySchema,
   getMyCreatedCoursesSchema,
   getRecommendedCoursesQuerySchema,
+  getRegistrationsByCourseIdQuerySchema,
+  getStudentsByCourseIdQuerySchema,
   updateCourseDetailSchema,
   updateCourseImageScheme,
   updateCoursePromoVideoScheme,
@@ -76,7 +78,19 @@ router.patch(
   courseController.updateCoursePromoVideo.bind(courseController)
 );
 
-router.get('/:id/students', requireAuth, courseController.getStudentsByCourseId.bind(courseController));
+router.get(
+  '/:id/registrations',
+  requireAuth,
+  validateQuery(getRegistrationsByCourseIdQuerySchema),
+  courseController.getRegistrationsByCoursesId.bind(courseController)
+);
+
+router.get(
+  '/:id/students',
+  requireAuth,
+  validateQuery(getStudentsByCourseIdQuerySchema),
+  courseController.getStudentsByCourseId.bind(courseController)
+);
 
 router.get('/', optionalAuth, validateQuery(getCoursesQuerySchema), courseController.getCourses.bind(courseController));
 

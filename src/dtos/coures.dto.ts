@@ -191,9 +191,16 @@ export const getCoursesQuerySchema = z.object({
 
 export type GetCoursesQueryDTO = z.infer<typeof getCoursesQuerySchema>;
 
-export const getStudentByCourseIdQuerySchema = z.object({
+export const getStudentsByCourseIdQuerySchema = z.object({
   page: z.string().regex(/^\d+$/).optional().transform(Number),
   limit: z.string().regex(/^\d+$/).optional().transform(Number),
 });
 
-export type GetStudentByCourseIdQueryDto = z.infer<typeof getStudentByCourseIdQuerySchema>;
+export type GetStudentsByCourseIdQueryDto = z.infer<typeof getStudentsByCourseIdQuerySchema>;
+
+export const getRegistrationsByCourseIdQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/).optional().transform(Number),
+  limit: z.string().regex(/^\d+$/).optional().transform(Number),
+});
+
+export type GetRegistrationsByCourseIdQueryDto = z.infer<typeof getRegistrationsByCourseIdQuerySchema>;
