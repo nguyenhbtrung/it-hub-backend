@@ -1,4 +1,4 @@
-import { Prisma } from '@/generated/prisma/client';
+import { EnrollmentStatus, Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export class EnrollmentRepository {
@@ -14,15 +14,28 @@ export class EnrollmentRepository {
     return enrollment;
   }
 
-  async updateEnrollment(courseId: string, userId: string, payload: Prisma.EnrollmentUpdateInput) {
+  async createEnrollment(courseId: string, userId: string, status: EnrollmentStatus) {
+    const enrollment = await prisma.enrollment.create({
+      data: {
+        courseId,
+        userId,
+        status,
+        enrolledAt: status === 'active' ? new Date() : undefined,
+      },
+    });
+    return enrollment;
+  }
+
+  async updateEnrollment(courseId: string, userId: string, data: Prisma.EnrollmentUpdateInput) {
     const enrollment = await prisma.enrollment.update({
       where: { courseId_userId: { courseId, userId } },
-      data: payload,
+      data,
     });
     return enrollment;
   }
 
   async deleteEnrollment(courseId: string, userId: string) {
+    console.log('>>>>>', courseId, userId);
     await prisma.enrollment.delete({
       where: { courseId_userId: { courseId, userId } },
     });

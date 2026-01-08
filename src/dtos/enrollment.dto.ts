@@ -12,3 +12,15 @@ export const deleteEnrollmentQuerySchema = z.object({
 });
 
 export type DeleteEnrollmentQueryDto = z.infer<typeof deleteEnrollmentQuerySchema>;
+
+export const createEnrollmentQuerySchema = z.object({
+  userId: z.string().optional(),
+});
+
+export type CreateEnrollmentQueryDto = z.infer<typeof createEnrollmentQuerySchema>;
+
+export const createEnrollmentSchema = z.object({
+  status: z.enum(EnrollmentStatus),
+});
+
+export type CreateEnrollmentDto = z.infer<typeof createEnrollmentSchema>;
