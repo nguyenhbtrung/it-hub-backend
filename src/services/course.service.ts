@@ -6,6 +6,7 @@ import {
   GetCoursesQueryDTO,
   GetFeaturedCoursesQueryDTO,
   GetMyCreatedCoursesDTO,
+  GetStudentByCourseIdQueryDto,
   toCreateCourseResponseDTO,
   UpdateCourseDetailDTO,
 } from '@/dtos/coures.dto';
@@ -69,7 +70,10 @@ export class CourseService {
       throw new NotFoundError('Course not found');
     }
     if (course.instructorId !== userId && role !== 'admin') {
-      throw new ForbiddenError('Permission denied: You are not the owner of this course');
+      throw new ForbiddenError('Permission denied');
+    }
+    if (role !== 'admin' && status !== 'pending' && status !== 'draft') {
+      throw new ForbiddenError('Permission denied');
     }
     await this.courseRepository.updateCourseStatus(courseId, status);
   }
@@ -137,7 +141,12 @@ export class CourseService {
     );
   }
 
-  async getStudentsByCourseId(courseId: string, userId: string, role?: string) {
+  async getStudentsByCourseId(
+    courseId: string,
+    userId: string,
+    role: string | undefined,
+    query: GetStudentByCourseIdQueryDto
+  ) {
     const course = await this.courseRepository.getCourseInstructorId(courseId);
 
     if (!course) {
@@ -146,11 +155,17 @@ export class CourseService {
     if (course.instructorId !== userId && role !== 'admin') {
       throw new ForbiddenError('Permission denied: You are not the owner of this course');
     }
-    const students = await this.courseRepository.getStudentsByCourseId(courseId);
-    return students.map((student) => ({
-      ...student,
-      avatar: student.avatar ? toAbsoluteURL(student.avatar) : null,
-    }));
+    const { page = 1, limit = 5 } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const { students, total } = await this.courseRepository.getStudentsByCourseId(courseId, take, skip);
+    return {
+      students: students.map((student) => ({
+        ...student,
+        avatar: student.avatar ? toAbsoluteURL(student.avatar) : null,
+      })),
+      meta: { total, page: Number(page), limit: Number(limit) },
+    };
   }
 
   async getCourses(query: GetCoursesQueryDTO) {

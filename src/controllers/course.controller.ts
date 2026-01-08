@@ -9,6 +9,7 @@ import {
   GetFeaturedCoursesQueryDTO,
   GetMyCreatedCoursesDTO,
   GetRecommendedCoursesQueryDto,
+  GetStudentByCourseIdQueryDto,
   UpdateCourseDetailDTO,
   UpdateCourseImageDto,
   UpdateCoursePromoVideoDto,
@@ -69,9 +70,10 @@ export class CourseController {
 
   async getStudentsByCourseId(req: Request, res: Response) {
     const { id: courseId } = req.params;
+    const query = req?.query as unknown as GetStudentByCourseIdQueryDto;
     const userId = req?.user?.id;
     const role = req?.user?.id;
-    const result = await courseService.getStudentsByCourseId(courseId, userId || '', role);
+    const result = await courseService.getStudentsByCourseId(courseId, userId || '', role, query);
     successResponse({
       res,
       data: result,

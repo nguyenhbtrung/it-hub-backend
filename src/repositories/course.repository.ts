@@ -45,7 +45,7 @@ export class CourseRepository {
     });
   }
 
-  async getStudentsByCourseId(courseId: string) {
+  async getStudentsByCourseId(courseId: string, take: number, skip: number) {
     const courseWithIds = await prisma.course.findUnique({
       where: { id: courseId },
       select: {
@@ -73,38 +73,45 @@ export class CourseRepository {
       }
     }
 
-    const enrollments = await prisma.enrollment.findMany({
-      where: { courseId, status: { in: ['active', 'completed'] } },
-      select: {
-        enrolledAt: true,
-        user: {
-          select: {
-            id: true,
-            email: true,
-            fullname: true,
-            avatar: {
-              select: {
-                url: true,
+    const where: Prisma.EnrollmentWhereInput = { courseId, status: { in: ['active', 'completed'] } };
+
+    const [enrollments, total] = await Promise.all([
+      prisma.enrollment.findMany({
+        where,
+        take,
+        skip,
+        select: {
+          enrolledAt: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+              fullname: true,
+              avatar: {
+                select: {
+                  url: true,
+                },
               },
-            },
-            learningProgress: {
-              where: {
-                OR: [{ stepId: { in: stepIds } }, { excerciseId: { in: exerciseIds } }],
-              },
-              select: {
-                id: true,
-                stepId: true,
-                excerciseId: true,
-                status: true,
-                updatedAt: true,
+              learningProgress: {
+                where: {
+                  OR: [{ stepId: { in: stepIds } }, { excerciseId: { in: exerciseIds } }],
+                },
+                select: {
+                  id: true,
+                  stepId: true,
+                  excerciseId: true,
+                  status: true,
+                  updatedAt: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      }),
+      prisma.enrollment.count({ where }),
+    ]);
 
-    const result = enrollments.map((enrollment) => {
+    const students = enrollments.map((enrollment) => {
       const user = enrollment.user;
       const progress = user.learningProgress ?? [];
       const total = stepIds.length + exerciseIds.length;
@@ -119,7 +126,7 @@ export class CourseRepository {
         enrolledAt: enrollment.enrolledAt,
       };
     });
-    return result;
+    return { students, total };
 
     // const course = await prisma.course.findUnique({
     //   where: { id: courseId },
@@ -517,6 +524,7 @@ export class CourseRepository {
         },
         img: { select: { id: true, url: true } },
         promoVideo: { select: { id: true, url: true } },
+        status: true,
       },
     });
 
@@ -538,6 +546,7 @@ export class CourseRepository {
       tags: course.tags.map((t) => t.tag.name),
       img: course.img,
       promoVideo: course.promoVideo,
+      status: course.status,
     };
   }
 

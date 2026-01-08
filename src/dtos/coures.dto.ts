@@ -105,6 +105,7 @@ export interface GetCourseDetailInstructorViewResponseDTO {
   tags: string[];
   img: { id: string; url: string } | null;
   promoVideo: { id: string; url: string } | null;
+  status: string;
 }
 
 export const getCourseContentQueryScheme = z.object({
@@ -189,3 +190,10 @@ export const getCoursesQuerySchema = z.object({
 });
 
 export type GetCoursesQueryDTO = z.infer<typeof getCoursesQuerySchema>;
+
+export const getStudentByCourseIdQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/).optional().transform(Number),
+  limit: z.string().regex(/^\d+$/).optional().transform(Number),
+});
+
+export type GetStudentByCourseIdQueryDto = z.infer<typeof getStudentByCourseIdQuerySchema>;
