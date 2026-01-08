@@ -8,6 +8,7 @@ import {
   getCoursesQuerySchema,
   getFeaturedCoursesQuerySchema,
   getMyCreatedCoursesSchema,
+  getNavigationByContentIdQuerySchema,
   getRecommendedCoursesQuerySchema,
   getRegistrationsByCourseIdQuerySchema,
   getStudentsByCourseIdQuerySchema,
@@ -76,6 +77,12 @@ router.patch(
   authorize([UserRole.admin, UserRole.instructor]),
   validate(updateCoursePromoVideoScheme),
   courseController.updateCoursePromoVideo.bind(courseController)
+);
+
+router.get(
+  '/navigation/:contentId',
+  validateQuery(getNavigationByContentIdQuerySchema),
+  courseController.getNavigationByContentId.bind(courseController)
 );
 
 router.get(

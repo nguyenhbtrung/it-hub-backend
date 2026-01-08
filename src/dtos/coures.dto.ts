@@ -204,3 +204,9 @@ export const getRegistrationsByCourseIdQuerySchema = z.object({
 });
 
 export type GetRegistrationsByCourseIdQueryDto = z.infer<typeof getRegistrationsByCourseIdQuerySchema>;
+
+export const getNavigationByContentIdQuerySchema = z.object({
+  contentType: z.enum(['section', 'unit', 'step']),
+});
+
+export type GetNavigationByContentIdQueryDto = z.infer<typeof getNavigationByContentIdQuerySchema>;

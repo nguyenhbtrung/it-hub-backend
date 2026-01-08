@@ -8,6 +8,7 @@ import {
   GetCoursesQueryDTO,
   GetFeaturedCoursesQueryDTO,
   GetMyCreatedCoursesDTO,
+  GetNavigationByContentIdQueryDto,
   GetRecommendedCoursesQueryDto,
   GetRegistrationsByCourseIdQueryDto,
   GetStudentsByCourseIdQueryDto,
@@ -19,12 +20,22 @@ import {
 import { UnauthorizedError } from '@/errors';
 import { CourseRepository } from '@/repositories/course.repository';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
+import { SectionRepository } from '@/repositories/section.repository';
+import { StepRepository } from '@/repositories/step.repository';
 import { TagRepository } from '@/repositories/tag.repository';
+import { UnitRepository } from '@/repositories/unit.repository';
 import { CourseService } from '@/services/course.service';
 import { successResponse } from '@/utils/response';
 import { Request, Response, NextFunction } from 'express';
 
-const courseService = new CourseService(new CourseRepository(), new TagRepository(), new EnrollmentRepository());
+const courseService = new CourseService(
+  new CourseRepository(),
+  new TagRepository(),
+  new EnrollmentRepository(),
+  new StepRepository(),
+  new UnitRepository(),
+  new SectionRepository()
+);
 
 export class CourseController {
   async createCourse(req: Request, res: Response, next: NextFunction) {
@@ -66,6 +77,16 @@ export class CourseController {
     successResponse({
       res,
       message: 'Course updated successfully',
+    });
+  }
+
+  async getNavigationByContentId(req: Request, res: Response) {
+    const query = req?.query as unknown as GetNavigationByContentIdQueryDto;
+    const { contentId } = req.params;
+    const result = await courseService.getNavigationByContentId(contentId, query);
+    successResponse({
+      res,
+      data: result,
     });
   }
 

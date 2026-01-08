@@ -35,7 +35,6 @@ export class EnrollmentRepository {
   }
 
   async deleteEnrollment(courseId: string, userId: string) {
-    console.log('>>>>>', courseId, userId);
     await prisma.enrollment.delete({
       where: { courseId_userId: { courseId, userId } },
     });

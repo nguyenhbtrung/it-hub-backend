@@ -10,6 +10,20 @@ export interface UpdateStepData {
 }
 
 export class StepRepository {
+  async getPreviousStep(lessonId: string, currentOrder: number) {
+    const nextStep = await prisma.step.findFirst({
+      where: { lessonId, order: { lt: currentOrder } },
+      orderBy: { order: 'desc' },
+    });
+    return nextStep;
+  }
+  async getNextStep(lessonId: string, currentOrder: number) {
+    const nextStep = await prisma.step.findFirst({
+      where: { lessonId, order: { gt: currentOrder } },
+      orderBy: { order: 'asc' },
+    });
+    return nextStep;
+  }
   async getStepContextData(stepId: string, scope: 'step' | 'lesson') {
     const data = await prisma.step.findUnique({
       where: { id: stepId },
@@ -71,6 +85,20 @@ export class StepRepository {
     });
     return step;
   }
+  async getStepWithRelationById(id: string) {
+    const step = await prisma.step.findUnique({
+      where: { id },
+      include: {
+        lesson: {
+          include: {
+            section: true,
+          },
+        },
+      },
+    });
+    return step;
+  }
+
   async getCourseByStepId(stepId: string) {
     const step = await prisma.step.findUnique({
       where: { id: stepId },

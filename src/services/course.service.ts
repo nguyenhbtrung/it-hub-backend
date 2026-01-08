@@ -6,6 +6,7 @@ import {
   GetCoursesQueryDTO,
   GetFeaturedCoursesQueryDTO,
   GetMyCreatedCoursesDTO,
+  GetNavigationByContentIdQueryDto,
   GetStudentsByCourseIdQueryDto,
   toCreateCourseResponseDTO,
   UpdateCourseDetailDTO,
@@ -15,7 +16,10 @@ import { ForbiddenError, NotFoundError } from '@/errors';
 import { CourseEnrollmentStatus, CourseLevel, CourseStatus, UserRole } from '@/generated/prisma/enums';
 import { CourseRepository } from '@/repositories/course.repository';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
+import { SectionRepository } from '@/repositories/section.repository';
+import { StepRepository } from '@/repositories/step.repository';
 import { TagRepository } from '@/repositories/tag.repository';
+import { UnitRepository } from '@/repositories/unit.repository';
 import { toAbsoluteURL } from '@/utils/file';
 import { generateCourseSlug, generateTagSlug } from '@/utils/slug';
 
@@ -23,7 +27,10 @@ export class CourseService {
   constructor(
     private courseRepository: CourseRepository,
     private tagRepository: TagRepository,
-    private enrollmentRepository: EnrollmentRepository
+    private enrollmentRepository: EnrollmentRepository,
+    private stepRepository: StepRepository,
+    private unitRepository: UnitRepository,
+    private sectionRepository: SectionRepository
   ) {}
   async createCourse(payload: CreateCourseDTO, instructorId: string): Promise<CreateCourseResponseDTO> {
     const { title, categoryId, subCategoryId } = payload;
@@ -139,6 +146,88 @@ export class CourseService {
         tagSlugs,
       }
     );
+  }
+
+  async getNavigationByContentId(contentId: string, query: GetNavigationByContentIdQueryDto) {
+    const { contentType } = query;
+    if (contentType === 'step') {
+      const step = await this.stepRepository.getStepWithRelationById(contentId);
+      if (!step) throw new NotFoundError();
+      const nextStep = await this.stepRepository.getNextStep(step.lessonId, step.order);
+      let nextUnit = null;
+      let nextSection = null;
+      if (!nextStep) {
+        nextUnit = await this.unitRepository.getNextUnit(step.lesson.sectionId, step.lesson.order);
+        if (!nextUnit) {
+          nextSection = await this.sectionRepository.getNextSection(
+            step.lesson.section.courseId,
+            step.lesson.section.order
+          );
+        }
+      }
+      const previusStep = await this.stepRepository.getPreviousStep(step.lessonId, step.order);
+      return {
+        nextId: nextStep?.id || nextUnit?.id || nextSection?.id,
+        nextType: nextStep
+          ? 'step'
+          : nextUnit
+            ? nextUnit.type === 'lesson'
+              ? 'lesson'
+              : 'exercise'
+            : nextSection
+              ? 'section'
+              : 'none',
+        previousId: previusStep?.id || step.lessonId,
+        previousType: previusStep ? 'step' : 'lesson',
+      };
+    }
+    if (contentType === 'unit') {
+      const unit = await this.unitRepository.getUnitWithRelationById(contentId);
+      if (!unit) throw new NotFoundError();
+      let nextUnit = null;
+      let nextSection = null;
+      if (!unit.steps?.[0]) {
+        nextUnit = await this.unitRepository.getNextUnit(unit.sectionId, unit.order);
+        if (!nextUnit) {
+          nextSection = await this.sectionRepository.getNextSection(unit.section.courseId, unit.section.order);
+        }
+      }
+
+      const previousUnit = await this.unitRepository.getPreviousUnit(unit.sectionId, unit.order);
+
+      return {
+        nextId: unit?.steps?.[0]?.id || nextUnit?.id || nextSection?.id,
+        nextType: unit?.steps?.[0]
+          ? 'step'
+          : nextUnit
+            ? nextUnit.type === 'lesson'
+              ? 'lesson'
+              : 'exercise'
+            : nextSection
+              ? 'section'
+              : 'none',
+        previousId: previousUnit?.steps?.[0]?.id || previousUnit?.id || unit.sectionId,
+        previousType: previousUnit?.steps?.[0]
+          ? 'step'
+          : previousUnit
+            ? previousUnit.type === 'lesson'
+              ? 'lesson'
+              : 'exercise'
+            : 'section',
+      };
+    }
+    const section = await this.sectionRepository.getSectionById(contentId);
+    if (!section) throw new NotFoundError();
+    const unit = await this.sectionRepository.getFirstUnitOfSection(contentId);
+    let nextSection = null;
+    if (!unit) {
+      nextSection = await this.sectionRepository.getNextSection(section.courseId, section.order);
+    }
+    return {
+      nextId: unit?.id || nextSection?.id,
+      nextType: unit ? (unit.type === 'lesson' ? 'lesson' : 'exercise') : nextSection ? 'section' : 'none',
+      previousType: 'none',
+    };
   }
 
   async getRegistrationsByCoursesId(

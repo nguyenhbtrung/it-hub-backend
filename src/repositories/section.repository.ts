@@ -3,6 +3,24 @@ import { Prisma, Unit } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export class SectionRepository {
+  async getFirstUnitOfSection(sectionId: string) {
+    const unit = await prisma.unit.findFirst({
+      where: { sectionId },
+      select: {
+        id: true,
+        type: true,
+      },
+      orderBy: { order: 'asc' },
+    });
+    return unit;
+  }
+  async getNextSection(courseId: string, order: number): Promise<any> {
+    const nextSection = await prisma.section.findFirst({
+      where: { courseId, order: { gt: order } },
+      orderBy: { order: 'asc' },
+    });
+    return nextSection;
+  }
   async getSectionById(id: string) {
     const section = await prisma.section.findUnique({
       where: { id },
