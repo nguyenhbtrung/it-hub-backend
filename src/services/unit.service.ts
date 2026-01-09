@@ -1,4 +1,4 @@
-import { AddStepDto, UpdateUnitDto } from '@/dtos/unit.dto';
+import { AddMaterialDto, AddStepDto, UpdateUnitDto } from '@/dtos/unit.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
 import { UserRole } from '@/generated/prisma/enums';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
@@ -56,6 +56,21 @@ export class UnitService {
       title: newStep.title,
       order: newStep.order,
     };
+  }
+
+  async addMaterial(unitId: string, instructorId: string, payload: AddMaterialDto) {
+    const course = await this.unitRepository.getCourseByUnitId(unitId);
+    if (!course) {
+      throw new NotFoundError('Course not found');
+    }
+    if (course.instructorId !== instructorId) {
+      throw new ForbiddenError('Permission denied: You are not the owner of this course');
+    }
+    const material = await this.unitRepository.addMaterial({
+      unit: { connect: { id: unitId } },
+      file: { connect: { id: payload.fileId } },
+    });
+    return material;
   }
 
   async updateUnit(unitId: string, instructorId: string, payload: UpdateUnitDto) {

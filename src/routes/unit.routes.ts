@@ -1,6 +1,6 @@
 import { UnitController } from '@/controllers/unit.controller';
 
-import { addStepScheme, updateUnitScheme } from '@/dtos/unit.dto';
+import { addMaterialScheme, addStepScheme, updateUnitScheme } from '@/dtos/unit.dto';
 import { UserRole } from '@/generated/prisma/enums';
 import { authorize, requireAuth } from '@/middleware/auth.middleware';
 import { validate } from '@/middleware/validate.middleware';
@@ -17,6 +17,14 @@ router.post(
   authorize([UserRole.admin, UserRole.instructor]),
   validate(addStepScheme),
   unitController.addStep.bind(unitController)
+);
+
+router.post(
+  '/:id/material',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  validate(addMaterialScheme),
+  unitController.addMaterial.bind(unitController)
 );
 
 router.patch(

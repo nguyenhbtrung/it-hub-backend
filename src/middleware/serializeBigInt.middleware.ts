@@ -1,4 +1,3 @@
-// src/middlewares/bigint-response.middleware.ts
 import { serializeBigInt } from '@/utils/bigintSerializer';
 import { Request, Response, NextFunction } from 'express';
 

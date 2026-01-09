@@ -16,3 +16,9 @@ export const addStepScheme = z.object({
 });
 
 export type AddStepDto = z.infer<typeof addStepScheme>;
+
+export const addMaterialScheme = z.object({
+  fileId: z.string(),
+});
+
+export type AddMaterialDto = z.infer<typeof addMaterialScheme>;

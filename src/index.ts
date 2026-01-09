@@ -57,7 +57,7 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/sections', sectionRoutes);
 app.use('/api/units', unitRoutes);
 app.use('/api/steps', stepRoutes);
-app.use('/api/exercise', exerciseRoutes);
+app.use('/api/exercises', exerciseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/ai', aiRoutes);

@@ -1,4 +1,4 @@
-import { AddStepDto, UpdateUnitDto } from '@/dtos/unit.dto';
+import { AddMaterialDto, AddStepDto, UpdateUnitDto } from '@/dtos/unit.dto';
 import { UnauthorizedError } from '@/errors';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { UnitRepository } from '@/repositories/unit.repository';
@@ -42,5 +42,14 @@ export class UnitController {
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
     const result = await unitService.addStep(unitId, instructorId, payload);
     successResponse({ res, status: 201, message: 'Add step successfully', data: result });
+  }
+
+  async addMaterial(req: Request, res: Response) {
+    const { id: unitId } = req.params;
+    const payload = req.body as AddMaterialDto;
+    const instructorId = req?.user?.id;
+    if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
+    const result = await unitService.addMaterial(unitId, instructorId, payload);
+    successResponse({ res, status: 201, message: 'Add material successfully', data: result });
   }
 }

@@ -50,7 +50,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
 
 export const upload = multer({
   storage,
-  fileFilter,
+  // fileFilter,
   limits: {
     fileSize: 500 * 1024 * 1024, // 500MB
   },

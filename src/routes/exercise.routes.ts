@@ -4,13 +4,19 @@ import { updateStepScheme } from '@/dtos/step.dto';
 
 import { UserRole } from '@/generated/prisma/enums';
 import { authorize, requireAuth } from '@/middleware/auth.middleware';
+import { serializeBigIntMiddleware } from '@/middleware/serializeBigInt.middleware';
 import { validate } from '@/middleware/validate.middleware';
 import { Router } from 'express';
 
 const router = Router();
 const exerciseController = new ExerciseController();
 
-router.get('/:unitId', requireAuth, exerciseController.getExerciseByUnitId.bind(exerciseController));
+router.get(
+  '/:unitId',
+  requireAuth,
+  serializeBigIntMiddleware,
+  exerciseController.getExerciseByUnitId.bind(exerciseController)
+);
 
 router.patch(
   '/:unitId',

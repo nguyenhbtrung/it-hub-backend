@@ -1,6 +1,7 @@
 import { NotFoundError } from '@/errors';
 import { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
+import { toAbsoluteURL } from '@/utils/file';
 
 export class ExerciseRepository {
   async getExerciseByUnitId(unitId: string) {
@@ -10,10 +11,35 @@ export class ExerciseRepository {
         unit: {
           select: {
             title: true,
+            materials: {
+              select: {
+                file: {
+                  select: {
+                    id: true,
+                    name: true,
+                    size: true,
+                    type: true,
+                    mimeType: true,
+                    url: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
     });
+
+    if (exercise?.unit?.materials) {
+      exercise.unit.materials = exercise.unit.materials.map((m) => ({
+        ...m,
+        file: {
+          ...m.file,
+          url: toAbsoluteURL(m.file.url),
+        },
+      }));
+    }
+
     return exercise;
   }
   async getCourseByExerciseId(exerciseId: string) {

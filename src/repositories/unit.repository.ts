@@ -1,5 +1,5 @@
 import { UpdateUnitDto } from '@/dtos/unit.dto';
-import { Prisma, Step } from '@/generated/prisma/client';
+import { Material, Prisma, Step } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export class UnitRepository {
@@ -60,6 +60,11 @@ export class UnitRepository {
   async addStep(data: Prisma.StepCreateInput): Promise<Step> {
     const newStep = await prisma.step.create({ data });
     return newStep;
+  }
+
+  async addMaterial(data: Prisma.MaterialCreateInput): Promise<Material> {
+    const material = await prisma.material.create({ data });
+    return material;
   }
 
   async updateUnit(unitId: string, data: UpdateUnitDto) {
