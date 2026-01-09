@@ -18,6 +18,13 @@ router.get(
   exerciseController.getExerciseByUnitId.bind(exerciseController)
 );
 
+router.get(
+  '/:exerciseId/submissions/me',
+  requireAuth,
+  serializeBigIntMiddleware,
+  exerciseController.getMyExerciseSubmissionByExerciseId.bind(exerciseController)
+);
+
 router.patch(
   '/:unitId',
   requireAuth,

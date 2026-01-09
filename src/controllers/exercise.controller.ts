@@ -18,6 +18,15 @@ export class ExerciseController {
     const result = await exerciseService.getExerciseByUnitId(unitId, userId, role);
     successResponse({ res, data: result });
   }
+
+  async getMyExerciseSubmissionByExerciseId(req: Request, res: Response) {
+    const { exerciseId } = req.params;
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedError('userId is missing');
+    const result = await exerciseService.getExerciseSubmission(userId, exerciseId);
+    successResponse({ res, data: result });
+  }
+
   async updateExercise(req: Request, res: Response) {
     const { unitId } = req.params;
     const payload = req.body as UpdateExerciseDto;

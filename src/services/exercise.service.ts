@@ -26,6 +26,11 @@ export class ExerciseService {
     return exercise;
   }
 
+  async getExerciseSubmission(userId: string, exerciseId: string) {
+    const submission = await this.exerciseRepository.getExerciseSubmission(userId, exerciseId);
+    return submission;
+  }
+
   async addSubmission(userId: string, exerciseId: string, payload: AddSubmissionDto) {
     const { score, demoUrl, note, fileIds } = payload;
     const attemp = await this.exerciseRepository.addExerciseAttemp({

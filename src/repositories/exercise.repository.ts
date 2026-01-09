@@ -43,6 +43,42 @@ export class ExerciseRepository {
 
     return exercise;
   }
+
+  async getExerciseSubmission(userId: string, exerciseId: string) {
+    const submission = await prisma.excerciseAttempt.findFirst({
+      where: { studentId: userId, excerciseId: exerciseId },
+      include: {
+        attachments: {
+          select: {
+            id: true,
+            file: {
+              select: {
+                id: true,
+                name: true,
+                size: true,
+                type: true,
+                mimeType: true,
+                url: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (submission?.attachments) {
+      submission.attachments = submission.attachments.map((a) => ({
+        ...a,
+        file: {
+          ...a.file,
+          url: toAbsoluteURL(a.file.url),
+        },
+      }));
+    }
+
+    return submission;
+  }
+
   async getCourseByExerciseId(exerciseId: string) {
     const exercise = await prisma.excercise.findUnique({
       where: { id: exerciseId },
