@@ -655,7 +655,7 @@ export class CourseRepository {
     const courseContent = await prisma.course.findUnique({
       where: {
         id: courseId,
-        OR: isAdmin ? [] : [{ status: 'published' }, { instructorId }],
+        OR: isAdmin ? undefined : [{ status: 'published' }, { instructorId }],
       },
       select: {
         sections: {
@@ -698,7 +698,7 @@ export class CourseRepository {
     const isAdmin = role === 'admin';
 
     const course = await prisma.course.findUnique({
-      where: { id, OR: isAdmin ? [] : [{ status: 'published' }, { instructorId: userId }] },
+      where: { id, OR: isAdmin ? undefined : [{ status: 'published' }, { instructorId: userId }] },
       select: {
         id: true,
         title: true,

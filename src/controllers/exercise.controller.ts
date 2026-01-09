@@ -1,0 +1,29 @@
+import { UpdateExerciseDto } from '@/dtos/exercise.dto';
+import { UnauthorizedError } from '@/errors';
+import { EnrollmentRepository } from '@/repositories/enrollment.repository';
+import { ExerciseRepository } from '@/repositories/exercise.repository';
+import { UnitRepository } from '@/repositories/unit.repository';
+import { ExerciseService } from '@/services/exercise.service';
+import { successResponse } from '@/utils/response';
+import { Request, Response } from 'express';
+
+const exerciseService = new ExerciseService(new ExerciseRepository(), new EnrollmentRepository(), new UnitRepository());
+
+export class ExerciseController {
+  async getExerciseByUnitId(req: Request, res: Response) {
+    const { unitId } = req.params;
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedError('UserId is missing');
+    const role = req?.user?.role;
+    const result = await exerciseService.getExerciseByUnitId(unitId, userId, role);
+    successResponse({ res, data: result });
+  }
+  async updateExercise(req: Request, res: Response) {
+    const { unitId } = req.params;
+    const payload = req.body as UpdateExerciseDto;
+    const instructorId = req?.user?.id;
+    if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
+    const result = await exerciseService.updateExercise(unitId, instructorId, payload);
+    successResponse({ res, message: 'Update exercise successfully', data: result });
+  }
+}

@@ -18,7 +18,7 @@ export class StepService {
     if (!course) {
       throw new NotFoundError('Course not found');
     }
-    if (course.instructorId !== userId) {
+    if (course.instructorId !== userId && role !== 'admin') {
       const enrollment = await this.enrollmentRepository.getEnrollment(course.id, userId);
       if (!enrollment || (enrollment.status !== 'active' && enrollment.status !== 'completed'))
         throw new ForbiddenError('Permission denied: You do not have permission to access this content.');
