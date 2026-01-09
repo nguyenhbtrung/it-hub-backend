@@ -12,3 +12,12 @@ export const updateExerciseScheme = z.object({
 });
 
 export type UpdateExerciseDto = z.infer<typeof updateExerciseScheme>;
+
+export const addSubmissionScheme = z.object({
+  score: z.number().min(0).max(10).nullable().optional(),
+  demoUrl: z.array(z.string()).optional(),
+  note: z.string().nullable().optional(),
+  fileIds: z.array(z.string()).nullable().optional(),
+});
+
+export type AddSubmissionDto = z.infer<typeof addSubmissionScheme>;

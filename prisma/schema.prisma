@@ -538,10 +538,10 @@ model ExcerciseAttempt {
 
 model ExcerciseAttachment {
   id       String @id @default(cuid())
-  attempId String
+  attemptId String
   fileId   String
 
-  attempt ExcerciseAttempt @relation(fields: [attempId], references: [id], onDelete: Cascade) 
+  attempt ExcerciseAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade) 
   file    File             @relation(fields: [fileId], references: [id], onDelete: Cascade) 
 
   @@map("excercise_attachments")

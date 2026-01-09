@@ -1,5 +1,5 @@
 import { ExerciseController } from '@/controllers/exercise.controller';
-import { updateExerciseScheme } from '@/dtos/exercise.dto';
+import { addSubmissionScheme, updateExerciseScheme } from '@/dtos/exercise.dto';
 import { updateStepScheme } from '@/dtos/step.dto';
 
 import { UserRole } from '@/generated/prisma/enums';
@@ -24,6 +24,13 @@ router.patch(
   authorize([UserRole.admin, UserRole.instructor]),
   validate(updateExerciseScheme),
   exerciseController.updateExercise.bind(exerciseController)
+);
+
+router.post(
+  '/:exerciseId/submissions',
+  requireAuth,
+  validate(addSubmissionScheme),
+  exerciseController.addSubmission.bind(exerciseController)
 );
 
 // router.delete(

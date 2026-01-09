@@ -1,4 +1,4 @@
-import { UpdateExerciseDto } from '@/dtos/exercise.dto';
+import { AddSubmissionDto, UpdateExerciseDto } from '@/dtos/exercise.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
 import { UserRole } from '@/generated/prisma/enums';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
@@ -24,6 +24,25 @@ export class ExerciseService {
     }
     const exercise = await this.exerciseRepository.getExerciseByUnitId(unitId);
     return exercise;
+  }
+
+  async addSubmission(userId: string, exerciseId: string, payload: AddSubmissionDto) {
+    const { score, demoUrl, note, fileIds } = payload;
+    const attemp = await this.exerciseRepository.addExerciseAttemp({
+      excercise: { connect: { id: exerciseId } },
+      student: { connect: { id: userId } },
+      score,
+      demoUrl,
+      note,
+    });
+    if (fileIds && fileIds.length > 0) {
+      const attachments = await this.exerciseRepository.addAttachments(fileIds, attemp.id);
+      return {
+        ...attemp,
+        attachments,
+      };
+    }
+    return attemp;
   }
 
   async updateExercise(unitId: string, instructorId: string, payload: UpdateExerciseDto) {

@@ -67,6 +67,23 @@ export class ExerciseRepository {
     return exercise?.unit?.section?.course;
   }
 
+  async addExerciseAttemp(data: Prisma.ExcerciseAttemptCreateInput) {
+    const attemp = await prisma.excerciseAttempt.create({
+      data,
+    });
+    return attemp;
+  }
+
+  async addAttachments(fileIds: string[], attemptId: string) {
+    const attachments = await prisma.excerciseAttachment.createMany({
+      data: fileIds.map((fileId) => ({
+        fileId,
+        attemptId,
+      })),
+    });
+    return attachments;
+  }
+
   async updateExercise(unitId: string, data: Prisma.ExcerciseUpdateInput) {
     const exercise = await this.getExerciseByUnitId(unitId);
     if (!exercise) throw new NotFoundError('Exercise not found');

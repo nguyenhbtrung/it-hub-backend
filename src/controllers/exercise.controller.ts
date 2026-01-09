@@ -1,4 +1,4 @@
-import { UpdateExerciseDto } from '@/dtos/exercise.dto';
+import { AddSubmissionDto, UpdateExerciseDto } from '@/dtos/exercise.dto';
 import { UnauthorizedError } from '@/errors';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { ExerciseRepository } from '@/repositories/exercise.repository';
@@ -25,5 +25,13 @@ export class ExerciseController {
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
     const result = await exerciseService.updateExercise(unitId, instructorId, payload);
     successResponse({ res, message: 'Update exercise successfully', data: result });
+  }
+  async addSubmission(req: Request, res: Response) {
+    const { exerciseId } = req.params;
+    const payload = req.body as AddSubmissionDto;
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedError('userId is missing');
+    const result = await exerciseService.addSubmission(userId, exerciseId, payload);
+    successResponse({ res, status: 201, message: 'Add submission successfully', data: result });
   }
 }
