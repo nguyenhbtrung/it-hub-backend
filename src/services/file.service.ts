@@ -225,12 +225,16 @@ export class FileService {
     }
 
     // Soft delete trong database
-    return prisma.file.update({
+    // return prisma.file.update({
+    //   where: { id: fileId },
+    //   data: {
+    //     status: FileStatus.unused,
+    //     deletedAt: new Date(),
+    //   },
+    // });
+
+    return prisma.file.delete({
       where: { id: fileId },
-      data: {
-        status: FileStatus.unused,
-        deletedAt: new Date(),
-      },
     });
   }
 

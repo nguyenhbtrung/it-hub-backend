@@ -13,6 +13,7 @@ export class ExerciseRepository {
             title: true,
             materials: {
               select: {
+                id: true,
                 file: {
                   select: {
                     id: true,
