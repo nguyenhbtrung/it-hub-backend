@@ -523,9 +523,10 @@ model ExcerciseAttempt {
   studentId   String
   score       Float?
   comment     String?
-  quizResults Json
+  quizResults Json?
   demoUrl     Json?
   note        String?
+  createdAt DateTime @default(now())
 
   excercise Excercise @relation(fields: [excerciseId], references: [id], onDelete: Cascade) 
   student   User      @relation(fields: [studentId], references: [id], onDelete: Cascade) 

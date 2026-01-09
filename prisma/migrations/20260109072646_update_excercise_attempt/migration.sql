@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "excercise_attempts" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ALTER COLUMN "quizResults" DROP NOT NULL;
