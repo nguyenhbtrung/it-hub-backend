@@ -399,6 +399,17 @@ export class CourseService {
     return { data, meta: { total, page: Number(page), limit: Number(limit) } };
   }
 
+  async getCourseInstructor(id: string, userId: string, role?: UserRole) {
+    const instructor = await this.courseRepository.getCourseInstructor(id, userId, role);
+    if (!instructor) throw new NotFoundError();
+    return { ...instructor, avatar: instructor?.avatar ? toFileResponseDto(instructor.avatar) : null };
+  }
+
+  async getCourseReviewStatistics(id: string, userId: string, role?: UserRole) {
+    const statistics = await this.courseRepository.getCourseReviewStatistics(id, userId, role);
+    return statistics;
+  }
+
   async getCourseDetail(id: string, userId: string, role?: UserRole, view: 'instructor' | 'student' = 'student') {
     if (view === 'instructor') {
       const course = await this.courseRepository.getCourseDetailByInstructor(id, userId, role);

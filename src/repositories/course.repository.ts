@@ -583,6 +583,72 @@ export class CourseRepository {
     };
   }
 
+  async getCourseInstructor(id: string, instructorId: string, role: UserRole | undefined) {
+    const isAdmin = role === 'admin';
+    const course = await prisma.course.findUnique({
+      where: { id, OR: isAdmin ? undefined : [{ status: 'published' }, { instructorId }] },
+      select: {
+        instructor: {
+          select: {
+            id: true,
+            fullname: true,
+            email: true,
+            avatar: {
+              select: {
+                url: true,
+              },
+            },
+            profile: {
+              select: {
+                specialized: true,
+                school: true,
+                githubUrl: true,
+                linkedinUrl: true,
+                websiteUrl: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return course?.instructor;
+  }
+
+  async getCourseReviewStatistics(courseId: string, instructorId: string, role: UserRole | undefined) {
+    const isAdmin = role === 'admin';
+
+    const course = await prisma.course.findUnique({
+      where: {
+        id: courseId,
+        OR: isAdmin ? undefined : [{ status: 'published' }, { instructorId }],
+      },
+      select: {
+        avgRating: true,
+        reviewCount: true,
+      },
+    });
+
+    if (!course) return null;
+
+    const ratingStats = await prisma.review.groupBy({
+      by: ['rating'],
+      where: { courseId },
+      _count: { rating: true },
+    });
+
+    const distribution = ratingStats.map((r) => ({
+      rating: r.rating,
+      count: r._count.rating,
+      percentage: course.reviewCount > 0 ? (r._count.rating / course.reviewCount) * 100 : 0,
+    }));
+
+    return {
+      avgRating: course.avgRating,
+      reviewCount: course.reviewCount,
+      distribution,
+    };
+  }
+
   async getCourseDetailByStudent(id: string, instructorId: string, role: UserRole | undefined) {
     const isAdmin = role === 'admin';
     const course = await prisma.course.findUnique({

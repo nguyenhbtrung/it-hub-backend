@@ -168,6 +168,29 @@ export class CourseController {
       meta: result.meta,
     });
   }
+
+  async getCourseInstructor(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const userId = req?.user?.id;
+    const role = req?.user?.role;
+    const result = await courseService.getCourseInstructor(courseId, userId || '', role);
+    successResponse({
+      res,
+      data: result,
+    });
+  }
+
+  async getCourseReviewStatistics(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const userId = req?.user?.id;
+    const role = req?.user?.role;
+    const result = await courseService.getCourseReviewStatistics(courseId, userId || '', role);
+    successResponse({
+      res,
+      data: result,
+    });
+  }
+
   async getCourseDetail(req: Request, res: Response) {
     const { view } = req.query as GetCourseDetailQueryDTO;
     const { id: courseId } = req.params as GetCourseDetailParamsDTO;

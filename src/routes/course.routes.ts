@@ -130,6 +130,9 @@ router.get(
 
 router.get('/slug/:slug/courseId', courseController.getCourseIdBySlug.bind(courseController));
 
+router.get('/:id/instructor', optionalAuth, courseController.getCourseInstructor.bind(courseController));
+router.get('/:id/review-statistics', optionalAuth, courseController.getCourseReviewStatistics.bind(courseController));
+
 router.get(
   '/:id',
   optionalAuth,
@@ -137,6 +140,7 @@ router.get(
   validateQuery(getCourseDetailQueryScheme),
   courseController.getCourseDetail.bind(courseController)
 );
+
 router.get(
   '/:id/content',
   optionalAuth,
