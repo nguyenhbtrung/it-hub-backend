@@ -469,12 +469,12 @@ export class CourseRepository {
           },
         },
         orderBy: [
-          { avgRating: 'desc' },
           {
             enrollments: {
               _count: 'desc',
             },
           },
+          { avgRating: 'desc' },
         ],
       }),
       prisma.course.count({ where }),

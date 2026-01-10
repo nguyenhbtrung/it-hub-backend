@@ -115,6 +115,7 @@ model User {
   scope         UserScope
   status        UserStatus @default(active)
   emailVerified Boolean    @default(false)
+  instructorApplicationAt DateTime?
 
   avatarId      String?
   avatar        File?      @relation(name: "UserAvatar", fields: [avatarId], references: [id], onDelete: SetNull) 
