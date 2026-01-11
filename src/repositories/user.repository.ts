@@ -2,6 +2,36 @@ import { prisma } from '../lib/prisma';
 import { User, Prisma } from '@/generated/prisma/client';
 
 export class UserRepository {
+  async getUserProfile(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        fullname: true,
+        role: true,
+        scope: true,
+        instructorApplicationAt: true,
+        avatar: {
+          select: {
+            url: true,
+          },
+        },
+        profile: {
+          select: {
+            bio: true,
+            school: true,
+            specialized: true,
+            skill: true,
+            githubUrl: true,
+            linkedinUrl: true,
+            websiteUrl: true,
+          },
+        },
+      },
+    });
+    return user;
+  }
   async create(data: Prisma.UserCreateInput): Promise<User> {
     return prisma.user.create({ data });
   }

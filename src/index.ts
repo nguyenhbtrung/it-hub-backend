@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import passportConfig from './config/passport';
 import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
 import categoryRoutes from './routes/category.routes';
 import courseRoutes from './routes/course.routes';
 import sectionRoutes from './routes/section.routes';
@@ -51,6 +52,7 @@ app.use(
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/courses', courseRoutes);
