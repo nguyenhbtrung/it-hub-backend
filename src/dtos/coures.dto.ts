@@ -219,3 +219,10 @@ export const getCourseReviewsQueryScheme = z.object({
 });
 
 export type GetCourseReviewsQueryDto = z.infer<typeof getCourseReviewsQueryScheme>;
+
+export const createOrUpdateReviewSchema = z.object({
+  rating: z.number().int().min(0).max(10),
+  comment: z.string().nullable().optional(),
+});
+
+export type CreateOrUpdateReviewDto = z.infer<typeof createOrUpdateReviewSchema>;

@@ -38,6 +38,25 @@ export class CourseRepository {
     return prisma.course.create({ data });
   }
 
+  async createOrUpdateReview(courseId: string, userId: string, data: { rating: number; comment?: string | null }) {
+    const review = await prisma.review.upsert({
+      where: {
+        courseId_userId: {
+          courseId,
+          userId,
+        },
+      },
+      update: data,
+      create: {
+        courseId,
+        userId,
+        ...data,
+      },
+    });
+
+    return review;
+  }
+
   async updateCourseStatus(courseId: string, status: CourseStatus) {
     await prisma.course.update({
       where: { id: courseId },

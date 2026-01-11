@@ -1,6 +1,7 @@
 import {
   AddSectionDto,
   CreateCourseDTO,
+  CreateOrUpdateReviewDto,
   GetCourseContentBreadcrumbQueryDTO,
   GetCourseContentQueryDTO,
   GetCourseDetailParamsDTO,
@@ -49,6 +50,17 @@ export class CourseController {
       message: 'Course created successfully',
       data: result,
       status: 201,
+    });
+  }
+
+  async createOrUpdateReview(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const userId = req?.user?.id;
+    const payload = req.body as CreateOrUpdateReviewDto;
+    const result = await courseService.createOrUpdateReview(courseId, userId || '', payload);
+    successResponse({
+      res,
+      data: result,
     });
   }
 

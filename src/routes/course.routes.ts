@@ -2,6 +2,7 @@ import { CourseController } from '@/controllers/course.controller';
 import {
   addSectionScheme,
   createCourseSchema,
+  createOrUpdateReviewSchema,
   getCourseContentBreadcrumbQueryScheme,
   getCourseContentQueryScheme,
   getCourseDetailParamsScheme,
@@ -41,6 +42,13 @@ router.post(
   authorize([UserRole.admin, UserRole.instructor]),
   validate(addSectionScheme),
   courseController.addSection.bind(courseController)
+);
+
+router.put(
+  '/:id/reviews',
+  requireAuth,
+  validate(createOrUpdateReviewSchema),
+  courseController.createOrUpdateReview.bind(courseController)
 );
 
 router.patch(

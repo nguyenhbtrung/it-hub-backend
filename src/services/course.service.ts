@@ -3,6 +3,7 @@ import {
   CreateCourseDTO,
   CreateCourseResponseDTO,
   CreatedCourseResponseDTO,
+  CreateOrUpdateReviewDto,
   GetCourseReviewsQueryDto,
   GetCoursesQueryDTO,
   GetFeaturedCoursesQueryDTO,
@@ -69,6 +70,11 @@ export class CourseService {
     });
 
     return toCreateCourseResponseDTO(newCourse);
+  }
+
+  async createOrUpdateReview(courseId: string, userId: string, payload: CreateOrUpdateReviewDto) {
+    const review = await this.courseRepository.createOrUpdateReview(courseId, userId, payload);
+    return review;
   }
 
   async updateCourseStatus(courseId: string, userId: string, role: string | undefined, status: CourseStatus) {
@@ -427,7 +433,13 @@ export class CourseService {
 
   async getMyReviewOfTheCourse(id: string, userId: string) {
     const review = await this.courseRepository.getMyReviewOfTheCourse(id, userId);
-    return review;
+    if (!review) return null;
+    return {
+      ...review,
+      user: review
+        ? { ...review?.user, avatar: review?.user.avatar ? toFileResponseDto(review.user.avatar) : null }
+        : undefined,
+    };
   }
 
   async getCourseDetail(id: string, userId: string, role?: UserRole, view: 'instructor' | 'student' = 'student') {
