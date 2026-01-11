@@ -1,10 +1,12 @@
 import { CourseController } from '@/controllers/course.controller';
 import {
   addSectionScheme,
+  createCourseSchema,
   getCourseContentBreadcrumbQueryScheme,
   getCourseContentQueryScheme,
   getCourseDetailParamsScheme,
   getCourseDetailQueryScheme,
+  getCourseReviewsQueryScheme,
   getCoursesQuerySchema,
   getFeaturedCoursesQuerySchema,
   getMyCreatedCoursesSchema,
@@ -29,6 +31,7 @@ router.post(
   '/',
   requireAuth,
   authorize([UserRole.admin, UserRole.instructor]),
+  validate(createCourseSchema),
   courseController.createCourse.bind(courseController)
 );
 
@@ -132,6 +135,12 @@ router.get('/slug/:slug/courseId', courseController.getCourseIdBySlug.bind(cours
 
 router.get('/:id/instructor', optionalAuth, courseController.getCourseInstructor.bind(courseController));
 router.get('/:id/review-statistics', optionalAuth, courseController.getCourseReviewStatistics.bind(courseController));
+router.get(
+  '/:id/reviews',
+  optionalAuth,
+  validateQuery(getCourseReviewsQueryScheme),
+  courseController.getCourseReviews.bind(courseController)
+);
 
 router.get(
   '/:id',

@@ -3,6 +3,7 @@ import {
   CreateCourseDTO,
   CreateCourseResponseDTO,
   CreatedCourseResponseDTO,
+  GetCourseReviewsQueryDto,
   GetCoursesQueryDTO,
   GetFeaturedCoursesQueryDTO,
   GetMyCreatedCoursesDTO,
@@ -405,9 +406,23 @@ export class CourseService {
     return { ...instructor, avatar: instructor?.avatar ? toFileResponseDto(instructor.avatar) : null };
   }
 
-  async getCourseReviewStatistics(id: string, userId: string, role?: UserRole) {
+  async getCourseReviewStatistics(id: string, userId: string, role: UserRole | undefined) {
     const statistics = await this.courseRepository.getCourseReviewStatistics(id, userId, role);
     return statistics;
+  }
+
+  async getCourseReviews(id: string, userId: string, role: UserRole | undefined, query: GetCourseReviewsQueryDto) {
+    const { page = 1, limit = 5, sortBy, sortOrder } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const { reviews, total } = await this.courseRepository.getCourseReviews(id, take, skip, sortBy, sortOrder);
+    return {
+      data: reviews.map((review) => ({
+        ...review,
+        user: { ...review.user, avatar: review.user.avatar ? toFileResponseDto(review.user.avatar) : null },
+      })),
+      meta: { total, page: Number(page), limit: Number(limit) },
+    };
   }
 
   async getCourseDetail(id: string, userId: string, role?: UserRole, view: 'instructor' | 'student' = 'student') {

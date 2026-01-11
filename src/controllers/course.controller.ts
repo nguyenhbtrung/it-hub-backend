@@ -5,6 +5,7 @@ import {
   GetCourseContentQueryDTO,
   GetCourseDetailParamsDTO,
   GetCourseDetailQueryDTO,
+  GetCourseReviewsQueryDto,
   GetCoursesQueryDTO,
   GetFeaturedCoursesQueryDTO,
   GetMyCreatedCoursesDTO,
@@ -188,6 +189,19 @@ export class CourseController {
     successResponse({
       res,
       data: result,
+    });
+  }
+
+  async getCourseReviews(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const query = req.query as unknown as GetCourseReviewsQueryDto;
+    const userId = req?.user?.id;
+    const role = req?.user?.role;
+    const result = await courseService.getCourseReviews(courseId, userId || '', role, query);
+    successResponse({
+      res,
+      data: result.data,
+      meta: result.meta,
     });
   }
 

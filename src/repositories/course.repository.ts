@@ -649,6 +649,44 @@ export class CourseRepository {
     };
   }
 
+  async getCourseReviews(
+    courseId: string,
+    take: number,
+    skip: number,
+    sortBy: string | undefined,
+    sortOrder: string | undefined
+  ) {
+    const where = { courseId };
+    const [reviews, total] = await Promise.all([
+      prisma.review.findMany({
+        where,
+        orderBy: sortBy ? { [sortBy]: sortOrder || 'desc' } : { createdAt: 'desc' },
+        take,
+        skip,
+        select: {
+          rating: true,
+          comment: true,
+          createdAt: true,
+          updatedAt: true,
+          user: {
+            select: {
+              fullname: true,
+              avatar: {
+                select: {
+                  url: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.review.count({
+        where,
+      }),
+    ]);
+    return { reviews, total };
+  }
+
   async getCourseDetailByStudent(id: string, instructorId: string, role: UserRole | undefined) {
     const isAdmin = role === 'admin';
     const course = await prisma.course.findUnique({

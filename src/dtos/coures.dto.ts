@@ -210,3 +210,12 @@ export const getNavigationByContentIdQuerySchema = z.object({
 });
 
 export type GetNavigationByContentIdQueryDto = z.infer<typeof getNavigationByContentIdQuerySchema>;
+
+export const getCourseReviewsQueryScheme = z.object({
+  page: z.string().regex(/^\d+$/).optional().transform(Number),
+  limit: z.string().regex(/^\d+$/).optional().transform(Number),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+});
+
+export type GetCourseReviewsQueryDto = z.infer<typeof getCourseReviewsQueryScheme>;
