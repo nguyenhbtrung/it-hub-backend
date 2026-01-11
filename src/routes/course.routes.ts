@@ -142,6 +142,8 @@ router.get(
   courseController.getCourseReviews.bind(courseController)
 );
 
+router.get('/:id/reviews/me', optionalAuth, courseController.getMyReviewOfTheCourse.bind(courseController));
+
 router.get(
   '/:id',
   optionalAuth,

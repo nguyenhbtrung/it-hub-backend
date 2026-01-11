@@ -651,12 +651,13 @@ export class CourseRepository {
 
   async getCourseReviews(
     courseId: string,
+    userId: string,
     take: number,
     skip: number,
     sortBy: string | undefined,
     sortOrder: string | undefined
   ) {
-    const where = { courseId };
+    const where = { courseId, userId: { not: userId } };
     const [reviews, total] = await Promise.all([
       prisma.review.findMany({
         where,
@@ -685,6 +686,29 @@ export class CourseRepository {
       }),
     ]);
     return { reviews, total };
+  }
+
+  async getMyReviewOfTheCourse(courseId: string, userId: string) {
+    const review = await prisma.review.findUnique({
+      where: { courseId_userId: { courseId, userId } },
+      select: {
+        rating: true,
+        comment: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            fullname: true,
+            avatar: {
+              select: {
+                url: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return review;
   }
 
   async getCourseDetailByStudent(id: string, instructorId: string, role: UserRole | undefined) {

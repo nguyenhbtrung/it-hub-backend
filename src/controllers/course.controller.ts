@@ -205,6 +205,16 @@ export class CourseController {
     });
   }
 
+  async getMyReviewOfTheCourse(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const userId = req?.user?.id;
+    const result = await courseService.getMyReviewOfTheCourse(courseId, userId || '');
+    successResponse({
+      res,
+      data: result,
+    });
+  }
+
   async getCourseDetail(req: Request, res: Response) {
     const { view } = req.query as GetCourseDetailQueryDTO;
     const { id: courseId } = req.params as GetCourseDetailParamsDTO;

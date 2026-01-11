@@ -415,7 +415,7 @@ export class CourseService {
     const { page = 1, limit = 5, sortBy, sortOrder } = query;
     const take = Number(limit);
     const skip = (page - 1) * limit;
-    const { reviews, total } = await this.courseRepository.getCourseReviews(id, take, skip, sortBy, sortOrder);
+    const { reviews, total } = await this.courseRepository.getCourseReviews(id, userId, take, skip, sortBy, sortOrder);
     return {
       data: reviews.map((review) => ({
         ...review,
@@ -423,6 +423,11 @@ export class CourseService {
       })),
       meta: { total, page: Number(page), limit: Number(limit) },
     };
+  }
+
+  async getMyReviewOfTheCourse(id: string, userId: string) {
+    const review = await this.courseRepository.getMyReviewOfTheCourse(id, userId);
+    return review;
   }
 
   async getCourseDetail(id: string, userId: string, role?: UserRole, view: 'instructor' | 'student' = 'student') {
