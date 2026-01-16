@@ -3,7 +3,7 @@ import z from 'zod';
 
 export const updateExerciseScheme = z.object({
   type: z.enum(ExcerciseType).optional(),
-  title: z.string().min(0, 'Title is required').max(60, 'Title must not exceed 60 characters').optional(),
+  title: z.string().min(0, 'Title is required').max(120, 'Title must not exceed 60 characters').optional(),
   description: z.string().optional(),
   content: z.any().optional(),
   deadline: z.coerce.date().nullable().optional(),

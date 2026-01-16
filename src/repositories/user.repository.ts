@@ -14,6 +14,7 @@ export class UserRepository {
         instructorApplicationAt: true,
         avatar: {
           select: {
+            id: true,
             url: true,
           },
         },
@@ -42,6 +43,22 @@ export class UserRepository {
 
   async findById(id: string): Promise<User | null> {
     return prisma.user.findUnique({ where: { id } });
+  }
+
+  async update(id: string, data: Prisma.UserUpdateInput) {
+    const user = await prisma.user.update({
+      where: { id },
+      data,
+    });
+    return user;
+  }
+
+  async updateProfile(userId: string, data: Prisma.UserProfileUpdateInput) {
+    const user = await prisma.userProfile.update({
+      where: { userId },
+      data,
+    });
+    return user;
   }
 
   async updatePassword(id: string, hashedPassword: string): Promise<User> {

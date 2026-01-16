@@ -1,4 +1,5 @@
 import { User, UserRole, UserScope } from '@/generated/prisma/client';
+import z from 'zod';
 
 export interface UserResponseDTO {
   id: string;
@@ -21,3 +22,16 @@ export function toUserResponseDTO(user: User): UserResponseDTO {
     createdAt: user.createdAt,
   };
 }
+
+export const updateMyProfileSchema = z.object({
+  avatarId: z.string().nullable().optional(),
+  fullname: z.string().nullable().optional(),
+  school: z.string().nullable().optional(),
+  specialized: z.string().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  githubUrl: z.url().nullable().optional(),
+  linkedinUrl: z.url().nullable().optional(),
+  websiteUrl: z.url().nullable().optional(),
+});
+
+export type UpdateMyProfileDto = z.infer<typeof updateMyProfileSchema>;
