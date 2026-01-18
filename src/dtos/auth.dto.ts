@@ -55,3 +55,15 @@ export const resetPasswordSchema = z.object({
 });
 
 export type ResetPasswordDTO = z.infer<typeof resetPasswordSchema>;
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string(),
+  newPassword: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+});
+
+export type ChangePasswordDTO = z.infer<typeof changePasswordSchema>;

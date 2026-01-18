@@ -10,6 +10,7 @@ import {
   verifyEmailSchema,
   requestPasswordResetSchema,
   resetPasswordSchema,
+  changePasswordSchema,
 } from '../dtos/auth.dto';
 import { requireAuth } from '@/middleware/auth.middleware';
 
@@ -37,6 +38,12 @@ router.post(
   authController.requestPasswordReset.bind(authController)
 );
 router.post('/reset-password', validate(resetPasswordSchema), authController.resetPassword.bind(authController));
+router.post(
+  '/change-password',
+  requireAuth,
+  validate(changePasswordSchema),
+  authController.changePassword.bind(authController)
+);
 // Protected routes
 router.post('/logout', requireAuth, authController.logout.bind(authController));
 router.post('/logout-all', requireAuth, authController.logoutAll.bind(authController));

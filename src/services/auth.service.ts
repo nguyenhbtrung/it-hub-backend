@@ -13,7 +13,7 @@ import { UserPayload } from '@/type';
 import { RefreshTokenCache } from '@/infra/cache/refreshToken.cache';
 
 const SALT_ROUNDS = 12;
-const ACCESS_TOKEN_EXPIRY = '1m';
+const ACCESS_TOKEN_EXPIRY = '7d';
 const REFRESH_TOKEN_EXPIRY = '7d';
 
 interface TokenPair {
@@ -257,6 +257,25 @@ export class AuthService {
 
     // Invalidate all refresh tokens for security
     await this.refreshTokenRepository.deleteAllByUserId(resetToken.userId);
+  }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const password = await this.userRepository.getPassword(userId);
+
+    if (!password) throw new UnauthorizedError();
+    const isValidPassword = await bcrypt.compare(currentPassword, password);
+    if (!isValidPassword) {
+      throw new BadRequestError('Current password is incorrect');
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+
+    // Update password
+    await this.userRepository.updatePassword(userId, hashedPassword);
+
+    // Invalidate all refresh tokens for security
+    await this.refreshTokenRepository.deleteAllByUserId(userId);
   }
 
   private generateAccessToken(payload: UserPayload) {

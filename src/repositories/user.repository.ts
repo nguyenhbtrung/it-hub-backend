@@ -2,6 +2,15 @@ import { prisma } from '../lib/prisma';
 import { User, Prisma } from '@/generated/prisma/client';
 
 export class UserRepository {
+  async getPassword(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        passwordHash: true,
+      },
+    });
+    return user?.passwordHash;
+  }
   async getUserProfile(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
