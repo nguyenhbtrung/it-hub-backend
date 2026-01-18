@@ -22,6 +22,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'path';
 
+import { redisClient } from './infra/redis/redis.client';
+
 dotenv.config();
 
 const app: Application = express();
@@ -77,7 +79,32 @@ app.use((req, res, next) => {
 // Global error handler (must be last)
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Email service configured: ${process.env.EMAIL_HOST}`);
-});
+async function bootstrap() {
+  try {
+    await redisClient.connect();
+    console.log('Redis connected');
+    const server = app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`Email service configured: ${process.env.EMAIL_HOST}`);
+    });
+    const shutdown = async () => {
+      console.log('Shutting down...');
+      try {
+        await redisClient.quit();
+        console.log('Redis disconnected');
+      } catch (err) {
+        console.error('Error disconnecting Redis:', err);
+      }
+      server.close(() => {
+        console.log('HTTP server closed');
+        process.exit(0);
+      });
+    };
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
+  } catch (err) {
+    console.error('Failed to start application:', err);
+    process.exit(1);
+  }
+}
+bootstrap();

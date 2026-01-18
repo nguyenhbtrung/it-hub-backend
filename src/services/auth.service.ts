@@ -10,9 +10,10 @@ import { EmailService } from './email.service';
 import { ConflictError, UnauthorizedError, BadRequestError, NotFoundError } from '../errors';
 import { toUserResponseDTO, UserResponseDTO } from '../dtos/user.dto';
 import { UserPayload } from '@/type';
+import { RefreshTokenCache } from '@/infra/cache/refreshToken.cache';
 
 const SALT_ROUNDS = 12;
-const ACCESS_TOKEN_EXPIRY = '7d';
+const ACCESS_TOKEN_EXPIRY = '1m';
 const REFRESH_TOKEN_EXPIRY = '7d';
 
 interface TokenPair {
@@ -100,6 +101,12 @@ export class AuthService {
   }
 
   async refreshAccessToken(refreshToken: string): Promise<TokenPair> {
+    // Find refresh token in cache
+    const cachedToken = await RefreshTokenCache.get(refreshToken);
+    if (cachedToken) {
+      return { accessToken: cachedToken.accessToken, refreshToken: cachedToken.refreshToken };
+    }
+
     // Find refresh token in database
     const storedToken = await this.refreshTokenRepository.findByToken(refreshToken);
 
@@ -131,6 +138,8 @@ export class AuthService {
 
     // Delete old refresh token
     await this.refreshTokenRepository.deleteByToken(refreshToken);
+
+    await RefreshTokenCache.set(storedToken.token, tokens.refreshToken, tokens.accessToken);
 
     return tokens;
   }
@@ -250,12 +259,16 @@ export class AuthService {
     await this.refreshTokenRepository.deleteAllByUserId(resetToken.userId);
   }
 
+  private generateAccessToken(payload: UserPayload) {
+    return jwt.sign(payload, process.env.JWT_SECRET!, {
+      expiresIn: ACCESS_TOKEN_EXPIRY,
+    });
+  }
+
   private async generateTokenPair(userId: string, email: string, role: UserRole, scope: UserScope): Promise<TokenPair> {
     // Generate access token
     const payload: UserPayload = { id: userId, email, role, scope };
-    const accessToken = jwt.sign(payload, process.env.JWT_SECRET!, {
-      expiresIn: ACCESS_TOKEN_EXPIRY,
-    });
+    const accessToken = this.generateAccessToken(payload);
 
     // Generate refresh token
     const refreshToken = jwt.sign({ id: userId, type: 'refresh' }, process.env.JWT_SECRET!, {
