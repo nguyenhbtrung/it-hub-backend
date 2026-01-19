@@ -23,6 +23,7 @@ import morgan from 'morgan';
 import path from 'path';
 
 import { redisClient } from './infra/redis/redis.client';
+import { getFileService } from './services/factories/file-service.factory';
 
 dotenv.config();
 
@@ -52,6 +53,8 @@ app.use(
 // Apply rate limiting to all API routes
 // app.use('/api/', apiLimiter);
 
+const fileService = getFileService();
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -63,7 +66,7 @@ app.use('/api/units', unitRoutes);
 app.use('/api/steps', stepRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
-app.use('/api/files', fileRoutes);
+app.use('/api/files', fileRoutes(fileService));
 app.use('/api/ai', aiRoutes);
 
 // Health check

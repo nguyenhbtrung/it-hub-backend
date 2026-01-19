@@ -10,8 +10,9 @@ import { FileStatus } from '@/generated/prisma/enums';
 import { NotFoundError } from '@/errors';
 import { toAbsoluteURL } from '@/utils/file';
 import { toFileResponseDto, UploadFileDto } from '@/dtos/file.dto';
+import { FileService } from './interfaces/file.service';
 
-export class FileService {
+export class LocalFileService implements FileService {
   /**
    * Xác định loại file dựa trên MIME type
    */

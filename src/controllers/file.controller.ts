@@ -1,14 +1,13 @@
-// src/controllers/file.controller.ts
 import { Request, Response } from 'express';
-import { FileService } from '../services/file.service';
 import fs from 'fs';
 import path from 'path';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '@/errors';
 import { successResponse } from '@/utils/response';
-
-const fileService = new FileService();
+import { FileService } from '@/services/interfaces/file.service';
 
 export class FileController {
+  constructor(private readonly fileService: FileService) {}
+
   /**
    * Upload single file
    */
@@ -21,7 +20,7 @@ export class FileController {
     if (!userId) throw new UnauthorizedError('userId is missing');
     const isPermanent = req.body.isPermanent === 'true';
 
-    const file = await fileService.uploadFile({
+    const file = await this.fileService.uploadFile({
       file: req.file,
       userId,
       isPermanent,
@@ -47,7 +46,7 @@ export class FileController {
     if (!userId) throw new UnauthorizedError('userId is missing');
     const isPermanent = req.body.isPermanent === 'true';
 
-    const uploadPromises = req.files.map((file) => fileService.uploadFile({ file, userId, isPermanent }));
+    const uploadPromises = req.files.map((file) => this.fileService.uploadFile({ file, userId, isPermanent }));
     const files = await Promise.all(uploadPromises);
 
     successResponse({
@@ -63,7 +62,7 @@ export class FileController {
    */
   async getFile(req: Request, res: Response) {
     const { fileId } = req.params;
-    const file = await fileService.getFile(fileId);
+    const file = await this.fileService.getFile(fileId);
 
     successResponse({ res, data: file });
   }
@@ -76,7 +75,7 @@ export class FileController {
     const userId = req.user?.id;
     if (!userId) throw new UnauthorizedError('userId is missing');
 
-    const file = await fileService.markAsPermanent(fileId, userId);
+    const file = await this.fileService.markAsPermanent(fileId, userId);
 
     successResponse({
       res,
@@ -93,7 +92,7 @@ export class FileController {
     const userId = req.user?.id;
     if (!userId) throw new UnauthorizedError('userId is missing');
 
-    await fileService.deleteFile(fileId, userId);
+    await this.fileService.deleteFile(fileId, userId);
 
     successResponse({ res, message: 'File deleted successfully' });
   }
@@ -105,7 +104,7 @@ export class FileController {
     const { fileId } = req.params;
     const range = req.headers.range;
 
-    const filePath = await fileService.getFilePath(fileId);
+    const filePath = await this.fileService.getFilePath(fileId);
     const stat = fs.statSync(filePath);
     const fileSize = stat.size;
 
@@ -144,7 +143,7 @@ export class FileController {
    */
   async serveFile(req: Request, res: Response) {
     const { fileId } = req.params;
-    const filePath = await fileService.getFilePath(fileId);
+    const filePath = await this.fileService.getFilePath(fileId);
 
     // Set appropriate headers
     // res.sendFile('D:\\repos\\ITHub\\it-hub-backend\\' + filePath);
@@ -153,7 +152,7 @@ export class FileController {
 
   async getFileUrl(req: Request, res: Response) {
     const { fileId } = req.params;
-    const url = await fileService.getFileAsoluteUrl(fileId);
+    const url = await this.fileService.getFileAsoluteUrl(fileId);
     successResponse({ res, data: url });
   }
 
@@ -176,7 +175,7 @@ export class FileController {
    */
   async cleanupTemporaryFiles(req: Request, res: Response) {
     const hours = parseInt(req.query.hours as string) || 24;
-    const result = await fileService.cleanupTemporaryFiles(hours);
+    const result = await this.fileService.cleanupTemporaryFiles(hours);
 
     successResponse({ res, message: 'Cleanup completed', data: result });
   }
