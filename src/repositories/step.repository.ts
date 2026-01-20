@@ -1,5 +1,6 @@
 import { UpdateStepDto } from '@/dtos/step.dto';
 import { NotFoundError } from '@/errors';
+import { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { title } from 'node:process';
 
@@ -79,6 +80,16 @@ export class StepRepository {
       },
     };
   }
+  async getStepContentById(id: string) {
+    const step = await prisma.step.findUnique({
+      where: { id },
+      select: {
+        content: true,
+      },
+    });
+    return step?.content;
+  }
+
   async getStepById(id: string) {
     const step = await prisma.step.findUnique({
       where: { id },
@@ -119,8 +130,9 @@ export class StepRepository {
     return step?.lesson?.section?.course;
   }
 
-  async updateStep(stepId: string, data: UpdateStepData) {
-    const step = await prisma.step.update({
+  async updateStep(stepId: string, data: UpdateStepData, tx?: Prisma.TransactionClient) {
+    const client = tx || prisma;
+    const step = await client.step.update({
       where: { id: stepId },
       data,
     });

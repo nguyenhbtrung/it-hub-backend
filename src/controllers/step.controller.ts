@@ -1,12 +1,19 @@
 import { UpdateStepDto } from '@/dtos/step.dto';
 import { UnauthorizedError } from '@/errors';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
+import { FileRepository } from '@/repositories/file.repository';
 import { StepRepository } from '@/repositories/step.repository';
+import { UnitOfWork } from '@/repositories/unitOfWork';
 import { StepService } from '@/services/step.service';
 import { successResponse } from '@/utils/response';
 import { Request, Response } from 'express';
 
-const stepService = new StepService(new StepRepository(), new EnrollmentRepository());
+const stepService = new StepService(
+  new StepRepository(),
+  new EnrollmentRepository(),
+  new FileRepository(),
+  new UnitOfWork()
+);
 
 export class StepController {
   async getStepById(req: Request, res: Response) {

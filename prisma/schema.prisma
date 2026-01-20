@@ -226,11 +226,23 @@ model File {
   materials     Material[]
   excerciseAttachments ExcerciseAttachment[]
   postAttachments PostAttachment[]
+  fileUsages FileUsage[]
 
   createdAt     DateTime   @default(now())
   deletedAt     DateTime?
 
   @@map("files")
+}
+
+model FileUsage {
+  id       String @id @default(cuid())
+
+  fileId   String @unique
+  file     File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  stepId   String?
+  step     Step? @relation(fields: [stepId], references: [id], onDelete: SetNull)
+  @@map("file_usages")
 }
 
 model Category {
@@ -456,6 +468,7 @@ model Step {
   lesson Unit @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   learningProgress LearningProgress[]
   courseLastAccess CourseLastAccess[]
+  fileUsages FileUsage[]
 
   @@index([lessonId])
   @@map("steps")

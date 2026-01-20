@@ -88,3 +88,48 @@ export function extractText(node: any): string {
   if (!node.content) return '';
   return node.content.map((c: any) => (c.type === 'text' ? c.text : extractText(c))).join('');
 }
+
+export function extractFileIdsFromContent(doc: any): string[] {
+  const ids = new Set<string>();
+
+  function walk(node?: any) {
+    if (!node) return;
+    if (Array.isArray(node)) {
+      for (const n of node) walk(n);
+      return;
+    }
+    // node is object
+    const attrs = node.attrs;
+    if (attrs && typeof attrs.fileId === 'string' && attrs.fileId.trim() !== '') {
+      ids.add(attrs.fileId);
+    }
+    if (node.content) walk(node.content);
+  }
+
+  // doc có thể là toàn bộ object hoặc mảng
+  if (Array.isArray((doc as any).content)) {
+    walk((doc as any).content);
+  } else {
+    walk(doc);
+  }
+
+  return Array.from(ids);
+}
+
+export function diffFileIds(oldContent: any, newContent: any): { removed: string[]; added: string[] } {
+  const oldIds = new Set(extractFileIdsFromContent(oldContent));
+  const newIds = new Set(extractFileIdsFromContent(newContent));
+
+  const removed: string[] = [];
+  const added: string[] = [];
+
+  for (const id of oldIds) {
+    if (!newIds.has(id)) removed.push(id);
+  }
+
+  for (const id of newIds) {
+    if (!oldIds.has(id)) added.push(id);
+  }
+
+  return { removed, added };
+}
