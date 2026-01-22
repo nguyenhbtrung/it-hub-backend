@@ -2,7 +2,11 @@ import { FileStatus, FileUsage, Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 
 export class FileRepository {
-  async createOrUpdateFileUsage(fileIds: string[], data: { stepId?: string }, tx?: Prisma.TransactionClient) {
+  async createOrUpdateFileUsage(
+    fileIds: string[],
+    data: { stepId?: string; exerciseId?: string },
+    tx?: Prisma.TransactionClient
+  ) {
     const client = tx || prisma;
 
     // Kết quả trả về: danh sách FileUsage đã được tạo/cập nhật

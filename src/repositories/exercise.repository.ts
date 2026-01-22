@@ -4,8 +4,19 @@ import { prisma } from '@/lib/prisma';
 import { toAbsoluteURL } from '@/utils/file';
 
 export class ExerciseRepository {
-  async getExerciseByUnitId(unitId: string) {
+  async getExerciseContentByUnitId(unitId: string) {
     const exercise = await prisma.excercise.findFirst({
+      where: { unitId },
+      select: {
+        id: true,
+        content: true,
+      },
+    });
+    return exercise;
+  }
+  async getExerciseByUnitId(unitId: string, tx?: Prisma.TransactionClient) {
+    const client = tx || prisma;
+    const exercise = await client.excercise.findFirst({
       where: { unitId },
       include: {
         unit: {
@@ -120,10 +131,11 @@ export class ExerciseRepository {
     return attachments;
   }
 
-  async updateExercise(unitId: string, data: Prisma.ExcerciseUpdateInput) {
-    const exercise = await this.getExerciseByUnitId(unitId);
+  async updateExercise(unitId: string, data: Prisma.ExcerciseUpdateInput, tx?: Prisma.TransactionClient) {
+    const client = tx || prisma;
+    const exercise = await this.getExerciseByUnitId(unitId, tx);
     if (!exercise) throw new NotFoundError('Exercise not found');
-    const updatedExercise = await prisma.excercise.update({
+    const updatedExercise = await client.excercise.update({
       where: { id: exercise.id },
       data,
     });

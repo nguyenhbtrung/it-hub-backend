@@ -2,12 +2,20 @@ import { AddSubmissionDto, UpdateExerciseDto } from '@/dtos/exercise.dto';
 import { UnauthorizedError } from '@/errors';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { ExerciseRepository } from '@/repositories/exercise.repository';
+import { FileRepository } from '@/repositories/file.repository';
 import { UnitRepository } from '@/repositories/unit.repository';
+import { UnitOfWork } from '@/repositories/unitOfWork';
 import { ExerciseService } from '@/services/exercise.service';
 import { successResponse } from '@/utils/response';
 import { Request, Response } from 'express';
 
-const exerciseService = new ExerciseService(new ExerciseRepository(), new EnrollmentRepository(), new UnitRepository());
+const exerciseService = new ExerciseService(
+  new ExerciseRepository(),
+  new EnrollmentRepository(),
+  new UnitRepository(),
+  new FileRepository(),
+  new UnitOfWork()
+);
 
 export class ExerciseController {
   async getExerciseByUnitId(req: Request, res: Response) {

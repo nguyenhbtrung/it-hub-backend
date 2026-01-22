@@ -242,6 +242,9 @@ model FileUsage {
 
   stepId   String?
   step     Step? @relation(fields: [stepId], references: [id], onDelete: SetNull)
+
+  exerciseId   String?
+  exercise     Excercise? @relation(fields: [exerciseId], references: [id], onDelete: SetNull)
   @@map("file_usages")
 }
 
@@ -489,6 +492,7 @@ model Excercise {
   excerciseQuizzes ExcerciseQuiz[]
   attempts ExcerciseAttempt[]
   learningProgress LearningProgress[]
+  fileUsages FileUsage[]
 
   @@index([unitId])
   @@map("excercises")
