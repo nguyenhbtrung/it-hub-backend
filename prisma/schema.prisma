@@ -517,7 +517,7 @@ model Quiz {
   id           String @id @default(cuid())
   question     Json
   options      Json
-  explaination String?
+  explaination Json?
 
   excerciseQuizzes ExcerciseQuiz[]
 

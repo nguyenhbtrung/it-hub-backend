@@ -832,6 +832,12 @@ export class CourseRepository {
                     order: true,
                   },
                 },
+                excercises: {
+                  select: {
+                    id: true,
+                    type: true,
+                  },
+                },
               },
             },
           },
