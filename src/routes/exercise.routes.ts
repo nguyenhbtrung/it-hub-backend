@@ -40,11 +40,6 @@ router.post(
   exerciseController.addSubmission.bind(exerciseController)
 );
 
-// router.delete(
-//   '/:id',
-//   requireAuth,
-//   authorize([UserRole.admin, UserRole.instructor]),
-//   exerciseController.deleteStep.bind(exerciseController)
-// );
+router.delete('/submissions/:id', requireAuth, exerciseController.deleteSubmission.bind(exerciseController));
 
 export default router;

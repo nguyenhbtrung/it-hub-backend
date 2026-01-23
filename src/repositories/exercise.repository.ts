@@ -4,6 +4,13 @@ import { prisma } from '@/lib/prisma';
 import { toAbsoluteURL } from '@/utils/file';
 
 export class ExerciseRepository {
+  async getExerciseAttempStudentIdAndAttachments(attemptId: string) {
+    const attemp = await prisma.excerciseAttempt.findUnique({
+      where: { id: attemptId },
+      select: { studentId: true, attachments: true },
+    });
+    return attemp;
+  }
   async getExerciseContentByUnitId(unitId: string) {
     const exercise = await prisma.excercise.findFirst({
       where: { unitId },
@@ -58,6 +65,7 @@ export class ExerciseRepository {
   async getExerciseSubmission(userId: string, exerciseId: string) {
     const submission = await prisma.excerciseAttempt.findFirst({
       where: { studentId: userId, excerciseId: exerciseId },
+      orderBy: { createdAt: 'desc' },
       include: {
         attachments: {
           select: {
@@ -114,15 +122,17 @@ export class ExerciseRepository {
     return exercise?.unit?.section?.course;
   }
 
-  async addExerciseAttemp(data: Prisma.ExcerciseAttemptCreateInput) {
-    const attemp = await prisma.excerciseAttempt.create({
+  async addExerciseAttemp(data: Prisma.ExcerciseAttemptCreateInput, tx?: Prisma.TransactionClient) {
+    const client = tx || prisma;
+    const attemp = await client.excerciseAttempt.create({
       data,
     });
     return attemp;
   }
 
-  async addAttachments(fileIds: string[], attemptId: string) {
-    const attachments = await prisma.excerciseAttachment.createMany({
+  async addAttachments(fileIds: string[], attemptId: string, tx?: Prisma.TransactionClient) {
+    const client = tx || prisma;
+    const attachments = await client.excerciseAttachment.createMany({
       data: fileIds.map((fileId) => ({
         fileId,
         attemptId,
@@ -140,5 +150,12 @@ export class ExerciseRepository {
       data,
     });
     return updatedExercise;
+  }
+
+  async deleteExerciseAttemp(attempId: string, tx?: Prisma.TransactionClient) {
+    const client = tx || prisma;
+    await client.excerciseAttempt.delete({
+      where: { id: attempId },
+    });
   }
 }

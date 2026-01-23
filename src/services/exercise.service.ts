@@ -38,20 +38,27 @@ export class ExerciseService {
 
   async addSubmission(userId: string, exerciseId: string, payload: AddSubmissionDto) {
     const { score, demoUrl, note, fileIds } = payload;
-    const attemp = await this.exerciseRepository.addExerciseAttemp({
-      excercise: { connect: { id: exerciseId } },
-      student: { connect: { id: userId } },
-      score,
-      demoUrl,
-      note,
+    const attemp = await this.uow.execute(async (tx) => {
+      const attemp = await this.exerciseRepository.addExerciseAttemp(
+        {
+          excercise: { connect: { id: exerciseId } },
+          student: { connect: { id: userId } },
+          score,
+          demoUrl,
+          note,
+        },
+        tx
+      );
+      if (fileIds && fileIds.length > 0) {
+        await this.fileRepository.markFilesStatus(fileIds, 'active', tx);
+        const attachments = await this.exerciseRepository.addAttachments(fileIds, attemp.id, tx);
+        return {
+          ...attemp,
+          attachments,
+        };
+      }
+      return attemp;
     });
-    if (fileIds && fileIds.length > 0) {
-      const attachments = await this.exerciseRepository.addAttachments(fileIds, attemp.id);
-      return {
-        ...attemp,
-        attachments,
-      };
-    }
     return attemp;
   }
 
@@ -87,5 +94,16 @@ export class ExerciseService {
     const exercise = await this.exerciseRepository.updateExercise(unitId, payload);
 
     return exercise;
+  }
+
+  async deleteSubmission(userId: string, submissionId: string) {
+    const submission = await this.exerciseRepository.getExerciseAttempStudentIdAndAttachments(submissionId);
+    if (!submission) throw new NotFoundError('Submission not found');
+    if (submission.studentId !== userId) throw new ForbiddenError();
+    const fileIds = submission.attachments.map((att) => att.fileId);
+    await this.uow.execute(async (tx) => {
+      await this.fileRepository.markFilesStatus(fileIds, 'unused', tx);
+      await this.exerciseRepository.deleteExerciseAttemp(submissionId, tx);
+    });
   }
 }

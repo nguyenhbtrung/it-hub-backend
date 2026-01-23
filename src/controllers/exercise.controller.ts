@@ -51,4 +51,12 @@ export class ExerciseController {
     const result = await exerciseService.addSubmission(userId, exerciseId, payload);
     successResponse({ res, status: 201, message: 'Add submission successfully', data: result });
   }
+
+  async deleteSubmission(req: Request, res: Response) {
+    const { id: submissionId } = req.params;
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedError('userId is missing');
+    await exerciseService.deleteSubmission(userId, submissionId);
+    successResponse({ res, status: 200, message: 'Delete submission successfully' });
+  }
 }
