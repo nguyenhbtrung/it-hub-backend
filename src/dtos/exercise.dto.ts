@@ -9,6 +9,7 @@ export const updateExerciseScheme = z.object({
   deadline: z.coerce.date().nullable().optional(),
   duration: z.number().int().positive().nullable().optional(),
   passingScore: z.number().min(0).max(10).nullable().optional(),
+  quizzes: z.any().optional(),
 });
 
 export type UpdateExerciseDto = z.infer<typeof updateExerciseScheme>;

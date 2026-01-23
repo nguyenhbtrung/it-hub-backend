@@ -46,6 +46,11 @@ export class ExerciseRepository {
             },
           },
         },
+        excerciseQuizzes: {
+          include: {
+            quiz: true,
+          },
+        },
       },
     });
 
@@ -57,6 +62,10 @@ export class ExerciseRepository {
           url: toAbsoluteURL(m.file.url),
         },
       }));
+    }
+
+    if (exercise) {
+      (exercise as any).quizzes = exercise.excerciseQuizzes.map((eq) => eq.quiz);
     }
 
     return exercise;
@@ -141,14 +150,72 @@ export class ExerciseRepository {
     return attachments;
   }
 
+  async createQuiz(data: Prisma.QuizCreateInput, tx?: Prisma.TransactionClient) {
+    const client = tx || prisma;
+    return await client.quiz.create({
+      data,
+    });
+  }
+
+  async createExerciseQuiz(data: Prisma.ExcerciseQuizCreateInput, tx?: Prisma.TransactionClient) {
+    const client = tx || prisma;
+    return await client.excerciseQuiz.create({
+      data,
+    });
+  }
+
   async updateExercise(unitId: string, data: Prisma.ExcerciseUpdateInput, tx?: Prisma.TransactionClient) {
     const client = tx || prisma;
+
     const exercise = await this.getExerciseByUnitId(unitId, tx);
     if (!exercise) throw new NotFoundError('Exercise not found');
+
     const updatedExercise = await client.excercise.update({
       where: { id: exercise.id },
       data,
+      include: {
+        unit: {
+          select: {
+            title: true,
+            materials: {
+              select: {
+                id: true,
+                file: {
+                  select: {
+                    id: true,
+                    name: true,
+                    size: true,
+                    type: true,
+                    mimeType: true,
+                    url: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        excerciseQuizzes: {
+          include: {
+            quiz: true,
+          },
+        },
+      },
     });
+
+    if (updatedExercise?.unit?.materials) {
+      updatedExercise.unit.materials = updatedExercise.unit.materials.map((m) => ({
+        ...m,
+        file: {
+          ...m.file,
+          url: toAbsoluteURL(m.file.url),
+        },
+      }));
+    }
+
+    if (updatedExercise) {
+      (updatedExercise as any).quizzes = updatedExercise.excerciseQuizzes.map((eq) => eq.quiz);
+    }
+
     return updatedExercise;
   }
 
@@ -157,5 +224,26 @@ export class ExerciseRepository {
     await client.excerciseAttempt.delete({
       where: { id: attempId },
     });
+  }
+
+  async deleteExerciseQuizzes(exerciseId: string, tx?: Prisma.TransactionClient) {
+    const client = tx || prisma;
+
+    const exerciseQuizzes = await client.excerciseQuiz.findMany({
+      where: { excerciseId: exerciseId },
+      select: { quizId: true },
+    });
+
+    const quizIds = exerciseQuizzes.map((eq) => eq.quizId);
+
+    await client.excerciseQuiz.deleteMany({
+      where: { excerciseId: exerciseId },
+    });
+
+    if (quizIds.length > 0) {
+      await client.quiz.deleteMany({
+        where: { id: { in: quizIds } },
+      });
+    }
   }
 }

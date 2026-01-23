@@ -28,6 +28,7 @@ router.get(
 router.patch(
   '/:unitId',
   requireAuth,
+  serializeBigIntMiddleware,
   authorize([UserRole.admin, UserRole.instructor]),
   validate(updateExerciseScheme),
   exerciseController.updateExercise.bind(exerciseController)
