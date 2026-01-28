@@ -46,7 +46,6 @@ export class AuthController {
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password } = req.body;
-      console.log('email', email);
       const result = await authService.login(email, password);
 
       res.cookie('refreshToken', result.refreshToken, {

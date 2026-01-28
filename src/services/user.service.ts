@@ -1,11 +1,16 @@
 import { toFileResponseDto } from '@/dtos/file.dto';
-import { GetUsersQueryDto, toUserResponseDTO, UpdateMyProfileDto } from '@/dtos/user.dto';
+import { GetUsersQueryDto, toUserResponseDTO, UpdateMyProfileDto, UpdateUserDto } from '@/dtos/user.dto';
+import { NotFoundError } from '@/errors';
+import { UnitOfWork } from '@/repositories/unitOfWork';
 import { UserRepository } from '@/repositories/user.repository';
 import { toAbsoluteURL } from '@/utils/file';
 
 export class UserService {
-  constructor(private userRepository: UserRepository) {}
-  async getUser(query: GetUsersQueryDto) {
+  constructor(
+    private userRepository: UserRepository,
+    private uow: UnitOfWork
+  ) {}
+  async getUsers(query: GetUsersQueryDto) {
     const { page = 1, limit = 10, q, sortBy, sortOrder = 'asc' } = query;
     const take = Number(limit);
     const skip = (page - 1) * limit;
@@ -19,6 +24,12 @@ export class UserService {
     return { data, meta: { total, page: Number(page), limit: Number(limit) } };
   }
 
+  async getUserById(id: string) {
+    const user = await this.userRepository.getUserProfile(id);
+    if (!user) throw new NotFoundError('User not found');
+    return { ...user, avatar: user?.avatar ? toFileResponseDto(user.avatar) : null };
+  }
+
   async getMyProfile(userId: string) {
     const profile = await this.userRepository.getUserProfile(userId);
     if (!profile) return null;
@@ -26,20 +37,61 @@ export class UserService {
     return { ...profile, avatar: profile?.avatar ? toFileResponseDto(profile.avatar) : null };
   }
 
+  async updateUser(userId: any, payload: UpdateUserDto) {
+    const { email, fullname, role, scope, status, school, specialized, bio, githubUrl, linkedinUrl, websiteUrl } =
+      payload;
+    return this.uow.execute(async (tx) => {
+      const user = await this.userRepository.update(
+        userId,
+        {
+          email,
+          fullname,
+          role,
+          scope,
+          status,
+        },
+        tx
+      );
+      const profile = await this.userRepository.updateProfile(
+        userId,
+        {
+          school,
+          specialized,
+          bio,
+          githubUrl,
+          linkedinUrl,
+          websiteUrl,
+        },
+        tx
+      );
+      return { ...toUserResponseDTO(user), profile: profile };
+    });
+  }
+
   async updateMyProfile(userId: string, payload: UpdateMyProfileDto) {
     const { avatarId, fullname, school, specialized, bio, githubUrl, linkedinUrl, websiteUrl } = payload;
-    const user = await this.userRepository.update(userId, {
-      fullname,
-      avatar: avatarId ? { connect: { id: avatarId } } : undefined,
+    return this.uow.execute(async (tx) => {
+      const user = await this.userRepository.update(
+        userId,
+        {
+          fullname,
+          avatar: avatarId ? { connect: { id: avatarId } } : undefined,
+        },
+        tx
+      );
+      const profile = await this.userRepository.updateProfile(
+        userId,
+        {
+          school,
+          specialized,
+          bio,
+          githubUrl,
+          linkedinUrl,
+          websiteUrl,
+        },
+        tx
+      );
+      return { ...toUserResponseDTO(user), profile: profile };
     });
-    const profile = await this.userRepository.updateProfile(userId, {
-      school,
-      specialized,
-      bio,
-      githubUrl,
-      linkedinUrl,
-      websiteUrl,
-    });
-    return { ...toUserResponseDTO(user), profile: profile };
   }
 }

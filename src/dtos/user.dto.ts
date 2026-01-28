@@ -1,4 +1,4 @@
-import { User, UserRole, UserScope } from '@/generated/prisma/client';
+import { User, UserRole, UserScope, UserStatus } from '@/generated/prisma/client';
 import z from 'zod';
 
 export interface UserResponseDTO {
@@ -35,6 +35,22 @@ export const updateMyProfileSchema = z.object({
 });
 
 export type UpdateMyProfileDto = z.infer<typeof updateMyProfileSchema>;
+
+export const updateUserSchema = z.object({
+  email: z.email('Invalid email format').optional(),
+  fullname: z.string().nullable().optional(),
+  school: z.string().nullable().optional(),
+  specialized: z.string().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  githubUrl: z.url().nullable().optional(),
+  linkedinUrl: z.url().nullable().optional(),
+  websiteUrl: z.url().nullable().optional(),
+  role: z.enum(UserRole).optional(),
+  scope: z.enum(UserScope).optional(),
+  status: z.enum(UserStatus).optional(),
+});
+
+export type UpdateUserDto = z.infer<typeof updateUserSchema>;
 
 export const getUsersQueryScheme = z.object({
   page: z.string().regex(/^\d+$/).optional().transform(Number),

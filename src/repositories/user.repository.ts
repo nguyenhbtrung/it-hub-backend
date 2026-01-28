@@ -2,6 +2,19 @@ import { prisma } from '../lib/prisma';
 import { User, Prisma } from '@/generated/prisma/client';
 
 export class UserRepository {
+  private toCreateInput(userId: string, data: Prisma.UserProfileUpdateInput): Prisma.UserProfileCreateInput {
+    return {
+      user: { connect: { id: userId } },
+      bio: typeof data.bio === 'string' ? data.bio : undefined,
+      school: typeof data.school === 'string' ? data.school : undefined,
+      specialized: typeof data.specialized === 'string' ? data.specialized : undefined,
+      githubUrl: typeof data.githubUrl === 'string' ? data.githubUrl : undefined,
+      linkedinUrl: typeof data.linkedinUrl === 'string' ? data.linkedinUrl : undefined,
+      websiteUrl: typeof data.websiteUrl === 'string' ? data.websiteUrl : undefined,
+      skill: data.skill as any,
+    };
+  }
+
   async getUsers(
     take: number,
     skip: number,
@@ -93,18 +106,21 @@ export class UserRepository {
     return prisma.user.findUnique({ where: { id } });
   }
 
-  async update(id: string, data: Prisma.UserUpdateInput) {
-    const user = await prisma.user.update({
+  async update(id: string, data: Prisma.UserUpdateInput, tx?: Prisma.TransactionClient) {
+    const client = tx || prisma;
+    const user = await client.user.update({
       where: { id },
       data,
     });
     return user;
   }
 
-  async updateProfile(userId: string, data: Prisma.UserProfileUpdateInput) {
-    const user = await prisma.userProfile.update({
+  async updateProfile(userId: string, data: Prisma.UserProfileUpdateInput, tx?: Prisma.TransactionClient) {
+    const client = tx || prisma;
+    const user = await client.userProfile.upsert({
       where: { userId },
-      data,
+      update: data,
+      create: this.toCreateInput(userId, data),
     });
     return user;
   }
