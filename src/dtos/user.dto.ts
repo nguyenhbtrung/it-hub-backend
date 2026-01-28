@@ -35,3 +35,13 @@ export const updateMyProfileSchema = z.object({
 });
 
 export type UpdateMyProfileDto = z.infer<typeof updateMyProfileSchema>;
+
+export const getUsersQueryScheme = z.object({
+  page: z.string().regex(/^\d+$/).optional().transform(Number),
+  limit: z.string().regex(/^\d+$/).optional().transform(Number),
+  q: z.string().optional(),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+});
+
+export type GetUsersQueryDto = z.infer<typeof getUsersQueryScheme>;

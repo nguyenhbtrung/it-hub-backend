@@ -1,6 +1,5 @@
 import { ExerciseController } from '@/controllers/exercise.controller';
 import { addSubmissionScheme, updateExerciseScheme } from '@/dtos/exercise.dto';
-import { updateStepScheme } from '@/dtos/step.dto';
 
 import { UserRole } from '@/generated/prisma/enums';
 import { authorize, requireAuth } from '@/middleware/auth.middleware';

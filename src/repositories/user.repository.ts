@@ -2,6 +2,45 @@ import { prisma } from '../lib/prisma';
 import { User, Prisma } from '@/generated/prisma/client';
 
 export class UserRepository {
+  async getUsers(
+    take: number,
+    skip: number,
+    q: string | undefined,
+    sortBy: string | undefined,
+    sortOrder: 'asc' | 'desc'
+  ) {
+    const searchConditions = q
+      ? [
+          { fullname: { contains: q, mode: 'insensitive' as const } },
+          { email: { contains: q, mode: 'insensitive' as const } },
+        ]
+      : [];
+
+    const where: Prisma.UserWhereInput = {
+      OR: q ? searchConditions : undefined,
+    };
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        take,
+        skip,
+        orderBy: sortBy ? { [sortBy]: sortOrder } : { createdAt: 'desc' },
+        select: {
+          id: true,
+          fullname: true,
+          email: true,
+          role: true,
+          scope: true,
+          status: true,
+          createdAt: true,
+          avatar: { select: { url: true } },
+        },
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    return { users, total };
+  }
   async getPassword(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },

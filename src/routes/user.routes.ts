@@ -1,13 +1,22 @@
 import { TagController } from '@/controllers/tag.controller';
 import { UserController } from '@/controllers/user.controller';
 import { getTagsQuerySchema } from '@/dtos/tag.dto';
-import { updateMyProfileSchema } from '@/dtos/user.dto';
-import { requireAuth } from '@/middleware/auth.middleware';
+import { getUsersQueryScheme, updateMyProfileSchema } from '@/dtos/user.dto';
+import { UserRole } from '@/generated/prisma/enums';
+import { authorize, requireAuth } from '@/middleware/auth.middleware';
 import { validate, validateQuery } from '@/middleware/validate.middleware';
 import { Router } from 'express';
 
 const router = Router();
 const userController = new UserController();
+
+router.get(
+  '/',
+  requireAuth,
+  authorize([UserRole.admin]),
+  validateQuery(getUsersQueryScheme),
+  userController.getUsers.bind(userController)
+);
 
 router.get('/me/profile', requireAuth, userController.getMyProfile.bind(userController));
 
