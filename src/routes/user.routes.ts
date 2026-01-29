@@ -45,4 +45,6 @@ router.patch(
   userController.updateMyProfile.bind(userController)
 );
 
+router.delete('/:id', requireAuth, authorize([UserRole.admin]), userController.deleteUser.bind(userController));
+
 export default router;

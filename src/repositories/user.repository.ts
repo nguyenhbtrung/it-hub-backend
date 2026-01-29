@@ -139,4 +139,10 @@ export class UserRepository {
       data: { emailVerified: true },
     });
   }
+
+  async delete(id: string) {
+    await prisma.user.delete({
+      where: { id },
+    });
+  }
 }

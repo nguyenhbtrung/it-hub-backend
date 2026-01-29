@@ -127,4 +127,8 @@ export class UserService {
       return { ...toUserResponseDTO(user), profile: profile };
     });
   }
+
+  async deleteUser(id: string) {
+    await this.userRepository.delete(id);
+  }
 }

@@ -69,4 +69,12 @@ export class UserController {
       data: result,
     });
   }
+
+  async deleteUser(req: Request, res: Response) {
+    const { id } = req.params;
+    await userService.deleteUser(id);
+    successResponse({
+      res,
+    });
+  }
 }
