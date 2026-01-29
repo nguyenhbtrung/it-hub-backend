@@ -1,13 +1,18 @@
+import { SALT_ROUNDS } from '@/constants/auth';
 import { toFileResponseDto } from '@/dtos/file.dto';
-import { GetUsersQueryDto, toUserResponseDTO, UpdateMyProfileDto, UpdateUserDto } from '@/dtos/user.dto';
+import { CreateUserDto, GetUsersQueryDto, toUserResponseDTO, UpdateMyProfileDto, UpdateUserDto } from '@/dtos/user.dto';
 import { NotFoundError } from '@/errors';
 import { UnitOfWork } from '@/repositories/unitOfWork';
 import { UserRepository } from '@/repositories/user.repository';
+import { VerificationTokenRepository } from '@/repositories/verificationToken.repository';
+import { generateRandomToken } from '@/utils/auth';
 import { toAbsoluteURL } from '@/utils/file';
+import bcrypt from 'bcrypt';
 
 export class UserService {
   constructor(
     private userRepository: UserRepository,
+    private verificationTokenRepository: VerificationTokenRepository,
     private uow: UnitOfWork
   ) {}
   async getUsers(query: GetUsersQueryDto) {
@@ -35,6 +40,34 @@ export class UserService {
     if (!profile) return null;
 
     return { ...profile, avatar: profile?.avatar ? toFileResponseDto(profile.avatar) : null };
+  }
+
+  async createUser(payload: CreateUserDto) {
+    const { email, fullname, password, role, scope } = payload;
+
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+    const user = await this.userRepository.create({
+      email,
+      passwordHash: hashedPassword,
+      fullname,
+      role,
+      scope,
+    });
+
+    const verificationToken = generateRandomToken();
+    const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await this.verificationTokenRepository.create({
+      token: verificationToken,
+      user: { connect: { id: user.id } },
+      expiresAt: verificationExpiresAt,
+    });
+
+    // Send verification email
+    // await this.emailService.sendVerificationEmail(user.email, verificationToken);
+
+    return toUserResponseDTO(user);
   }
 
   async updateUser(userId: any, payload: UpdateUserDto) {

@@ -11,10 +11,8 @@ import { ConflictError, UnauthorizedError, BadRequestError, NotFoundError } from
 import { toUserResponseDTO, UserResponseDTO } from '../dtos/user.dto';
 import { UserPayload } from '@/type';
 import { RefreshTokenCache } from '@/infra/cache/refreshToken.cache';
-
-const SALT_ROUNDS = 12;
-const ACCESS_TOKEN_EXPIRY = '7d';
-const REFRESH_TOKEN_EXPIRY = '7d';
+import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY, SALT_ROUNDS } from '@/constants/auth';
+import { generateRandomToken } from '@/utils/auth';
 
 interface TokenPair {
   accessToken: string;
@@ -54,7 +52,7 @@ export class AuthService {
     });
 
     // Generate verification token
-    const verificationToken = this.generateRandomToken();
+    const verificationToken = generateRandomToken();
     const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     await this.verificationTokenRepository.create({
@@ -192,7 +190,7 @@ export class AuthService {
     }
 
     // Generate new verification token
-    const verificationToken = this.generateRandomToken();
+    const verificationToken = generateRandomToken();
     const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     await this.verificationTokenRepository.create({
@@ -221,7 +219,7 @@ export class AuthService {
     }
 
     // Generate reset token
-    const resetToken = this.generateRandomToken();
+    const resetToken = generateRandomToken();
     const resetExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     await this.passwordResetTokenRepository.create({
@@ -303,9 +301,5 @@ export class AuthService {
     });
 
     return { accessToken, refreshToken };
-  }
-
-  private generateRandomToken(): string {
-    return crypto.randomBytes(32).toString('hex');
   }
 }

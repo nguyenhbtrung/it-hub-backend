@@ -72,6 +72,7 @@ export class UserRepository {
         fullname: true,
         role: true,
         scope: true,
+        status: true,
         instructorApplicationAt: true,
         avatar: {
           select: {

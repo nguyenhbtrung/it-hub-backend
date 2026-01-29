@@ -71,7 +71,6 @@ export class ExerciseService {
       throw new ForbiddenError('Permission denied: You are not the owner of this course');
     }
 
-    // Parse quizzes nếu nó là string
     let parsedQuizzes: any[] | null = null;
     if (payload.quizzes !== undefined) {
       try {

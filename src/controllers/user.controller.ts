@@ -1,12 +1,13 @@
-import { GetUsersQueryDto, UpdateMyProfileDto, UpdateUserDto } from '@/dtos/user.dto';
+import { CreateUserDto, GetUsersQueryDto, UpdateMyProfileDto, UpdateUserDto } from '@/dtos/user.dto';
 import { UnauthorizedError } from '@/errors';
 import { UnitOfWork } from '@/repositories/unitOfWork';
 import { UserRepository } from '@/repositories/user.repository';
+import { VerificationTokenRepository } from '@/repositories/verificationToken.repository';
 import { UserService } from '@/services/user.service';
 import { successResponse } from '@/utils/response';
 import { Request, Response } from 'express';
 
-const userService = new UserService(new UserRepository(), new UnitOfWork());
+const userService = new UserService(new UserRepository(), new VerificationTokenRepository(), new UnitOfWork());
 
 export class UserController {
   async getUsers(req: Request, res: Response) {
@@ -34,6 +35,16 @@ export class UserController {
     const result = await userService.getMyProfile(userId);
     successResponse({
       res,
+      data: result,
+    });
+  }
+
+  async createUser(req: Request, res: Response) {
+    const payload = req.body as CreateUserDto;
+    const result = await userService.createUser(payload);
+    successResponse({
+      res,
+      status: 201,
       data: result,
     });
   }

@@ -23,6 +23,16 @@ export function toUserResponseDTO(user: User): UserResponseDTO {
   };
 }
 
+export const createUserSchema = z.object({
+  email: z.email('Invalid email format'),
+  fullname: z.string().nullable().optional(),
+  password: z.string('Password is required'),
+  role: z.enum(UserRole),
+  scope: z.enum(UserScope),
+});
+
+export type CreateUserDto = z.infer<typeof createUserSchema>;
+
 export const updateMyProfileSchema = z.object({
   avatarId: z.string().nullable().optional(),
   fullname: z.string().nullable().optional(),
