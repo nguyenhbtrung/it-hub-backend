@@ -1,6 +1,13 @@
 import { SALT_ROUNDS } from '@/constants/auth';
 import { toFileResponseDto } from '@/dtos/file.dto';
-import { CreateUserDto, GetUsersQueryDto, toUserResponseDTO, UpdateMyProfileDto, UpdateUserDto } from '@/dtos/user.dto';
+import {
+  CreateUserDto,
+  GetInstructorRegistrationsQueryDto,
+  GetUsersQueryDto,
+  toUserResponseDTO,
+  UpdateMyProfileDto,
+  UpdateUserDto,
+} from '@/dtos/user.dto';
 import { NotFoundError } from '@/errors';
 import { UnitOfWork } from '@/repositories/unitOfWork';
 import { UserRepository } from '@/repositories/user.repository';
@@ -33,6 +40,20 @@ export class UserService {
     const user = await this.userRepository.getUserProfile(id);
     if (!user) throw new NotFoundError('User not found');
     return { ...user, avatar: user?.avatar ? toFileResponseDto(user.avatar) : null };
+  }
+
+  async getInstructorRegistations(query: GetInstructorRegistrationsQueryDto) {
+    const { page = 1, limit = 10, q, sortBy, sortOrder = 'asc' } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const { users, total } = await this.userRepository.getInstructorRegistations(take, skip, q, sortBy, sortOrder);
+
+    const data = users.map((user: any) => {
+      const avatarUrl = user?.avatar?.url ? toAbsoluteURL(user.avatar.url) : null;
+      delete user.avatar;
+      return { ...user, avatarUrl };
+    });
+    return { data, meta: { total, page: Number(page), limit: Number(limit) } };
   }
 
   async getMyProfile(userId: string) {

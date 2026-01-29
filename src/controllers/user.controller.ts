@@ -1,4 +1,10 @@
-import { CreateUserDto, GetUsersQueryDto, UpdateMyProfileDto, UpdateUserDto } from '@/dtos/user.dto';
+import {
+  CreateUserDto,
+  GetInstructorRegistrationsQueryDto,
+  GetUsersQueryDto,
+  UpdateMyProfileDto,
+  UpdateUserDto,
+} from '@/dtos/user.dto';
 import { UnauthorizedError } from '@/errors';
 import { UnitOfWork } from '@/repositories/unitOfWork';
 import { UserRepository } from '@/repositories/user.repository';
@@ -26,6 +32,16 @@ export class UserController {
     successResponse({
       res,
       data: result,
+    });
+  }
+
+  async getInstructorRegistations(req: Request, res: Response) {
+    const query = req?.query as unknown as GetInstructorRegistrationsQueryDto;
+    const result = await userService.getInstructorRegistations(query);
+    successResponse({
+      res,
+      data: result.data,
+      meta: result.meta,
     });
   }
 

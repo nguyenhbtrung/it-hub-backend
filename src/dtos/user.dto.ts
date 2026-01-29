@@ -71,3 +71,13 @@ export const getUsersQueryScheme = z.object({
 });
 
 export type GetUsersQueryDto = z.infer<typeof getUsersQueryScheme>;
+
+export const getInstructorRegistrationsQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/).optional().transform(Number),
+  limit: z.string().regex(/^\d+$/).optional().transform(Number),
+  q: z.string().optional(),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+});
+
+export type GetInstructorRegistrationsQueryDto = z.infer<typeof getInstructorRegistrationsQuerySchema>;

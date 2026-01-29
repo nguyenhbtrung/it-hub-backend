@@ -54,6 +54,48 @@ export class UserRepository {
 
     return { users, total };
   }
+
+  async getInstructorRegistations(
+    take: number,
+    skip: number,
+    q: string | undefined,
+    sortBy: string | undefined,
+    sortOrder: 'asc' | 'desc'
+  ) {
+    const searchConditions = q
+      ? [
+          { fullname: { contains: q, mode: 'insensitive' as const } },
+          { email: { contains: q, mode: 'insensitive' as const } },
+        ]
+      : [];
+
+    const where: Prisma.UserWhereInput = {
+      role: 'student',
+      instructorApplicationAt: {
+        not: null,
+      },
+      OR: q ? searchConditions : undefined,
+    };
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        take,
+        skip,
+        orderBy: sortBy ? { [sortBy]: sortOrder } : { instructorApplicationAt: 'desc' },
+        select: {
+          id: true,
+          fullname: true,
+          email: true,
+          instructorApplicationAt: true,
+          avatar: { select: { url: true } },
+        },
+      }),
+      prisma.user.count({ where }),
+    ]);
+
+    return { users, total };
+  }
+
   async getPassword(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },

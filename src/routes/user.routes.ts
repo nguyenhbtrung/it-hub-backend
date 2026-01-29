@@ -1,7 +1,13 @@
 import { TagController } from '@/controllers/tag.controller';
 import { UserController } from '@/controllers/user.controller';
 import { getTagsQuerySchema } from '@/dtos/tag.dto';
-import { createUserSchema, getUsersQueryScheme, updateMyProfileSchema, updateUserSchema } from '@/dtos/user.dto';
+import {
+  createUserSchema,
+  getInstructorRegistrationsQuerySchema,
+  getUsersQueryScheme,
+  updateMyProfileSchema,
+  updateUserSchema,
+} from '@/dtos/user.dto';
 import { UserRole } from '@/generated/prisma/enums';
 import { authorize, requireAuth } from '@/middleware/auth.middleware';
 import { validate, validateQuery } from '@/middleware/validate.middleware';
@@ -21,6 +27,14 @@ router.get(
 router.get('/:id', requireAuth, authorize([UserRole.admin]), userController.getUserById.bind(userController));
 
 router.get('/me/profile', requireAuth, userController.getMyProfile.bind(userController));
+
+router.get(
+  '/instructor/registrations',
+  requireAuth,
+  authorize([UserRole.admin]),
+  validateQuery(getInstructorRegistrationsQuerySchema),
+  userController.getInstructorRegistations.bind(userController)
+);
 
 router.post(
   '/',
