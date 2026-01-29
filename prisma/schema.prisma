@@ -217,6 +217,10 @@ model File {
   status   FileStatus
   metadata Json
 
+  providerPublicId  String?
+  provider          String @default("local")
+
+
   ownerId   String
   owner     User @relation("OwnerFile", fields: [ownerId], references: [id], onDelete: Cascade)
 
