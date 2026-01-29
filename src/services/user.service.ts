@@ -92,8 +92,20 @@ export class UserService {
   }
 
   async updateUser(userId: any, payload: UpdateUserDto) {
-    const { email, fullname, role, scope, status, school, specialized, bio, githubUrl, linkedinUrl, websiteUrl } =
-      payload;
+    const {
+      email,
+      fullname,
+      role,
+      scope,
+      status,
+      school,
+      specialized,
+      bio,
+      githubUrl,
+      linkedinUrl,
+      websiteUrl,
+      instructorApplicationAt,
+    } = payload;
     return this.uow.execute(async (tx) => {
       const user = await this.userRepository.update(
         userId,
@@ -103,6 +115,7 @@ export class UserService {
           role,
           scope,
           status,
+          instructorApplicationAt,
         },
         tx
       );

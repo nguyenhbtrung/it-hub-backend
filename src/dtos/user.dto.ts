@@ -58,6 +58,7 @@ export const updateUserSchema = z.object({
   role: z.enum(UserRole).optional(),
   scope: z.enum(UserScope).optional(),
   status: z.enum(UserStatus).optional(),
+  instructorApplicationAt: z.coerce.date().nullable().optional(),
 });
 
 export type UpdateUserDto = z.infer<typeof updateUserSchema>;
