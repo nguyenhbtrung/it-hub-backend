@@ -7,23 +7,18 @@ import { uploadConfig } from '../config/upload.config';
 import { FileType, FileMetadata } from '../types/file.types';
 import { prisma } from '@/lib/prisma';
 import { FileStatus } from '@/generated/prisma/enums';
-import { NotFoundError } from '@/errors';
-import { toAbsoluteURL } from '@/utils/file';
-import { toFileResponseDto, UploadFileDto } from '@/dtos/file.dto';
+import { BadRequestError, NotFoundError } from '@/errors';
+import { getFileType, toAbsoluteURL } from '@/utils/file';
+import {
+  ConfirmUploadDto,
+  GenerateSignedUploadOptionsDto,
+  SignedUploadResponseDto,
+  toFileResponseDto,
+  UploadFileDto,
+} from '@/dtos/file.dto';
 import { FileService } from './interfaces/file.service';
 
 export class LocalFileService implements FileService {
-  /**
-   * Xác định loại file dựa trên MIME type
-   */
-  private getFileType(mimeType: string): FileType {
-    if (mimeType.startsWith('image/')) return FileType.IMAGE;
-    if (mimeType.startsWith('video/')) return FileType.VIDEO;
-    if (mimeType.startsWith('application/pdf') || mimeType.includes('document') || mimeType.includes('text'))
-      return FileType.DOCUMENT;
-    return FileType.OTHER;
-  }
-
   /**
    * Tạo thumbnail cho image
    */
@@ -97,7 +92,7 @@ export class LocalFileService implements FileService {
    */
   async uploadFile(data: UploadFileDto) {
     const { file, userId, isPermanent = false } = data;
-    const fileType = this.getFileType(file.mimetype);
+    const fileType = getFileType(file.mimetype);
 
     let metadata: FileMetadata = {
       originalName: file.originalname,
@@ -144,6 +139,13 @@ export class LocalFileService implements FileService {
     return toFileResponseDto(fileRecord);
   }
 
+  generateSignedUpload(options?: GenerateSignedUploadOptionsDto): SignedUploadResponseDto {
+    throw new BadRequestError('Local storage does not support signed upload');
+  }
+  async confirmUpload(data: ConfirmUploadDto, userId: string): Promise<any> {
+    throw new BadRequestError('Local storage does not support confirm upload');
+  }
+
   /**
    * Chuyển file từ temporary sang permanent
    */
@@ -178,11 +180,6 @@ export class LocalFileService implements FileService {
   async getFile(fileId: string) {
     const file = await prisma.file.findUnique({
       where: { id: fileId },
-      include: {
-        owner: {
-          select: { id: true, fullname: true, email: true },
-        },
-      },
     });
     if (!file) throw new NotFoundError('File not found');
     return toFileResponseDto(file);

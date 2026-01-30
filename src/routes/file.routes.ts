@@ -22,6 +22,9 @@ export default function fileRoutes(fileService: FileService) {
     fileController.uploadMultipleFiles.bind(fileController)
   );
 
+  router.post('/signed-upload', requireAuth, fileController.generateSignedUpload.bind(fileController));
+  router.post('/confirm-upload', requireAuth, fileController.confirmUpload.bind(fileController));
+
   // File management
   router.get('/:fileId', requireAuth, fileController.getFile.bind(fileController));
 

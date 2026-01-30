@@ -27,3 +27,25 @@ export interface UploadFileDto {
   userId: string;
   isPermanent?: boolean;
 }
+
+export interface GenerateSignedUploadOptionsDto {
+  mimeType?: string;
+}
+
+export interface SignedUploadResponseDto {
+  cloudName: string;
+  apiKey: string;
+  timestamp: number;
+  signature: string;
+  folder: string;
+  resourceType: 'image' | 'video' | 'raw' | 'auto';
+}
+
+export class ConfirmUploadDto {
+  providerPublicId!: string;
+  url!: string;
+  mimeType!: string;
+  size!: number;
+  originalName!: string;
+  isPermanent?: boolean;
+}

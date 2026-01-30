@@ -4,6 +4,7 @@ import path from 'path';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '@/errors';
 import { successResponse } from '@/utils/response';
 import { FileService } from '@/services/interfaces/file.service';
+import { ConfirmUploadDto, GenerateSignedUploadOptionsDto } from '@/dtos/file.dto';
 
 export class FileController {
   constructor(private readonly fileService: FileService) {}
@@ -54,6 +55,30 @@ export class FileController {
       status: 201,
       message: 'Files uploaded successfully',
       data: files,
+    });
+  }
+
+  async generateSignedUpload(req: Request, res: Response) {
+    const payload = req.body;
+    const result = this.fileService.generateSignedUpload(payload);
+    successResponse({
+      res,
+      data: result,
+    });
+  }
+
+  async confirmUpload(req: Request, res: Response) {
+    const userId = req.user?.id;
+    if (!userId) throw new UnauthorizedError('userId is missing');
+
+    const payload = req.body as ConfirmUploadDto;
+
+    const result = await this.fileService.confirmUpload(payload, userId);
+
+    successResponse({
+      res,
+      status: 201,
+      data: result,
     });
   }
 
