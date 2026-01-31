@@ -348,7 +348,7 @@ export class CourseService {
 
   async getRecommendedCourses(categoryId: string, userId?: string) {
     const courses = await this.courseRepository.getRecommendedCoursesByCategory(categoryId);
-    return courses;
+    return courses.map((course) => ({ ...course, img: course?.img ? toFileResponseDto(course.img) : null }));
   }
 
   async getFeaturedCourses(query: GetFeaturedCoursesQueryDTO): Promise<any> {
