@@ -100,6 +100,7 @@ export class CategoryRepository {
         where: {
           categoryId: id,
           status: 'published',
+          avgRating: { gt: 0 },
         },
         _avg: {
           avgRating: true,
@@ -125,6 +126,7 @@ export class CategoryRepository {
       students,
     };
   }
+
   async getCategoryIdBySlug(slug: string) {
     const category = await prisma.category.findUnique({
       where: { slug },
