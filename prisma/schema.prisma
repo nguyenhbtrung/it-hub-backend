@@ -477,6 +477,7 @@ model Step {
   learningProgress LearningProgress[]
   courseLastAccess CourseLastAccess[]
   fileUsages FileUsage[]
+  stepEmbeddings StepEmbedding[]
 
   @@index([lessonId])
   @@map("steps")
@@ -726,4 +727,24 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
 
   @@map("password_reset_tokens")
+}
+
+model StepEmbedding {
+  id        String @id @default(cuid())
+  stepId    String
+
+  courseId  String?
+  sectionId String?
+  unitId    String?
+
+  chunkIndex  Int
+  content     String
+  embedding Unsupported("vector")?
+
+  step      Step                   @relation(fields: [stepId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+  @@index([sectionId])
+  @@index([unitId])
+  @@map("step_embeddings")
 }
