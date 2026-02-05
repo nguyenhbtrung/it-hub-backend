@@ -133,3 +133,84 @@ export function diffFileIds(oldContent: any, newContent: any): { removed: string
 
   return { removed, added };
 }
+
+export function JsonContentToMarkdown(node: any): string {
+  if (!node) return '';
+
+  // Text node
+  if (node.type === 'text') {
+    let text = node.text || '';
+
+    if (node.marks) {
+      for (const mark of node.marks) {
+        switch (mark.type) {
+          case 'bold':
+            text = `**${text}**`;
+            break;
+          case 'italic':
+            text = `*${text}*`;
+            break;
+          case 'underline':
+            text = `__${text}__`;
+            break;
+          case 'code':
+            text = `\`${text}\``;
+            break;
+          case 'link':
+            text = `[${text}](${mark.attrs?.href || ''})`;
+            break;
+        }
+      }
+    }
+
+    return text;
+  }
+
+  // Đệ quy children
+  const childrenText = (node.content || []).map((child: any) => JsonContentToMarkdown(child)).join('');
+
+  switch (node.type) {
+    case 'heading': {
+      const level = node.attrs?.level || 1;
+      return `${'#'.repeat(level)} ${childrenText}\n\n`;
+    }
+
+    case 'paragraph':
+      return `${childrenText}\n\n`;
+
+    case 'bulletList':
+      return `${node.content.map((item: any) => JsonContentToMarkdown(item)).join('')}\n`;
+
+    case 'orderedList':
+      return `${node.content.map((item: any, idx: number) => JsonContentToMarkdown({ ...item, order: idx + 1 })).join('')}\n`;
+
+    case 'listItem': {
+      const prefix = node.order ? `${node.order}. ` : '- ';
+      const text = (node.content || [])
+        .map((c: any) => JsonContentToMarkdown(c))
+        .join('')
+        .trim();
+      return `${prefix}${text}\n`;
+    }
+
+    case 'blockquote':
+      return `> ${childrenText}\n\n`;
+
+    case 'codeBlock':
+      return `\`\`\`\n${childrenText}\n\`\`\`\n\n`;
+
+    case 'figure':
+      return node.content?.[0]?.text
+        ? `![Figure](${node.attrs.src})\n${node.content[0].text}\n\n`
+        : `![Figure](${node.attrs?.src || ''})\n\n`;
+
+    case 'video':
+      return `Video: ${node.attrs?.src || ''}\n\n`;
+
+    case 'callout':
+      return `> ${node.attrs?.type?.toUpperCase() ?? 'NOTE'}: ${childrenText}\n\n`;
+
+    default:
+      return childrenText;
+  }
+}

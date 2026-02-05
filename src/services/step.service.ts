@@ -8,13 +8,15 @@ import { UnitOfWork } from '@/repositories/unitOfWork';
 import { diffFileIds, estimateDurationFromContent, extractFileIdsFromContent, extractPlainText } from '@/utils/content';
 import { title } from 'node:process';
 import { duration } from 'node_modules/zod/v4/classic/iso.cjs';
+import { AiService } from './ai.service';
 
 export class StepService {
   constructor(
     private stepRepository: StepRepository,
     private enrollmentRepository: EnrollmentRepository,
     private fileRepository: FileRepository,
-    private uow: UnitOfWork
+    private uow: UnitOfWork,
+    private aiService: AiService
   ) {}
 
   async getStepById(stepId: string, userId: string, role?: UserRole) {
@@ -60,6 +62,7 @@ export class StepService {
           },
           tx
         );
+        await this.aiService.embedStepContentCore(stepId, tx);
         return step;
       });
       return step;

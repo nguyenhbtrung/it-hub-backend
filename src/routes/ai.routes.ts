@@ -9,5 +9,6 @@ const router = Router();
 const aiController = new AiController();
 
 router.post('/ask/step', requireAuth, validate(askAiStepSchema), aiController.askAiStep.bind(aiController));
+router.post('/embed/step', aiController.embedStepContent.bind(aiController));
 
 export default router;

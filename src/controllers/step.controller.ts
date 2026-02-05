@@ -4,15 +4,21 @@ import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { FileRepository } from '@/repositories/file.repository';
 import { StepRepository } from '@/repositories/step.repository';
 import { UnitOfWork } from '@/repositories/unitOfWork';
+import { AiService } from '@/services/ai.service';
+import { LlmService } from '@/services/llm.service';
 import { StepService } from '@/services/step.service';
 import { successResponse } from '@/utils/response';
+import { GoogleGenAI } from '@google/genai';
 import { Request, Response } from 'express';
+
+const API_KEY = process.env.GEMINI_API_KEY || '';
 
 const stepService = new StepService(
   new StepRepository(),
   new EnrollmentRepository(),
   new FileRepository(),
-  new UnitOfWork()
+  new UnitOfWork(),
+  new AiService(new StepRepository(), new LlmService(new GoogleGenAI({ apiKey: API_KEY })), new UnitOfWork())
 );
 
 export class StepController {
