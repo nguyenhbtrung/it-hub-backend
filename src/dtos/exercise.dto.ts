@@ -19,6 +19,7 @@ export const addSubmissionScheme = z.object({
   demoUrl: z.array(z.string()).optional(),
   note: z.string().nullable().optional(),
   fileIds: z.array(z.string()).nullable().optional(),
+  quizResultsMetadata: z.string().nullable().optional(),
 });
 
 export type AddSubmissionDto = z.infer<typeof addSubmissionScheme>;

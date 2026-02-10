@@ -37,7 +37,9 @@ export class ExerciseService {
   }
 
   async addSubmission(userId: string, exerciseId: string, payload: AddSubmissionDto) {
-    const { score, demoUrl, note, fileIds } = payload;
+    const { score, demoUrl, note, fileIds, quizResultsMetadata } = payload;
+
+    const quizResults = quizResultsMetadata ? JSON.parse(quizResultsMetadata) : quizResultsMetadata;
     const attemp = await this.uow.execute(async (tx) => {
       const attemp = await this.exerciseRepository.addExerciseAttemp(
         {
@@ -46,6 +48,7 @@ export class ExerciseService {
           score,
           demoUrl,
           note,
+          quizResults,
         },
         tx
       );
