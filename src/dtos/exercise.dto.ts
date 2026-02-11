@@ -1,6 +1,13 @@
 import { ExcerciseType } from '@/generated/prisma/enums';
 import z from 'zod';
 
+export const getExerciseSubmissionsQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/).optional().transform(Number),
+  limit: z.string().regex(/^\d+$/).optional().transform(Number),
+});
+
+export type GetExerciseSubmissionsQueryDto = z.infer<typeof getExerciseSubmissionsQuerySchema>;
+
 export const updateExerciseScheme = z.object({
   type: z.enum(ExcerciseType).optional(),
   title: z.string().min(0, 'Title is required').max(120, 'Title must not exceed 60 characters').optional(),

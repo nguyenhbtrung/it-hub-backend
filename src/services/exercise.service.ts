@@ -1,4 +1,4 @@
-import { AddSubmissionDto, UpdateExerciseDto } from '@/dtos/exercise.dto';
+import { AddSubmissionDto, GetExerciseSubmissionsQueryDto, UpdateExerciseDto } from '@/dtos/exercise.dto';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@/errors';
 import { UserRole } from '@/generated/prisma/enums';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
@@ -7,6 +7,7 @@ import { FileRepository } from '@/repositories/file.repository';
 import { UnitRepository } from '@/repositories/unit.repository';
 import { UnitOfWork } from '@/repositories/unitOfWork';
 import { diffFileIds, extractFileIdsFromContent } from '@/utils/content';
+import { toAbsoluteURL } from '@/utils/file';
 
 export class ExerciseService {
   constructor(
@@ -31,9 +32,25 @@ export class ExerciseService {
     return exercise;
   }
 
-  async getExerciseSubmission(userId: string, exerciseId: string) {
-    const submission = await this.exerciseRepository.getExerciseSubmission(userId, exerciseId);
-    return submission;
+  async getExerciseSubmissions(userId: string, exerciseId: string, query: GetExerciseSubmissionsQueryDto) {
+    const { page = 1, limit = 1 } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const { submissions, total } = await this.exerciseRepository.getExerciseSubmissions(userId, exerciseId, take, skip);
+    const data = submissions.map((submission) => ({
+      ...submission,
+      attachments: submission.attachments?.map((a) => ({
+        ...a,
+        file: {
+          ...a.file,
+          url: toAbsoluteURL(a.file.url),
+        },
+      })),
+    }));
+    return {
+      data,
+      meta: { total, page: Number(page), limit: Number(limit) },
+    };
   }
 
   async addSubmission(userId: string, exerciseId: string, payload: AddSubmissionDto) {

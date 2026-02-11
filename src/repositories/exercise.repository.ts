@@ -1,5 +1,6 @@
 import { NotFoundError } from '@/errors';
 import { Prisma } from '@/generated/prisma/client';
+import { ExcerciseAttemptWhereInput } from '@/generated/prisma/models';
 import { prisma } from '@/lib/prisma';
 import { toAbsoluteURL } from '@/utils/file';
 
@@ -71,40 +72,39 @@ export class ExerciseRepository {
     return exercise;
   }
 
-  async getExerciseSubmission(userId: string, exerciseId: string) {
-    const submission = await prisma.excerciseAttempt.findFirst({
-      where: { studentId: userId, excerciseId: exerciseId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        attachments: {
-          select: {
-            id: true,
-            file: {
-              select: {
-                id: true,
-                name: true,
-                size: true,
-                type: true,
-                mimeType: true,
-                url: true,
+  async getExerciseSubmissions(userId: string, exerciseId: string, take: number, skip: number) {
+    const where: ExcerciseAttemptWhereInput = { studentId: userId, excerciseId: exerciseId };
+    const [submissions, total] = await Promise.all([
+      prisma.excerciseAttempt.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take,
+        skip,
+        include: {
+          attachments: {
+            select: {
+              id: true,
+              file: {
+                select: {
+                  id: true,
+                  name: true,
+                  size: true,
+                  type: true,
+                  mimeType: true,
+                  url: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      }),
+      prisma.excerciseAttempt.count({ where }),
+    ]);
 
-    if (submission?.attachments) {
-      submission.attachments = submission.attachments.map((a) => ({
-        ...a,
-        file: {
-          ...a.file,
-          url: toAbsoluteURL(a.file.url),
-        },
-      }));
-    }
-
-    return submission;
+    return {
+      submissions,
+      total,
+    };
   }
 
   async getCourseByExerciseId(exerciseId: string) {

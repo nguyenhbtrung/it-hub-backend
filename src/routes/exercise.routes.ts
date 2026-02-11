@@ -1,10 +1,10 @@
 import { ExerciseController } from '@/controllers/exercise.controller';
-import { addSubmissionScheme, updateExerciseScheme } from '@/dtos/exercise.dto';
+import { addSubmissionScheme, getExerciseSubmissionsQuerySchema, updateExerciseScheme } from '@/dtos/exercise.dto';
 
 import { UserRole } from '@/generated/prisma/enums';
 import { authorize, requireAuth } from '@/middleware/auth.middleware';
 import { serializeBigIntMiddleware } from '@/middleware/serializeBigInt.middleware';
-import { validate } from '@/middleware/validate.middleware';
+import { validate, validateQuery } from '@/middleware/validate.middleware';
 import { Router } from 'express';
 
 const router = Router();
@@ -21,7 +21,8 @@ router.get(
   '/:exerciseId/submissions/me',
   requireAuth,
   serializeBigIntMiddleware,
-  exerciseController.getMyExerciseSubmissionByExerciseId.bind(exerciseController)
+  validateQuery(getExerciseSubmissionsQuerySchema),
+  exerciseController.getMyExerciseSubmissionsByExerciseId.bind(exerciseController)
 );
 
 router.patch(

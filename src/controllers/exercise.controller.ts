@@ -1,4 +1,4 @@
-import { AddSubmissionDto, UpdateExerciseDto } from '@/dtos/exercise.dto';
+import { AddSubmissionDto, GetExerciseSubmissionsQueryDto, UpdateExerciseDto } from '@/dtos/exercise.dto';
 import { UnauthorizedError } from '@/errors';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { ExerciseRepository } from '@/repositories/exercise.repository';
@@ -27,12 +27,15 @@ export class ExerciseController {
     successResponse({ res, data: result });
   }
 
-  async getMyExerciseSubmissionByExerciseId(req: Request, res: Response) {
+  async getMyExerciseSubmissionsByExerciseId(req: Request, res: Response) {
     const { exerciseId } = req.params;
     const userId = req?.user?.id;
     if (!userId) throw new UnauthorizedError('userId is missing');
-    const result = await exerciseService.getExerciseSubmission(userId, exerciseId);
-    successResponse({ res, data: result });
+
+    const query = req.query as unknown as GetExerciseSubmissionsQueryDto;
+
+    const result = await exerciseService.getExerciseSubmissions(userId, exerciseId, query);
+    successResponse({ res, data: result.data, meta: result.meta });
   }
 
   async updateExercise(req: Request, res: Response) {
