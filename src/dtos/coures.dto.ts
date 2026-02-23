@@ -1,4 +1,4 @@
-import { Course, CourseLevel, CourseStatus, Unit } from '@/generated/prisma/client';
+import { Course, CourseLevel, CourseStatus, ExcerciseType, Unit } from '@/generated/prisma/client';
 import { z } from 'zod';
 
 export const createCourseSchema = z.object({
@@ -219,6 +219,14 @@ export const getCourseReviewsQueryScheme = z.object({
 });
 
 export type GetCourseReviewsQueryDto = z.infer<typeof getCourseReviewsQueryScheme>;
+
+export const getCourseExercisesGroupedBySectionQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/).optional().transform(Number),
+  limit: z.string().regex(/^\d+$/).optional().transform(Number),
+  type: z.enum(ExcerciseType).optional(),
+});
+
+export type getCourseExercisesGroupedBySectionQueryDto = z.infer<typeof getCourseExercisesGroupedBySectionQuerySchema>;
 
 export const createOrUpdateReviewSchema = z.object({
   rating: z.number().int().min(0).max(10),

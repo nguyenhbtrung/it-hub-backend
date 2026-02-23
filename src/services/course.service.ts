@@ -4,6 +4,7 @@ import {
   CreateCourseResponseDTO,
   CreatedCourseResponseDTO,
   CreateOrUpdateReviewDto,
+  getCourseExercisesGroupedBySectionQueryDto,
   GetCourseReviewsQueryDto,
   GetCoursesQueryDTO,
   GetFeaturedCoursesQueryDTO,
@@ -18,6 +19,7 @@ import { ForbiddenError, NotFoundError } from '@/errors';
 import { CourseEnrollmentStatus, CourseLevel, CourseStatus, UserRole } from '@/generated/prisma/enums';
 import { CourseRepository } from '@/repositories/course.repository';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
+import { ExerciseRepository } from '@/repositories/exercise.repository';
 import { SectionRepository } from '@/repositories/section.repository';
 import { StepRepository } from '@/repositories/step.repository';
 import { TagRepository } from '@/repositories/tag.repository';
@@ -32,7 +34,8 @@ export class CourseService {
     private enrollmentRepository: EnrollmentRepository,
     private stepRepository: StepRepository,
     private unitRepository: UnitRepository,
-    private sectionRepository: SectionRepository
+    private sectionRepository: SectionRepository,
+    private exerciseRepository: ExerciseRepository
   ) {}
   async createCourse(payload: CreateCourseDTO, instructorId: string): Promise<CreateCourseResponseDTO> {
     const { title, categoryId, subCategoryId } = payload;
@@ -493,6 +496,26 @@ export class CourseService {
   async getContentBreadcrumb(contentId: string, type: 'section' | 'unit' | 'step') {
     const contentBreadcrumb = await this.courseRepository.getContentBreadcrumb(contentId, type);
     return contentBreadcrumb;
+  }
+
+  async getCourseExercisesGroupedBySection(courseId: string, query: getCourseExercisesGroupedBySectionQueryDto) {
+    const { page = 1, limit = 10, type } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const { sections, total } = await this.sectionRepository.getExercisesGroupedBySection(courseId, skip, take, type);
+    const data = sections.map((section) => ({
+      id: section.id,
+      title: section.title,
+      exercises: section.units.map((unit) => ({
+        unitId: unit.id,
+        title: unit.title,
+        ...unit.excercises[0],
+        newAssigments: unit.excercises[0]._count.attempts,
+        _count: undefined,
+      })),
+    }));
+
+    return { data, meta: { total, page: Number(page), limit: Number(limit) } };
   }
 
   async addSection(courseId: string, instructorId: string, payload: AddSectionDto) {

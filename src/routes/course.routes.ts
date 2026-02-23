@@ -7,6 +7,7 @@ import {
   getCourseContentQueryScheme,
   getCourseDetailParamsScheme,
   getCourseDetailQueryScheme,
+  getCourseExercisesGroupedBySectionQuerySchema,
   getCourseReviewsQueryScheme,
   getCoursesQuerySchema,
   getFeaturedCoursesQuerySchema,
@@ -173,6 +174,14 @@ router.get(
   optionalAuth,
   validateQuery(getCourseContentBreadcrumbQueryScheme),
   courseController.getCourseContentBreadcrumb.bind(courseController)
+);
+
+router.get(
+  '/:id/sections/exercises',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  validateQuery(getCourseExercisesGroupedBySectionQuerySchema),
+  courseController.getCourseExercisesGroupedBySection.bind(courseController)
 );
 
 export default router;

@@ -6,6 +6,7 @@ import {
   GetCourseContentQueryDTO,
   GetCourseDetailParamsDTO,
   GetCourseDetailQueryDTO,
+  getCourseExercisesGroupedBySectionQueryDto,
   GetCourseReviewsQueryDto,
   GetCoursesQueryDTO,
   GetFeaturedCoursesQueryDTO,
@@ -22,6 +23,7 @@ import {
 import { UnauthorizedError } from '@/errors';
 import { CourseRepository } from '@/repositories/course.repository';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
+import { ExerciseRepository } from '@/repositories/exercise.repository';
 import { SectionRepository } from '@/repositories/section.repository';
 import { StepRepository } from '@/repositories/step.repository';
 import { TagRepository } from '@/repositories/tag.repository';
@@ -36,7 +38,8 @@ const courseService = new CourseService(
   new EnrollmentRepository(),
   new StepRepository(),
   new UnitRepository(),
-  new SectionRepository()
+  new SectionRepository(),
+  new ExerciseRepository()
 );
 
 export class CourseController {
@@ -275,6 +278,17 @@ export class CourseController {
     successResponse({
       res,
       data: result,
+    });
+  }
+
+  async getCourseExercisesGroupedBySection(req: Request, res: Response) {
+    const { id: courseId } = req.params;
+    const query = req.query as unknown as getCourseExercisesGroupedBySectionQueryDto;
+    const result = await courseService.getCourseExercisesGroupedBySection(courseId, query);
+    successResponse({
+      res,
+      data: result.data,
+      meta: result.meta,
     });
   }
 
