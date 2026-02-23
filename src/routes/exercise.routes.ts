@@ -25,6 +25,13 @@ router.get(
   exerciseController.getMyExerciseSubmissionsByExerciseId.bind(exerciseController)
 );
 
+router.get(
+  '/:unitId/submissions/overview',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  exerciseController.getSubmissionOverviewByUnitId.bind(exerciseController)
+);
+
 router.patch(
   '/:unitId',
   requireAuth,

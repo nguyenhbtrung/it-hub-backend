@@ -53,6 +53,31 @@ export class ExerciseService {
     };
   }
 
+  async getSubmissionOverviewByUnitId(unitId: string) {
+    const exercise = await this.exerciseRepository.getExerciseWithCourseIdByUnitId(unitId);
+
+    if (!exercise) {
+      throw new NotFoundError('Exercise not found');
+    }
+
+    const exerciseId = exercise.id;
+    const courseId = exercise.unit.section.courseId;
+
+    const [totalStudents, submittedStudents, unscoredAttempts, scoredAttempts] = await Promise.all([
+      this.enrollmentRepository.countActiveStudentsByCourseId(courseId),
+      this.exerciseRepository.countDistinctStudentsAttempted(exerciseId),
+      this.exerciseRepository.countUnscoredAttempts(exerciseId),
+      this.exerciseRepository.countScoredAttempts(exerciseId),
+    ]);
+
+    return {
+      totalStudents,
+      submittedStudents,
+      unscoredAttempts,
+      scoredAttempts,
+    };
+  }
+
   async addSubmission(userId: string, exerciseId: string, payload: AddSubmissionDto) {
     const { score, demoUrl, note, fileIds, quizResultsMetadata } = payload;
 

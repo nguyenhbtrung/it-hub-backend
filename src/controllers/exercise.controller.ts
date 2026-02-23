@@ -38,6 +38,12 @@ export class ExerciseController {
     successResponse({ res, data: result.data, meta: result.meta });
   }
 
+  async getSubmissionOverviewByUnitId(req: Request, res: Response) {
+    const { unitId } = req.params;
+    const result = await exerciseService.getSubmissionOverviewByUnitId(unitId);
+    successResponse({ res, data: result });
+  }
+
   async updateExercise(req: Request, res: Response) {
     const { unitId } = req.params;
     const payload = req.body as UpdateExerciseDto;

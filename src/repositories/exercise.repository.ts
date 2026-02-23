@@ -161,6 +161,54 @@ export class ExerciseRepository {
   //   ]);
   // }
 
+  async getExerciseWithCourseIdByUnitId(unitId: string) {
+    return prisma.excercise.findFirst({
+      where: { unitId },
+      select: {
+        id: true,
+        unit: {
+          select: {
+            section: {
+              select: {
+                courseId: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async countDistinctStudentsAttempted(exerciseId: string) {
+    const result = await prisma.excerciseAttempt.findMany({
+      where: { excerciseId: exerciseId },
+      distinct: ['studentId'],
+      select: { studentId: true },
+    });
+
+    return result.length;
+  }
+
+  async countUnscoredAttempts(exerciseId: string) {
+    return prisma.excerciseAttempt.count({
+      where: {
+        excerciseId: exerciseId,
+        score: null,
+      },
+    });
+  }
+
+  async countScoredAttempts(exerciseId: string) {
+    return prisma.excerciseAttempt.count({
+      where: {
+        excerciseId: exerciseId,
+        score: {
+          not: null,
+        },
+      },
+    });
+  }
+
   async addExerciseAttemp(data: Prisma.ExcerciseAttemptCreateInput, tx?: Prisma.TransactionClient) {
     const client = tx || prisma;
     const attemp = await client.excerciseAttempt.create({

@@ -14,6 +14,17 @@ export class EnrollmentRepository {
     return enrollment;
   }
 
+  async countActiveStudentsByCourseId(courseId: string) {
+    return prisma.enrollment.count({
+      where: {
+        courseId,
+        status: {
+          in: ['active', 'completed'],
+        },
+      },
+    });
+  }
+
   async createEnrollment(courseId: string, userId: string, status: EnrollmentStatus) {
     const enrollment = await prisma.enrollment.create({
       data: {
