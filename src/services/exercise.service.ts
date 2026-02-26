@@ -1,4 +1,9 @@
-import { AddSubmissionDto, GetExerciseSubmissionsQueryDto, UpdateExerciseDto } from '@/dtos/exercise.dto';
+import {
+  AddSubmissionDto,
+  GetExerciseSubmissionsQueryDto,
+  GetStudentSubmissionsQueryDto,
+  UpdateExerciseDto,
+} from '@/dtos/exercise.dto';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@/errors';
 import { UserRole } from '@/generated/prisma/enums';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
@@ -75,6 +80,42 @@ export class ExerciseService {
       submittedStudents,
       unscoredAttempts,
       scoredAttempts,
+    };
+  }
+
+  async getStudentSubmissions(unitId: string, query: GetStudentSubmissionsQueryDto) {
+    const exercise = await this.exerciseRepository.getExerciseWithCourseIdByUnitId(unitId);
+
+    if (!exercise) {
+      throw new NotFoundError('Exercise not found');
+    }
+
+    const exerciseId = exercise.id;
+    const courseId = exercise.unit.section.courseId;
+
+    const { page = 1, limit = 10 } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+
+    const { submissions, total } = await this.exerciseRepository.getStudentSubmissionsByUnitId(
+      exerciseId,
+      courseId,
+      take,
+      skip
+    );
+
+    const data = submissions.map((submission) => ({
+      ...submission,
+      avatar: submission.avatar ? toAbsoluteURL(submission.avatar.url) : null,
+      attemptId: submission.excerciseAttempts?.[0]?.id,
+      attemptCount: submission.excerciseAttempts.length,
+      score: submission.excerciseAttempts?.[0]?.score,
+      createdAt: submission.excerciseAttempts?.[0]?.createdAt,
+      excerciseAttempts: undefined,
+    }));
+    return {
+      data,
+      meta: { total, page: Number(page), limit: Number(limit) },
     };
   }
 

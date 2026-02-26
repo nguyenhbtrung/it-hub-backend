@@ -1,4 +1,9 @@
-import { AddSubmissionDto, GetExerciseSubmissionsQueryDto, UpdateExerciseDto } from '@/dtos/exercise.dto';
+import {
+  AddSubmissionDto,
+  GetExerciseSubmissionsQueryDto,
+  GetStudentSubmissionsQueryDto,
+  UpdateExerciseDto,
+} from '@/dtos/exercise.dto';
 import { UnauthorizedError } from '@/errors';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { ExerciseRepository } from '@/repositories/exercise.repository';
@@ -42,6 +47,13 @@ export class ExerciseController {
     const { unitId } = req.params;
     const result = await exerciseService.getSubmissionOverviewByUnitId(unitId);
     successResponse({ res, data: result });
+  }
+
+  async getStudentSubmissions(req: Request, res: Response) {
+    const { unitId } = req.params;
+    const query = req.query as unknown as GetStudentSubmissionsQueryDto;
+    const result = await exerciseService.getStudentSubmissions(unitId, query);
+    successResponse({ res, data: result.data, meta: result.meta });
   }
 
   async updateExercise(req: Request, res: Response) {

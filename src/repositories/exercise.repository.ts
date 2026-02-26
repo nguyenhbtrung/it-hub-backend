@@ -1,6 +1,6 @@
 import { NotFoundError } from '@/errors';
 import { ExcerciseType, Prisma } from '@/generated/prisma/client';
-import { ExcerciseAttemptWhereInput, ExcerciseWhereInput } from '@/generated/prisma/models';
+import { ExcerciseAttemptWhereInput, ExcerciseWhereInput, UserWhereInput } from '@/generated/prisma/models';
 import { prisma } from '@/lib/prisma';
 import { toAbsoluteURL } from '@/utils/file';
 
@@ -207,6 +207,50 @@ export class ExerciseRepository {
         },
       },
     });
+  }
+
+  async getStudentSubmissionsByUnitId(exerciseId: string, courseId: string, take: number, skip: number) {
+    const where: UserWhereInput = {
+      enrollments: {
+        some: {
+          courseId,
+          status: {
+            in: ['active', 'completed'],
+          },
+        },
+      },
+    };
+    const [submissions, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        take,
+        skip,
+        select: {
+          email: true,
+          fullname: true,
+          avatar: {
+            select: {
+              url: true,
+            },
+          },
+          excerciseAttempts: {
+            where: {
+              excerciseId: exerciseId,
+            },
+            orderBy: { createdAt: 'desc' },
+            select: {
+              id: true,
+              createdAt: true,
+              score: true,
+            },
+          },
+        },
+      }),
+      prisma.user.count({
+        where,
+      }),
+    ]);
+    return { submissions, total };
   }
 
   async addExerciseAttemp(data: Prisma.ExcerciseAttemptCreateInput, tx?: Prisma.TransactionClient) {

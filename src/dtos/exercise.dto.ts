@@ -30,3 +30,10 @@ export const addSubmissionScheme = z.object({
 });
 
 export type AddSubmissionDto = z.infer<typeof addSubmissionScheme>;
+
+export const getStudentSubmissionsQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/).optional().transform(Number),
+  limit: z.string().regex(/^\d+$/).optional().transform(Number),
+});
+
+export type GetStudentSubmissionsQueryDto = z.infer<typeof getStudentSubmissionsQuerySchema>;

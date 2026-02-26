@@ -1,5 +1,10 @@
 import { ExerciseController } from '@/controllers/exercise.controller';
-import { addSubmissionScheme, getExerciseSubmissionsQuerySchema, updateExerciseScheme } from '@/dtos/exercise.dto';
+import {
+  addSubmissionScheme,
+  getExerciseSubmissionsQuerySchema,
+  getStudentSubmissionsQuerySchema,
+  updateExerciseScheme,
+} from '@/dtos/exercise.dto';
 
 import { UserRole } from '@/generated/prisma/enums';
 import { authorize, requireAuth } from '@/middleware/auth.middleware';
@@ -30,6 +35,14 @@ router.get(
   requireAuth,
   authorize([UserRole.admin, UserRole.instructor]),
   exerciseController.getSubmissionOverviewByUnitId.bind(exerciseController)
+);
+
+router.get(
+  '/:unitId/submissions',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  validateQuery(getStudentSubmissionsQuerySchema),
+  exerciseController.getStudentSubmissions.bind(exerciseController)
 );
 
 router.patch(
