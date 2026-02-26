@@ -209,6 +209,22 @@ export class ExerciseRepository {
     });
   }
 
+  async getAverageScore(exerciseId: string): Promise<number> {
+    const result = await prisma.excerciseAttempt.aggregate({
+      where: {
+        excerciseId: exerciseId,
+        score: {
+          not: null,
+        },
+      },
+      _avg: {
+        score: true,
+      },
+    });
+
+    return result._avg.score ?? 0;
+  }
+
   async getStudentSubmissionsByUnitId(exerciseId: string, courseId: string, take: number, skip: number) {
     const where: UserWhereInput = {
       enrollments: {

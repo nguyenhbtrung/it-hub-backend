@@ -68,11 +68,12 @@ export class ExerciseService {
     const exerciseId = exercise.id;
     const courseId = exercise.unit.section.courseId;
 
-    const [totalStudents, submittedStudents, unscoredAttempts, scoredAttempts] = await Promise.all([
+    const [totalStudents, submittedStudents, unscoredAttempts, scoredAttempts, averageScore] = await Promise.all([
       this.enrollmentRepository.countActiveStudentsByCourseId(courseId),
       this.exerciseRepository.countDistinctStudentsAttempted(exerciseId),
       this.exerciseRepository.countUnscoredAttempts(exerciseId),
       this.exerciseRepository.countScoredAttempts(exerciseId),
+      this.exerciseRepository.getAverageScore(exerciseId),
     ]);
 
     return {
@@ -80,6 +81,7 @@ export class ExerciseService {
       submittedStudents,
       unscoredAttempts,
       scoredAttempts,
+      averageScore,
     };
   }
 
