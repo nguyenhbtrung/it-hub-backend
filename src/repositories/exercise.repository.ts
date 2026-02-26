@@ -225,7 +225,20 @@ export class ExerciseRepository {
     return result._avg.score ?? 0;
   }
 
-  async getStudentSubmissionsByUnitId(exerciseId: string, courseId: string, take: number, skip: number) {
+  async getStudentSubmissionsByUnitId(
+    exerciseId: string,
+    courseId: string,
+    take: number,
+    skip: number,
+    q?: string | undefined,
+    status?: 'all' | 'pending' | 'graded' | 'not_submitted'
+  ) {
+    const searchConditions = q
+      ? [
+          { fullname: { contains: q, mode: 'insensitive' as const } },
+          { email: { contains: q, mode: 'insensitive' as const } },
+        ]
+      : [];
     const where: UserWhereInput = {
       enrollments: {
         some: {
@@ -235,6 +248,41 @@ export class ExerciseRepository {
           },
         },
       },
+      OR: q ? searchConditions : undefined,
+
+      ...(status === 'pending' && {
+        excerciseAttempts: {
+          some: {
+            excerciseId: exerciseId,
+            score: null,
+          },
+        },
+      }),
+
+      ...(status === 'graded' && {
+        excerciseAttempts: {
+          some: {
+            excerciseId: exerciseId,
+            score: { not: null },
+          },
+        },
+        NOT: {
+          excerciseAttempts: {
+            some: {
+              excerciseId: exerciseId,
+              score: null,
+            },
+          },
+        },
+      }),
+
+      ...(status === 'not_submitted' && {
+        excerciseAttempts: {
+          none: {
+            excerciseId: exerciseId,
+          },
+        },
+      }),
     };
     const [submissions, total] = await Promise.all([
       prisma.user.findMany({

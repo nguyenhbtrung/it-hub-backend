@@ -95,7 +95,7 @@ export class ExerciseService {
     const exerciseId = exercise.id;
     const courseId = exercise.unit.section.courseId;
 
-    const { page = 1, limit = 10 } = query;
+    const { page = 1, limit = 10, q, status } = query;
     const take = Number(limit);
     const skip = (page - 1) * limit;
 
@@ -103,7 +103,9 @@ export class ExerciseService {
       exerciseId,
       courseId,
       take,
-      skip
+      skip,
+      q,
+      status
     );
 
     const data = submissions.map((submission) => ({

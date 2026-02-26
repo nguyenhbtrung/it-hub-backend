@@ -34,6 +34,8 @@ export type AddSubmissionDto = z.infer<typeof addSubmissionScheme>;
 export const getStudentSubmissionsQuerySchema = z.object({
   page: z.string().regex(/^\d+$/).optional().transform(Number),
   limit: z.string().regex(/^\d+$/).optional().transform(Number),
+  q: z.string().optional(),
+  status: z.enum(['all', 'pending', 'graded', 'not_submitted']).optional(),
 });
 
 export type GetStudentSubmissionsQueryDto = z.infer<typeof getStudentSubmissionsQuerySchema>;
