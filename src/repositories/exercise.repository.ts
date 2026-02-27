@@ -168,6 +168,7 @@ export class ExerciseRepository {
         id: true,
         unit: {
           select: {
+            title: true,
             section: {
               select: {
                 courseId: true,

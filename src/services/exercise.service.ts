@@ -77,6 +77,7 @@ export class ExerciseService {
     ]);
 
     return {
+      title: exercise.unit.title,
       totalStudents,
       submittedStudents,
       unscoredAttempts,
