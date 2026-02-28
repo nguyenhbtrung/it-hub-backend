@@ -318,6 +318,52 @@ export class ExerciseRepository {
     return { submissions, total };
   }
 
+  async getExerciseAttemptById(id: string) {
+    const attempt = await prisma.excerciseAttempt.findUnique({
+      where: { id },
+      include: {
+        attachments: {
+          select: {
+            id: true,
+            file: {
+              select: {
+                id: true,
+                name: true,
+                size: true,
+                type: true,
+                mimeType: true,
+                url: true,
+              },
+            },
+          },
+        },
+        student: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            avatar: {
+              select: {
+                url: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return attempt;
+  }
+
+  async getAttempSequence(exerciseId: string, studentId: string, createdAt: Date) {
+    return prisma.excerciseAttempt.count({
+      where: {
+        excerciseId: exerciseId,
+        studentId: studentId,
+        createdAt: { lte: createdAt },
+      },
+    });
+  }
+
   async addExerciseAttemp(data: Prisma.ExcerciseAttemptCreateInput, tx?: Prisma.TransactionClient) {
     const client = tx || prisma;
     const attemp = await client.excerciseAttempt.create({
@@ -404,6 +450,14 @@ export class ExerciseRepository {
     }
 
     return updatedExercise;
+  }
+
+  async updateExerciseAttempt(id: string, data: Prisma.ExcerciseAttemptUpdateInput) {
+    const attempt = await prisma.excerciseAttempt.update({
+      where: { id },
+      data,
+    });
+    return attempt;
   }
 
   async deleteExerciseAttemp(attempId: string, tx?: Prisma.TransactionClient) {

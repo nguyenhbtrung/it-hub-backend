@@ -39,3 +39,10 @@ export const getStudentSubmissionsQuerySchema = z.object({
 });
 
 export type GetStudentSubmissionsQueryDto = z.infer<typeof getStudentSubmissionsQuerySchema>;
+
+export const updateSubmissionSchema = z.object({
+  score: z.number().min(0).max(10).nullable().optional(),
+  comment: z.string().optional(),
+});
+
+export type UpdateSubmissionDto = z.infer<typeof updateSubmissionSchema>;

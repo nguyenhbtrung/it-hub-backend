@@ -3,6 +3,7 @@ import {
   GetExerciseSubmissionsQueryDto,
   GetStudentSubmissionsQueryDto,
   UpdateExerciseDto,
+  UpdateSubmissionDto,
 } from '@/dtos/exercise.dto';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@/errors';
 import { UserRole } from '@/generated/prisma/enums';
@@ -124,6 +125,32 @@ export class ExerciseService {
     };
   }
 
+  async getSubmissionById(id: string) {
+    const submission = await this.exerciseRepository.getExerciseAttemptById(id);
+    if (!submission) throw new NotFoundError('Submission not found');
+    const attemptCount = await this.exerciseRepository.getAttempSequence(
+      submission.excerciseId,
+      submission.studentId,
+      submission.createdAt
+    );
+    const data = {
+      ...submission,
+      attemptCount,
+      attachments: submission.attachments?.map((a) => ({
+        ...a,
+        file: {
+          ...a.file,
+          url: toAbsoluteURL(a.file.url),
+        },
+      })),
+      student: {
+        ...submission.student,
+        avatar: submission.student.avatar ? toAbsoluteURL(submission.student.avatar.url) : null,
+      },
+    };
+    return data;
+  }
+
   async addSubmission(userId: string, exerciseId: string, payload: AddSubmissionDto) {
     const { score, demoUrl, note, fileIds, quizResultsMetadata } = payload;
 
@@ -235,6 +262,11 @@ export class ExerciseService {
     delete updateData.quizzes;
 
     return await this.exerciseRepository.updateExercise(unitId, updateData);
+  }
+
+  async updateSubmission(id: string, payload: UpdateSubmissionDto) {
+    const submission = await this.exerciseRepository.updateExerciseAttempt(id, payload);
+    return submission;
   }
 
   async deleteSubmission(userId: string, submissionId: string) {

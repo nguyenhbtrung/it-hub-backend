@@ -4,6 +4,7 @@ import {
   getExerciseSubmissionsQuerySchema,
   getStudentSubmissionsQuerySchema,
   updateExerciseScheme,
+  updateSubmissionSchema,
 } from '@/dtos/exercise.dto';
 
 import { UserRole } from '@/generated/prisma/enums';
@@ -45,6 +46,14 @@ router.get(
   exerciseController.getStudentSubmissions.bind(exerciseController)
 );
 
+router.get(
+  '/submissions/:id',
+  requireAuth,
+  serializeBigIntMiddleware,
+  authorize([UserRole.admin, UserRole.instructor]),
+  exerciseController.getSubmissionById.bind(exerciseController)
+);
+
 router.patch(
   '/:unitId',
   requireAuth,
@@ -52,6 +61,14 @@ router.patch(
   authorize([UserRole.admin, UserRole.instructor]),
   validate(updateExerciseScheme),
   exerciseController.updateExercise.bind(exerciseController)
+);
+
+router.patch(
+  '/submissions/:id',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  validate(updateSubmissionSchema),
+  exerciseController.updateSubmission.bind(exerciseController)
 );
 
 router.post(

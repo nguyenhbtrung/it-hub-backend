@@ -3,6 +3,7 @@ import {
   GetExerciseSubmissionsQueryDto,
   GetStudentSubmissionsQueryDto,
   UpdateExerciseDto,
+  UpdateSubmissionDto,
 } from '@/dtos/exercise.dto';
 import { UnauthorizedError } from '@/errors';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
@@ -56,6 +57,12 @@ export class ExerciseController {
     successResponse({ res, data: result.data, meta: result.meta });
   }
 
+  async getSubmissionById(req: Request, res: Response) {
+    const { id } = req.params;
+    const result = await exerciseService.getSubmissionById(id);
+    successResponse({ res, data: result });
+  }
+
   async updateExercise(req: Request, res: Response) {
     const { unitId } = req.params;
     const payload = req.body as UpdateExerciseDto;
@@ -64,6 +71,14 @@ export class ExerciseController {
     const result = await exerciseService.updateExercise(unitId, instructorId, payload);
     successResponse({ res, message: 'Update exercise successfully', data: result });
   }
+
+  async updateSubmission(req: Request, res: Response) {
+    const { id } = req.params;
+    const payload = req.body as UpdateSubmissionDto;
+    const result = await exerciseService.updateSubmission(id, payload);
+    successResponse({ res, data: result });
+  }
+
   async addSubmission(req: Request, res: Response) {
     const { exerciseId } = req.params;
     const payload = req.body as AddSubmissionDto;
