@@ -2,6 +2,7 @@ import {
   AddSubmissionDto,
   GetExerciseSubmissionsQueryDto,
   GetStudentSubmissionsQueryDto,
+  GetSubmissionsByStudentIdQueryDto,
   UpdateExerciseDto,
   UpdateSubmissionDto,
 } from '@/dtos/exercise.dto';
@@ -149,6 +150,23 @@ export class ExerciseService {
       },
     };
     return data;
+  }
+
+  async getSubmissionsByUnitAndStudent(studentId: string, unitId: string, query: GetSubmissionsByStudentIdQueryDto) {
+    const { page = 1, limit = 10 } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const { submissions, total } = await this.exerciseRepository.getSubmissionsByUnitAndStudent(
+      studentId,
+      unitId,
+      skip,
+      take
+    );
+    const data = submissions;
+    return {
+      data,
+      meta: { total, page: Number(page), limit: Number(limit) },
+    };
   }
 
   async addSubmission(userId: string, exerciseId: string, payload: AddSubmissionDto) {

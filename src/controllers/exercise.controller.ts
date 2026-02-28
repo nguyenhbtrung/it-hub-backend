@@ -2,6 +2,7 @@ import {
   AddSubmissionDto,
   GetExerciseSubmissionsQueryDto,
   GetStudentSubmissionsQueryDto,
+  GetSubmissionsByStudentIdQueryDto,
   UpdateExerciseDto,
   UpdateSubmissionDto,
 } from '@/dtos/exercise.dto';
@@ -61,6 +62,13 @@ export class ExerciseController {
     const { id } = req.params;
     const result = await exerciseService.getSubmissionById(id);
     successResponse({ res, data: result });
+  }
+
+  async getSubmissionsByUnitAndStudent(req: Request, res: Response) {
+    const { unitId, studentId } = req.params;
+    const query = req.query as unknown as GetSubmissionsByStudentIdQueryDto;
+    const result = await exerciseService.getSubmissionsByUnitAndStudent(studentId, unitId, query);
+    successResponse({ res, data: result.data, meta: result.meta });
   }
 
   async updateExercise(req: Request, res: Response) {

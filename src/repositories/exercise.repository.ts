@@ -364,6 +364,32 @@ export class ExerciseRepository {
     });
   }
 
+  async getSubmissionsByUnitAndStudent(studentId: string, unitId: string, skip: number, take: number) {
+    const where: ExcerciseAttemptWhereInput = {
+      studentId,
+      excercise: {
+        unitId,
+      },
+    };
+    const [submissions, total] = await Promise.all([
+      prisma.excerciseAttempt.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          score: true,
+          createdAt: true,
+        },
+      }),
+      prisma.excerciseAttempt.count({
+        where,
+      }),
+    ]);
+    return { submissions, total };
+  }
+
   async addExerciseAttemp(data: Prisma.ExcerciseAttemptCreateInput, tx?: Prisma.TransactionClient) {
     const client = tx || prisma;
     const attemp = await client.excerciseAttempt.create({

@@ -3,6 +3,7 @@ import {
   addSubmissionScheme,
   getExerciseSubmissionsQuerySchema,
   getStudentSubmissionsQuerySchema,
+  getSubmissionsByStudentIdQuerySchema,
   updateExerciseScheme,
   updateSubmissionSchema,
 } from '@/dtos/exercise.dto';
@@ -52,6 +53,14 @@ router.get(
   serializeBigIntMiddleware,
   authorize([UserRole.admin, UserRole.instructor]),
   exerciseController.getSubmissionById.bind(exerciseController)
+);
+
+router.get(
+  '/:unitId/students/:studentId/submissions',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  validateQuery(getSubmissionsByStudentIdQuerySchema),
+  exerciseController.getSubmissionsByUnitAndStudent.bind(exerciseController)
 );
 
 router.patch(
