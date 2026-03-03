@@ -1,4 +1,4 @@
-import { User, UserRole, UserScope, UserStatus } from '@/generated/prisma/client';
+import { LearningStatus, User, UserRole, UserScope, UserStatus } from '@/generated/prisma/client';
 import z from 'zod';
 
 export interface UserResponseDTO {
@@ -62,6 +62,12 @@ export const updateUserSchema = z.object({
 });
 
 export type UpdateUserDto = z.infer<typeof updateUserSchema>;
+
+export const createOrUpdateLearningProgressSchema = z.object({
+  status: z.enum(LearningStatus),
+});
+
+export type CreateOrUpdateLearningProgressDto = z.infer<typeof createOrUpdateLearningProgressSchema>;
 
 export const getUsersQueryScheme = z.object({
   page: z.string().regex(/^\d+$/).optional().transform(Number),

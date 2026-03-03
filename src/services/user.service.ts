@@ -1,6 +1,7 @@
 import { SALT_ROUNDS } from '@/constants/auth';
 import { toFileResponseDto } from '@/dtos/file.dto';
 import {
+  CreateOrUpdateLearningProgressDto,
   CreateUserDto,
   GetInstructorRegistrationsQueryDto,
   GetUsersQueryDto,
@@ -9,6 +10,7 @@ import {
   UpdateUserDto,
 } from '@/dtos/user.dto';
 import { NotFoundError } from '@/errors';
+import { LearningProgressRepository } from '@/repositories/learningProgressRepository';
 import { UnitOfWork } from '@/repositories/unitOfWork';
 import { UserRepository } from '@/repositories/user.repository';
 import { VerificationTokenRepository } from '@/repositories/verificationToken.repository';
@@ -20,6 +22,7 @@ export class UserService {
   constructor(
     private userRepository: UserRepository,
     private verificationTokenRepository: VerificationTokenRepository,
+    private learningProgressRepository: LearningProgressRepository,
     private uow: UnitOfWork
   ) {}
   async getUsers(query: GetUsersQueryDto) {
@@ -160,6 +163,34 @@ export class UserService {
       );
       return { ...toUserResponseDTO(user), profile: profile };
     });
+  }
+
+  async createOrUpdateStepLearningProgress(
+    studentId: string,
+    stepId: string,
+    payload: CreateOrUpdateLearningProgressDto
+  ) {
+    const { status } = payload;
+    const learningProgress = await this.learningProgressRepository.createOrUpdateLearningProgress({
+      studentId,
+      stepId,
+      status,
+    });
+    return learningProgress;
+  }
+
+  async createOrUpdateExerciseLearningProgress(
+    studentId: string,
+    exerciseId: string,
+    payload: CreateOrUpdateLearningProgressDto
+  ) {
+    const { status } = payload;
+    const learningProgress = await this.learningProgressRepository.createOrUpdateLearningProgress({
+      studentId,
+      exerciseId,
+      status,
+    });
+    return learningProgress;
   }
 
   async deleteUser(id: string) {

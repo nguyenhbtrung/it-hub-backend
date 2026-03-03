@@ -2,6 +2,7 @@ import { TagController } from '@/controllers/tag.controller';
 import { UserController } from '@/controllers/user.controller';
 import { getTagsQuerySchema } from '@/dtos/tag.dto';
 import {
+  createOrUpdateLearningProgressSchema,
   createUserSchema,
   getInstructorRegistrationsQuerySchema,
   getUsersQueryScheme,
@@ -57,6 +58,20 @@ router.patch(
   requireAuth,
   validate(updateMyProfileSchema),
   userController.updateMyProfile.bind(userController)
+);
+
+router.put(
+  '/me/steps/:stepId/progress',
+  requireAuth,
+  validate(createOrUpdateLearningProgressSchema),
+  userController.createOrUpdateStepLearningProgress.bind(userController)
+);
+
+router.put(
+  '/me/exercises/:exerciseId/progress',
+  requireAuth,
+  validate(createOrUpdateLearningProgressSchema),
+  userController.createOrUpdateExerciseLearningProgress.bind(userController)
 );
 
 router.delete('/:id', requireAuth, authorize([UserRole.admin]), userController.deleteUser.bind(userController));

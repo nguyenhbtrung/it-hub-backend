@@ -1,4 +1,5 @@
 import {
+  CreateOrUpdateLearningProgressDto,
   CreateUserDto,
   GetInstructorRegistrationsQueryDto,
   GetUsersQueryDto,
@@ -6,6 +7,7 @@ import {
   UpdateUserDto,
 } from '@/dtos/user.dto';
 import { UnauthorizedError } from '@/errors';
+import { LearningProgressRepository } from '@/repositories/learningProgressRepository';
 import { UnitOfWork } from '@/repositories/unitOfWork';
 import { UserRepository } from '@/repositories/user.repository';
 import { VerificationTokenRepository } from '@/repositories/verificationToken.repository';
@@ -13,7 +15,12 @@ import { UserService } from '@/services/user.service';
 import { successResponse } from '@/utils/response';
 import { Request, Response } from 'express';
 
-const userService = new UserService(new UserRepository(), new VerificationTokenRepository(), new UnitOfWork());
+const userService = new UserService(
+  new UserRepository(),
+  new VerificationTokenRepository(),
+  new LearningProgressRepository(),
+  new UnitOfWork()
+);
 
 export class UserController {
   async getUsers(req: Request, res: Response) {
@@ -84,6 +91,24 @@ export class UserController {
       res,
       data: result,
     });
+  }
+
+  async createOrUpdateStepLearningProgress(req: Request, res: Response) {
+    const studentId = req?.user?.id;
+    if (!studentId) throw new UnauthorizedError('studentId is missing');
+    const { stepId } = req.params;
+    const payload = req.body as CreateOrUpdateLearningProgressDto;
+    const result = await userService.createOrUpdateStepLearningProgress(studentId, stepId, payload);
+    successResponse({ res, data: result });
+  }
+
+  async createOrUpdateExerciseLearningProgress(req: Request, res: Response) {
+    const studentId = req?.user?.id;
+    if (!studentId) throw new UnauthorizedError('studentId is missing');
+    const { exerciseId } = req.params;
+    const payload = req.body as CreateOrUpdateLearningProgressDto;
+    const result = await userService.createOrUpdateExerciseLearningProgress(studentId, exerciseId, payload);
+    successResponse({ res, data: result });
   }
 
   async deleteUser(req: Request, res: Response) {
