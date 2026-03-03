@@ -3,6 +3,17 @@ import { LearningStatus } from '@/generated/prisma/enums';
 import { prisma } from '@/lib/prisma';
 
 export class LearningProgressRepository {
+  async getLearningProgressByStepId(studentId: string, stepId: string) {
+    const learningProgress = await prisma.learningProgress.findUnique({
+      where: {
+        studentId_stepId: {
+          studentId,
+          stepId,
+        },
+      },
+    });
+    return learningProgress;
+  }
   async createOrUpdateLearningProgress(data: {
     studentId: string;
     stepId?: string;

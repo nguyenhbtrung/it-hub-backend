@@ -37,6 +37,12 @@ router.get(
   userController.getInstructorRegistations.bind(userController)
 );
 
+router.get(
+  '/me/steps/:stepId/progress',
+  requireAuth,
+  userController.getMyLearningProgressByStepId.bind(userController)
+);
+
 router.post(
   '/',
   requireAuth,

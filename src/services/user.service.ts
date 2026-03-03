@@ -66,6 +66,12 @@ export class UserService {
     return { ...profile, avatar: profile?.avatar ? toFileResponseDto(profile.avatar) : null };
   }
 
+  async getLearningProgressByStepId(studentId: string, stepId: string) {
+    const learningProgress = await this.learningProgressRepository.getLearningProgressByStepId(studentId, stepId);
+    if (!learningProgress) throw new NotFoundError();
+    return learningProgress;
+  }
+
   async createUser(payload: CreateUserDto) {
     const { email, fullname, password, role, scope } = payload;
 

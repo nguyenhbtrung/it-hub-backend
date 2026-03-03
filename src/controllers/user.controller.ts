@@ -62,6 +62,14 @@ export class UserController {
     });
   }
 
+  async getMyLearningProgressByStepId(req: Request, res: Response) {
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedError('UserId is missing');
+    const { stepId } = req.params;
+    const result = await userService.getLearningProgressByStepId(userId, stepId);
+    successResponse({ res, data: result });
+  }
+
   async createUser(req: Request, res: Response) {
     const payload = req.body as CreateUserDto;
     const result = await userService.createUser(payload);
