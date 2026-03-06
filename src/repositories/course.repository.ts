@@ -441,6 +441,27 @@ export class CourseRepository {
     return maxOrder;
   }
 
+  async countCoursesByInstructorId(instructorId: string, status?: CourseStatus) {
+    return prisma.course.count({
+      where: { instructorId, status },
+    });
+  }
+
+  async getCoursesAverageRatingByInstructorId(instructorId: string) {
+    const course = await prisma.course.aggregate({
+      _avg: {
+        avgRating: true,
+      },
+      where: {
+        instructorId,
+        avgRating: {
+          gt: 0,
+        },
+      },
+    });
+    return course._avg.avgRating ?? 0;
+  }
+
   async addSection(data: Prisma.SectionCreateInput): Promise<Section> {
     const newSection = await prisma.section.create({ data });
     return newSection;

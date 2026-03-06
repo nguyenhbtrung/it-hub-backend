@@ -80,6 +80,41 @@ export class EnrollmentRepository {
     });
   }
 
+  async countActiveStudentbyInstructorId(instructorId: string) {
+    return prisma.enrollment.count({
+      where: {
+        course: {
+          instructorId,
+        },
+        status: {
+          in: ['active', 'completed'],
+        },
+      },
+    });
+  }
+
+  async countNewStudentsThisMonthByInstructorId(instructorId: string) {
+    const now = new Date();
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+    return prisma.enrollment.count({
+      where: {
+        status: {
+          in: ['active', 'completed'],
+        },
+        course: {
+          instructorId,
+        },
+        enrolledAt: {
+          gte: startOfMonth,
+          lt: startOfNextMonth,
+        },
+      },
+    });
+  }
+
   async createEnrollment(courseId: string, userId: string, status: EnrollmentStatus) {
     const enrollment = await prisma.enrollment.create({
       data: {
