@@ -10,6 +10,7 @@ import { UnauthorizedError } from '@/errors';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { ExerciseRepository } from '@/repositories/exercise.repository';
 import { FileRepository } from '@/repositories/file.repository';
+import { LearningProgressRepository } from '@/repositories/learningProgressRepository';
 import { UnitRepository } from '@/repositories/unit.repository';
 import { UnitOfWork } from '@/repositories/unitOfWork';
 import { ExerciseService } from '@/services/exercise.service';
@@ -21,6 +22,7 @@ const exerciseService = new ExerciseService(
   new EnrollmentRepository(),
   new UnitRepository(),
   new FileRepository(),
+  new LearningProgressRepository(),
   new UnitOfWork()
 );
 

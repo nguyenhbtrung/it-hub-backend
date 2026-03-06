@@ -12,6 +12,14 @@ export class ExerciseRepository {
     });
     return attemp;
   }
+
+  async getExerciseById(id: string) {
+    const exercise = await prisma.excercise.findUnique({
+      where: { id },
+    });
+    return exercise;
+  }
+
   async getExerciseContentByUnitId(unitId: string) {
     const exercise = await prisma.excercise.findFirst({
       where: { unitId },
@@ -478,8 +486,9 @@ export class ExerciseRepository {
     return updatedExercise;
   }
 
-  async updateExerciseAttempt(id: string, data: Prisma.ExcerciseAttemptUpdateInput) {
-    const attempt = await prisma.excerciseAttempt.update({
+  async updateExerciseAttempt(id: string, data: Prisma.ExcerciseAttemptUpdateInput, tx?: Prisma.TransactionClient) {
+    const client = tx || prisma;
+    const attempt = await client.excerciseAttempt.update({
       where: { id },
       data,
     });

@@ -7,10 +7,11 @@ import {
   UpdateSubmissionDto,
 } from '@/dtos/exercise.dto';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@/errors';
-import { UserRole } from '@/generated/prisma/enums';
+import { LearningStatus, UserRole } from '@/generated/prisma/enums';
 import { EnrollmentRepository } from '@/repositories/enrollment.repository';
 import { ExerciseRepository } from '@/repositories/exercise.repository';
 import { FileRepository } from '@/repositories/file.repository';
+import { LearningProgressRepository } from '@/repositories/learningProgressRepository';
 import { UnitRepository } from '@/repositories/unit.repository';
 import { UnitOfWork } from '@/repositories/unitOfWork';
 import { diffFileIds, extractFileIdsFromContent } from '@/utils/content';
@@ -22,6 +23,7 @@ export class ExerciseService {
     private enrollmentRepository: EnrollmentRepository,
     private unitRepository: UnitRepository,
     private fileRepository: FileRepository,
+    private learningProgressRepository: LearningProgressRepository,
     private uow: UnitOfWork
   ) {}
 
@@ -173,8 +175,8 @@ export class ExerciseService {
     const { score, demoUrl, note, fileIds, quizResultsMetadata } = payload;
 
     const quizResults = quizResultsMetadata ? JSON.parse(quizResultsMetadata) : quizResultsMetadata;
-    const attemp = await this.uow.execute(async (tx) => {
-      const attemp = await this.exerciseRepository.addExerciseAttemp(
+    const attempt = await this.uow.execute(async (tx) => {
+      const attempt = await this.exerciseRepository.addExerciseAttemp(
         {
           excercise: { connect: { id: exerciseId } },
           student: { connect: { id: userId } },
@@ -185,17 +187,31 @@ export class ExerciseService {
         },
         tx
       );
+      if (score) {
+        const exercise = await this.exerciseRepository.getExerciseById(exerciseId);
+        if (!exercise) throw new NotFoundError('Exercise not found');
+        const passingScore = exercise.passingScore || 0;
+        const status: LearningStatus = score >= passingScore ? 'completed' : 'not_started';
+        await this.learningProgressRepository.createOrUpdateLearningProgress(
+          {
+            studentId: userId,
+            exerciseId,
+            status,
+          },
+          tx
+        );
+      }
       if (fileIds && fileIds.length > 0) {
         await this.fileRepository.markFilesStatus(fileIds, 'active', tx);
-        const attachments = await this.exerciseRepository.addAttachments(fileIds, attemp.id, tx);
+        const attachments = await this.exerciseRepository.addAttachments(fileIds, attempt.id, tx);
         return {
-          ...attemp,
+          ...attempt,
           attachments,
         };
       }
-      return attemp;
+      return attempt;
     });
-    return attemp;
+    return attempt;
   }
 
   async updateExercise(unitId: string, instructorId: string, payload: UpdateExerciseDto) {
@@ -283,7 +299,27 @@ export class ExerciseService {
   }
 
   async updateSubmission(id: string, payload: UpdateSubmissionDto) {
-    const submission = await this.exerciseRepository.updateExerciseAttempt(id, payload);
+    const submission = this.uow.execute(async (tx) => {
+      const submission = await this.exerciseRepository.updateExerciseAttempt(id, payload);
+
+      const { score } = payload;
+      if (score) {
+        const exercise = await this.exerciseRepository.getExerciseById(submission.excerciseId);
+        if (!exercise) throw new NotFoundError('Exercise not found');
+        const passingScore = exercise.passingScore || 0;
+        const status: LearningStatus = score >= passingScore ? 'completed' : 'not_started';
+        await this.learningProgressRepository.createOrUpdateLearningProgress(
+          {
+            studentId: submission.studentId,
+            exerciseId: submission.excerciseId,
+            status,
+          },
+          tx
+        );
+      }
+      return submission;
+    });
+
     return submission;
   }
 

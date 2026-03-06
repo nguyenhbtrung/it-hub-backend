@@ -1,4 +1,5 @@
 import { BadRequestError } from '@/errors';
+import { Prisma } from '@/generated/prisma/client';
 import { LearningStatus } from '@/generated/prisma/enums';
 import { prisma } from '@/lib/prisma';
 
@@ -14,20 +15,24 @@ export class LearningProgressRepository {
     });
     return learningProgress;
   }
-  async createOrUpdateLearningProgress(data: {
-    studentId: string;
-    stepId?: string;
-    exerciseId?: string;
-    status: LearningStatus;
-  }) {
+  async createOrUpdateLearningProgress(
+    data: {
+      studentId: string;
+      stepId?: string;
+      exerciseId?: string;
+      status: LearningStatus;
+    },
+    tx?: Prisma.TransactionClient
+  ) {
     const { studentId, stepId, exerciseId, status } = data;
+    const client = tx || prisma;
 
     if ((!stepId && !exerciseId) || (stepId && exerciseId)) {
       throw new BadRequestError('Either stepId or exerciseId must be provided (but not both).');
     }
 
     if (stepId) {
-      return prisma.learningProgress.upsert({
+      return client.learningProgress.upsert({
         where: {
           studentId_stepId: {
             studentId,
@@ -45,7 +50,7 @@ export class LearningProgressRepository {
       });
     }
 
-    return prisma.learningProgress.upsert({
+    return client.learningProgress.upsert({
       where: {
         studentId_excerciseId: {
           studentId,
