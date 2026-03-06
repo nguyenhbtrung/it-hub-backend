@@ -5,6 +5,7 @@ import {
   createOrUpdateLearningProgressSchema,
   createUserSchema,
   getInstructorRegistrationsQuerySchema,
+  getLearningCoursesQuerySchema,
   getUsersQueryScheme,
   updateMyProfileSchema,
   updateUserSchema,
@@ -28,6 +29,12 @@ router.get(
 router.get('/:id', requireAuth, authorize([UserRole.admin]), userController.getUserById.bind(userController));
 
 router.get('/me/profile', requireAuth, userController.getMyProfile.bind(userController));
+router.get(
+  '/me/learn/courses',
+  requireAuth,
+  validateQuery(getLearningCoursesQuerySchema),
+  userController.getMyLearningCourses.bind(userController)
+);
 
 router.get(
   '/instructor/registrations',

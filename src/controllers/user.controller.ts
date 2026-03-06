@@ -2,15 +2,24 @@ import {
   CreateOrUpdateLearningProgressDto,
   CreateUserDto,
   GetInstructorRegistrationsQueryDto,
+  GetLearningCoursesQueryDto,
   GetUsersQueryDto,
   UpdateMyProfileDto,
   UpdateUserDto,
 } from '@/dtos/user.dto';
 import { UnauthorizedError } from '@/errors';
+import { CourseRepository } from '@/repositories/course.repository';
 import { LearningProgressRepository } from '@/repositories/learningProgressRepository';
 import { UnitOfWork } from '@/repositories/unitOfWork';
 import { UserRepository } from '@/repositories/user.repository';
 import { VerificationTokenRepository } from '@/repositories/verificationToken.repository';
+import { EnrollmentRepository } from '@/repositories/enrollment.repository';
+import { ExerciseRepository } from '@/repositories/exercise.repository';
+import { SectionRepository } from '@/repositories/section.repository';
+import { StepRepository } from '@/repositories/step.repository';
+import { TagRepository } from '@/repositories/tag.repository';
+import { UnitRepository } from '@/repositories/unit.repository';
+import { CourseService } from '@/services/course.service';
 import { UserService } from '@/services/user.service';
 import { successResponse } from '@/utils/response';
 import { Request, Response } from 'express';
@@ -20,6 +29,16 @@ const userService = new UserService(
   new VerificationTokenRepository(),
   new LearningProgressRepository(),
   new UnitOfWork()
+);
+
+const courseService = new CourseService(
+  new CourseRepository(),
+  new TagRepository(),
+  new EnrollmentRepository(),
+  new StepRepository(),
+  new UnitRepository(),
+  new SectionRepository(),
+  new ExerciseRepository()
 );
 
 export class UserController {
@@ -59,6 +78,18 @@ export class UserController {
     successResponse({
       res,
       data: result,
+    });
+  }
+
+  async getMyLearningCourses(req: Request, res: Response) {
+    const userId = req?.user?.id;
+    if (!userId) throw new UnauthorizedError('UserId is missing');
+    const query = req?.query as unknown as GetLearningCoursesQueryDto;
+    const result = await courseService.getLearningCoursesByUserId(userId, query);
+    successResponse({
+      res,
+      data: result.data,
+      meta: result.meta,
     });
   }
 

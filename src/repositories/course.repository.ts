@@ -12,7 +12,6 @@ import {
 import { prisma } from '@/lib/prisma';
 import { CourseDuration } from '@/types/course.type';
 import { toAbsoluteURL } from '@/utils/file';
-import { title } from 'node:process';
 
 interface UpdateCourseDetailData {
   title: string;

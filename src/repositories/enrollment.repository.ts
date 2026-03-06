@@ -1,7 +1,62 @@
 import { EnrollmentStatus, Prisma } from '@/generated/prisma/client';
+import { EnrollmentWhereInput } from '@/generated/prisma/models';
 import { prisma } from '@/lib/prisma';
 
 export class EnrollmentRepository {
+  async getEnrollmentsWithCourseByUserId(userId: string, skip: number, take: number, status: EnrollmentStatus) {
+    const where: EnrollmentWhereInput = {
+      userId,
+      status,
+    };
+
+    const [enrollments, total] = await Promise.all([
+      prisma.enrollment.findMany({
+        where,
+        skip,
+        take,
+        orderBy: [{ enrolledAt: 'desc' }, { createdAt: 'desc' }],
+        select: {
+          createdAt: true,
+          enrolledAt: true,
+          status: true,
+          course: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              shortDescription: true,
+              instructor: {
+                select: {
+                  fullname: true,
+                },
+              },
+              status: true,
+              category: { select: { name: true } },
+              subCategory: { select: { name: true } },
+              level: true,
+              avgRating: true,
+              reviewCount: true,
+              totalDuration: true,
+              img: { select: { url: true } },
+              createdAt: true,
+              _count: {
+                select: {
+                  enrollments: {
+                    where: { status: { in: ['active', 'completed'] } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.enrollment.count({
+        where,
+      }),
+    ]);
+    return { enrollments, total };
+  }
+
   async getEnrollment(courseId: string, userId: string) {
     const enrollment = await prisma.enrollment.findUnique({
       where: {

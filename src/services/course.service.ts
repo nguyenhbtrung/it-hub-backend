@@ -15,6 +15,7 @@ import {
   UpdateCourseDetailDTO,
 } from '@/dtos/coures.dto';
 import { toFileResponseDto } from '@/dtos/file.dto';
+import { GetLearningCoursesQueryDto } from '@/dtos/user.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
 import { CourseEnrollmentStatus, CourseLevel, CourseStatus, UserRole } from '@/generated/prisma/enums';
 import { CourseRepository } from '@/repositories/course.repository';
@@ -515,6 +516,27 @@ export class CourseService {
       })),
     }));
 
+    return { data, meta: { total, page: Number(page), limit: Number(limit) } };
+  }
+
+  async getLearningCoursesByUserId(userId: string, query: GetLearningCoursesQueryDto) {
+    const { page = 1, limit = 10, status = 'active' } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+
+    const { enrollments, total } = await this.enrollmentRepository.getEnrollmentsWithCourseByUserId(
+      userId,
+      skip,
+      take,
+      status
+    );
+
+    const data = enrollments.map((e) => ({
+      ...e,
+      ...e.course,
+      img: e.course?.img ? toFileResponseDto(e.course?.img) : null,
+      course: undefined,
+    }));
     return { data, meta: { total, page: Number(page), limit: Number(limit) } };
   }
 
