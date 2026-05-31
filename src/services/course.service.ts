@@ -405,7 +405,12 @@ export class CourseService {
     const { page = 1, limit = 10, status } = query;
     const take = Number(limit);
     const skip = (page - 1) * limit;
-    const [data, total] = await this.courseRepository.getInstructorCreatedCourses(take, skip, status, instructorId);
+    const [courses, total] = await this.courseRepository.getInstructorCreatedCourses(take, skip, status, instructorId);
+
+    const data = courses.map((course) => ({
+      ...course,
+      imgUrl: course?.imgUrl ? toAbsoluteURL(course.imgUrl) : null,
+    }));
 
     return { data, meta: { total, page: Number(page), limit: Number(limit) } };
   }

@@ -56,6 +56,7 @@ export type UpdateCourseStatusDTO = z.infer<typeof updateCourseStatusSchema>;
 
 export interface CreatedCourseResponseDTO {
   id: string;
+  slug: string;
   title: string;
   category: string;
   subCategory: string | undefined;

@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma';
-import { User, Prisma } from '@/generated/prisma/client';
+import { User, Prisma, UserRole, UserStatus } from '@/generated/prisma/client';
 
 export class UserRepository {
   private toCreateInput(userId: string, data: Prisma.UserProfileUpdateInput): Prisma.UserProfileCreateInput {
@@ -53,6 +53,19 @@ export class UserRepository {
     ]);
 
     return { users, total };
+  }
+
+  async getUsersFromDate(startDate: Date) {
+    return prisma.user.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+        },
+      },
+      select: {
+        createdAt: true,
+      },
+    });
   }
 
   async getInstructorRegistations(
@@ -137,6 +150,46 @@ export class UserRepository {
     });
     return user;
   }
+
+  async countInstructorApplicationsFromDate(date: Date) {
+    return prisma.user.count({
+      where: {
+        instructorApplicationAt: {
+          gte: date,
+        },
+      },
+    });
+  }
+
+  async countInstructorApplicationsThisMonth() {
+    const start = new Date();
+    start.setDate(1);
+    start.setHours(0, 0, 0, 0);
+
+    return this.countInstructorApplicationsFromDate(start);
+  }
+
+  async countActiveInstructors() {
+    return prisma.user.count({
+      where: {
+        role: UserRole.instructor,
+        status: UserStatus.active,
+      },
+    });
+  }
+
+  async countActiveInstructorsFromDate(date: Date) {
+    return prisma.user.count({
+      where: {
+        role: UserRole.instructor,
+        status: UserStatus.active,
+        createdAt: {
+          gte: date,
+        },
+      },
+    });
+  }
+
   async create(data: Prisma.UserCreateInput): Promise<User> {
     return prisma.user.create({ data });
   }

@@ -447,6 +447,26 @@ export class CourseRepository {
     });
   }
 
+  async countAllCourses() {
+    return prisma.course.count();
+  }
+
+  async countCoursesByStatus(status: CourseStatus) {
+    return prisma.course.count({
+      where: {
+        status,
+      },
+    });
+  }
+
+  async countPendingCourses() {
+    return prisma.course.count({
+      where: {
+        status: 'pending',
+      },
+    });
+  }
+
   async getCoursesAverageRatingByInstructorId(instructorId: string) {
     const course = await prisma.course.aggregate({
       _avg: {
@@ -544,6 +564,7 @@ export class CourseRepository {
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
+          slug: true,
           title: true,
           status: true,
           category: { select: { name: true } },
@@ -559,6 +580,7 @@ export class CourseRepository {
 
     const data: CreatedCourseResponseDTO[] = courses.map((c) => ({
       id: c.id,
+      slug: c.slug,
       title: c.title,
       category: c.category.name,
       subCategory: c.subCategory?.name,

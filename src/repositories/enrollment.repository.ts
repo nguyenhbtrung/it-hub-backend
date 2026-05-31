@@ -69,6 +69,72 @@ export class EnrollmentRepository {
     return enrollment;
   }
 
+  async getEnrollmentsOfInstructorFromDate(userId: string, startDate: Date) {
+    return prisma.enrollment.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+        },
+        course: {
+          instructorId: userId,
+        },
+        status: {
+          in: ['active', 'completed'],
+        },
+      },
+      select: {
+        createdAt: true,
+      },
+    });
+  }
+
+  async getEnrollmentsFromDate(startDate: Date) {
+    return prisma.enrollment.findMany({
+      where: {
+        createdAt: {
+          gte: startDate,
+        },
+      },
+      select: {
+        createdAt: true,
+      },
+    });
+  }
+
+  async getRecentEnrollmentsByInstructorId(instructorId: string, limit: number) {
+    return prisma.enrollment.findMany({
+      where: {
+        status: 'pending',
+        course: {
+          instructorId,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullname: true,
+            avatar: {
+              select: {
+                url: true,
+              },
+            },
+          },
+        },
+        course: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit,
+    });
+  }
+
   async countActiveStudentsByCourseId(courseId: string) {
     return prisma.enrollment.count({
       where: {
@@ -113,6 +179,69 @@ export class EnrollmentRepository {
         },
       },
     });
+  }
+
+  async countTotalStudents() {
+    const result = await prisma.enrollment.findMany({
+      distinct: ['userId'],
+      where: {
+        status: { in: ['active', 'completed'] },
+      },
+      select: {
+        userId: true,
+      },
+    });
+
+    return result.length;
+  }
+
+  async countStudentsFromDate(date: Date) {
+    const result = await prisma.enrollment.findMany({
+      where: {
+        status: { in: ['active', 'completed'] },
+        enrolledAt: {
+          gte: date,
+        },
+      },
+      distinct: ['userId'],
+      select: {
+        userId: true,
+      },
+    });
+
+    return result.length;
+  }
+
+  async countStudentsThisMonth() {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    return this.countStudentsFromDate(startOfMonth);
+  }
+
+  async countStudentsLastMonth() {
+    const now = new Date();
+
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const result = await prisma.enrollment.findMany({
+      where: {
+        status: { in: ['active', 'completed'] },
+        enrolledAt: {
+          gte: startOfLastMonth,
+          lt: endOfLastMonth,
+        },
+      },
+      distinct: ['userId'],
+      select: {
+        userId: true,
+      },
+    });
+
+    return result.length;
   }
 
   async createEnrollment(courseId: string, userId: string, status: EnrollmentStatus) {
