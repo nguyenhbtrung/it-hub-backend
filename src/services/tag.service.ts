@@ -1,7 +1,9 @@
 import { GetTagsQueryDTO } from '@/dtos/tag.dto';
 import { Tag } from '@/generated/prisma/client';
-import { TagRepository } from '@/repositories/tag.repository';
+import { TagRepository } from '@/repositories';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class TagService {
   constructor(private tagRepository: TagRepository) {}
   async getTags(query: GetTagsQueryDTO): Promise<{ data: Tag[]; meta: any }> {

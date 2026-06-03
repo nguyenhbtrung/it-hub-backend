@@ -1,15 +1,15 @@
 import { AskAiStepDto } from '@/dtos/ai.dto';
-import { StepRepository } from '@/repositories/step.repository';
+import { StepRepository, UnitOfWork } from '@/repositories';
 import { JsonContentToMarkdown, jsonContentToText } from '@/utils/content';
 import { LlmService } from './llm.service';
-import { GoogleGenAI } from '@google/genai';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
 import { EmbeddingChunk } from '@/types/embedding.type';
-import { UnitOfWork } from '@/repositories/unitOfWork';
 import { NotFoundError } from '@/errors';
 import { l2Normalize } from '@/utils/vector';
 import { CohereClientV2 } from 'cohere-ai';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class AiService {
   constructor(
     private stepRepository: StepRepository,

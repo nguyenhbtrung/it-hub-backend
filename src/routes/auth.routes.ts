@@ -1,6 +1,4 @@
 import { Router } from 'express';
-import passport from 'passport';
-import { AuthController } from '../controllers/auth.controller';
 import { validate } from '../middleware/validate.middleware';
 import { authLimiter, passwordResetLimiter } from '../middleware/rateLimiter.middleware';
 import {
@@ -13,9 +11,9 @@ import {
   changePasswordSchema,
 } from '../dtos/auth.dto';
 import { requireAuth } from '@/middleware/auth.middleware';
+import { authController } from '@/bootstrap/container';
 
 const router = Router();
-const authController = new AuthController();
 
 // Public routes with rate limiting
 router.post('/register', authLimiter, validate(registerSchema), authController.register.bind(authController));

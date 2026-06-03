@@ -1,6 +1,8 @@
+import { Injectable } from '@ntrg/simple-di';
 import { prisma } from '../lib/prisma';
 import { VerificationToken, Prisma } from '@/generated/prisma/client';
 
+@Injectable()
 export class VerificationTokenRepository {
   async create(data: Prisma.VerificationTokenCreateInput): Promise<VerificationToken> {
     return prisma.verificationToken.create({ data });

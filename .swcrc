@@ -1,0 +1,19 @@
+{
+  "$schema": "https://swc.rs",
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "decorators": true,
+      "dynamicImport": true
+    },
+    "transform": {
+      "legacyDecorator": true,
+      "decoratorMetadata": true
+    },
+    "target": "ES2023",
+    "keepClassNames": true
+  },
+  "module": {
+    "type": "commonjs"
+  }
+}

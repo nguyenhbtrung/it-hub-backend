@@ -1,8 +1,8 @@
-import { CourseRepository } from '@/repositories/course.repository';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { UserRepository } from '@/repositories/user.repository';
+import { CourseRepository, EnrollmentRepository, UserRepository } from '@/repositories';
 import { toAbsoluteURL } from '@/utils/file';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class DashboardService {
   constructor(
     private enrollmentRepository: EnrollmentRepository,

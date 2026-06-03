@@ -1,4 +1,4 @@
-import { UnitController } from '@/controllers/unit.controller';
+import { unitController } from '@/bootstrap/container';
 
 import { addMaterialScheme, addStepScheme, updateUnitScheme } from '@/dtos/unit.dto';
 import { UserRole } from '@/generated/prisma/enums';
@@ -7,7 +7,6 @@ import { validate } from '@/middleware/validate.middleware';
 import { Router } from 'express';
 
 const router = Router();
-const unitController = new UnitController();
 
 router.get('/:id', requireAuth, unitController.getUnitById.bind(unitController));
 

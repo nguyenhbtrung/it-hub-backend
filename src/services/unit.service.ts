@@ -1,9 +1,10 @@
 import { AddMaterialDto, AddStepDto, UpdateUnitDto } from '@/dtos/unit.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
 import { UserRole } from '@/generated/prisma/enums';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { UnitRepository } from '@/repositories/unit.repository';
+import { EnrollmentRepository, UnitRepository } from '@/repositories';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class UnitService {
   constructor(
     private unitRepository: UnitRepository,

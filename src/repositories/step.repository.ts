@@ -3,6 +3,7 @@ import { NotFoundError } from '@/errors';
 import { Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { EmbeddingChunk } from '@/types/embedding.type';
+import { Injectable } from '@ntrg/simple-di';
 import { title } from 'node:process';
 
 export interface UpdateStepData {
@@ -11,6 +12,7 @@ export interface UpdateStepData {
   duration?: number;
 }
 
+@Injectable()
 export class StepRepository {
   async getCourseSlugByStepId(stepId: string) {
     const step = await prisma.step.findUnique({

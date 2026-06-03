@@ -1,5 +1,4 @@
-import { EnrollmentController } from '@/controllers/enrollment.controller';
-import { getCourseByCategoryIdQuerySchema } from '@/dtos/category.dto';
+import { enrollmentController } from '@/bootstrap/container';
 import { createEnrollmentSchema, updateEnrollmentSchema } from '@/dtos/enrollment.dto';
 import { UserRole } from '@/generated/prisma/enums';
 import { authorize, requireAuth } from '@/middleware/auth.middleware';
@@ -7,7 +6,6 @@ import { validate } from '@/middleware/validate.middleware';
 import { Router } from 'express';
 
 const router = Router();
-const enrollmentController = new EnrollmentController();
 
 router.post(
   '/:courseId/',

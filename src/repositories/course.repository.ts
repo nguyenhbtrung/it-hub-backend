@@ -12,6 +12,7 @@ import {
 import { prisma } from '@/lib/prisma';
 import { CourseDuration } from '@/types/course.type';
 import { toAbsoluteURL } from '@/utils/file';
+import { Injectable } from '@ntrg/simple-di';
 
 interface UpdateCourseDetailData {
   title: string;
@@ -32,6 +33,7 @@ interface UpdateCourseTagData {
 
 type WithStatus<T> = T & { status: LearningStatus | 'not_started' };
 
+@Injectable()
 export class CourseRepository {
   async create(data: Prisma.CourseCreateInput): Promise<Course> {
     return prisma.course.create({ data });

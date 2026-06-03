@@ -11,6 +11,10 @@
     "types": ["node"],
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
+
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
     "paths": {
       "@/*": ["./src/*"]
     }

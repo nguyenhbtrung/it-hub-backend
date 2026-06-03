@@ -1,6 +1,8 @@
+import { Injectable } from '@ntrg/simple-di';
 import { prisma } from '../lib/prisma';
 import { User, Prisma, UserRole, UserStatus } from '@/generated/prisma/client';
 
+@Injectable()
 export class UserRepository {
   private toCreateInput(userId: string, data: Prisma.UserProfileUpdateInput): Prisma.UserProfileCreateInput {
     return {

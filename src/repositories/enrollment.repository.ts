@@ -1,7 +1,9 @@
 import { EnrollmentStatus, Prisma } from '@/generated/prisma/client';
 import { EnrollmentWhereInput } from '@/generated/prisma/models';
 import { prisma } from '@/lib/prisma';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class EnrollmentRepository {
   async getEnrollmentsWithCourseByUserId(userId: string, skip: number, take: number, status: EnrollmentStatus) {
     const where: EnrollmentWhereInput = {

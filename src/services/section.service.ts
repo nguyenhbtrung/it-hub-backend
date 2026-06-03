@@ -1,9 +1,10 @@
 import { AddUnitDto, UpdateSectionDto } from '@/dtos/section.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
 import { UserRole } from '@/generated/prisma/enums';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { SectionRepository } from '@/repositories/section.repository';
+import { EnrollmentRepository, SectionRepository } from '@/repositories';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class SectionService {
   constructor(
     private sectionRepository: SectionRepository,

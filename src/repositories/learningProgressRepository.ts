@@ -2,7 +2,9 @@ import { BadRequestError } from '@/errors';
 import { Prisma } from '@/generated/prisma/client';
 import { LearningStatus } from '@/generated/prisma/enums';
 import { prisma } from '@/lib/prisma';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class LearningProgressRepository {
   async getLearningProgressByStepId(studentId: string, stepId: string) {
     const learningProgress = await prisma.learningProgress.findUnique({

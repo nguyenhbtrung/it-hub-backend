@@ -2,8 +2,10 @@ import { GetCategoriesQueryDTO, GetCourseByCategoryIdQueryDto } from '@/dtos/cat
 import { toFileResponseDto } from '@/dtos/file.dto';
 import { NotFoundError } from '@/errors';
 import { Category } from '@/generated/prisma/client';
-import { CategoryRepository } from '@/repositories/category.repository';
+import { CategoryRepository } from '@/repositories';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class CategoryService {
   constructor(private categoryRepository: CategoryRepository) {}
 

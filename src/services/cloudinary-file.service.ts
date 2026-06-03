@@ -15,9 +15,11 @@ import path from 'path';
 import streamifier from 'streamifier';
 import { getCloudinaryResourceType, getFileType } from '@/utils/file';
 import { UploadApiOptions } from 'cloudinary';
+import { Injectable } from '@ntrg/simple-di';
 
 const UPLOAD_DIR = 'uploads';
 
+@Injectable()
 export class CloudinaryFileService implements FileService {
   /**
    * Upload buffer lên Cloudinary bằng upload_stream

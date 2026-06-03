@@ -1,4 +1,4 @@
-import { SectionController } from '@/controllers/section.controller';
+import { sectionController } from '@/bootstrap/container';
 import { addUnitScheme, updateSectionScheme } from '@/dtos/section.dto';
 import { UserRole } from '@/generated/prisma/enums';
 import { authorize, requireAuth } from '@/middleware/auth.middleware';
@@ -6,7 +6,6 @@ import { validate, validateQuery } from '@/middleware/validate.middleware';
 import { Router } from 'express';
 
 const router = Router();
-const sectionController = new SectionController();
 
 router.get('/:id', requireAuth, sectionController.getSectionById.bind(sectionController));
 

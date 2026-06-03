@@ -1,15 +1,12 @@
 import { UpdateStepDto } from '@/dtos/step.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
 import { UserRole } from '@/generated/prisma/enums';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { FileRepository } from '@/repositories/file.repository';
-import { StepRepository } from '@/repositories/step.repository';
-import { UnitOfWork } from '@/repositories/unitOfWork';
-import { diffFileIds, estimateDurationFromContent, extractFileIdsFromContent, extractPlainText } from '@/utils/content';
-import { title } from 'node:process';
-import { duration } from 'node_modules/zod/v4/classic/iso.cjs';
+import { EnrollmentRepository, FileRepository, StepRepository, UnitOfWork } from '@/repositories';
+import { diffFileIds, estimateDurationFromContent, extractFileIdsFromContent } from '@/utils/content';
 import { AiService } from './ai.service';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class StepService {
   constructor(
     private stepRepository: StepRepository,

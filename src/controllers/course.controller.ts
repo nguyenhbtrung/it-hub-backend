@@ -21,33 +21,20 @@ import {
   UpdateCourseStatusDTO,
 } from '@/dtos/coures.dto';
 import { UnauthorizedError } from '@/errors';
-import { CourseRepository } from '@/repositories/course.repository';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { ExerciseRepository } from '@/repositories/exercise.repository';
-import { SectionRepository } from '@/repositories/section.repository';
-import { StepRepository } from '@/repositories/step.repository';
-import { TagRepository } from '@/repositories/tag.repository';
-import { UnitRepository } from '@/repositories/unit.repository';
-import { CourseService } from '@/services/course.service';
+import { CourseService } from '@/services';
 import { successResponse } from '@/utils/response';
+import { Injectable } from '@ntrg/simple-di';
 import { Request, Response, NextFunction } from 'express';
 
-const courseService = new CourseService(
-  new CourseRepository(),
-  new TagRepository(),
-  new EnrollmentRepository(),
-  new StepRepository(),
-  new UnitRepository(),
-  new SectionRepository(),
-  new ExerciseRepository()
-);
-
+@Injectable()
 export class CourseController {
+  constructor(private readonly courseService: CourseService) {}
+
   async createCourse(req: Request, res: Response, next: NextFunction) {
     const payload = req.body as CreateCourseDTO;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    const result = await courseService.createCourse(payload, instructorId);
+    const result = await this.courseService.createCourse(payload, instructorId);
     successResponse({
       res,
       message: 'Course created successfully',
@@ -60,7 +47,7 @@ export class CourseController {
     const { id: courseId } = req.params;
     const userId = req?.user?.id;
     const payload = req.body as CreateOrUpdateReviewDto;
-    const result = await courseService.createOrUpdateReview(courseId, userId || '', payload);
+    const result = await this.courseService.createOrUpdateReview(courseId, userId || '', payload);
     successResponse({
       res,
       data: result,
@@ -72,7 +59,7 @@ export class CourseController {
     const { status } = req.body as UpdateCourseStatusDTO;
     const userId = req?.user?.id;
     const role = req?.user?.role;
-    await courseService.updateCourseStatus(courseId, userId || '', role, status);
+    await this.courseService.updateCourseStatus(courseId, userId || '', role, status);
     successResponse({
       res,
     });
@@ -80,7 +67,7 @@ export class CourseController {
 
   async updateCourseTotalDuration(req: Request, res: Response) {
     const { id: courseId } = req.params;
-    const result = await courseService.updateCourseTotalDuration(courseId);
+    const result = await this.courseService.updateCourseTotalDuration(courseId);
     successResponse({ res, message: 'Course duration updated successfully.', data: { duration: result } });
   }
 
@@ -89,7 +76,7 @@ export class CourseController {
     const payload = req.body as UpdateCourseDetailDTO;
     const instructorId = req?.user?.id;
     const role = req?.user?.role;
-    await courseService.updateCourseDetail(courseId, instructorId || '', role, payload);
+    await this.courseService.updateCourseDetail(courseId, instructorId || '', role, payload);
     successResponse({
       res,
       message: 'Course updated successfully',
@@ -99,7 +86,7 @@ export class CourseController {
   async getNavigationByContentId(req: Request, res: Response) {
     const query = req?.query as unknown as GetNavigationByContentIdQueryDto;
     const { contentId } = req.params;
-    const result = await courseService.getNavigationByContentId(contentId, query);
+    const result = await this.courseService.getNavigationByContentId(contentId, query);
     successResponse({
       res,
       data: result,
@@ -111,7 +98,7 @@ export class CourseController {
     const query = req?.query as unknown as GetRegistrationsByCourseIdQueryDto;
     const userId = req?.user?.id;
     const role = req?.user?.role;
-    const result = await courseService.getRegistrationsByCoursesId(courseId, userId || '', role, query);
+    const result = await this.courseService.getRegistrationsByCoursesId(courseId, userId || '', role, query);
     successResponse({
       res,
       data: result.data,
@@ -124,7 +111,7 @@ export class CourseController {
     const query = req?.query as unknown as GetStudentsByCourseIdQueryDto;
     const userId = req?.user?.id;
     const role = req?.user?.role;
-    const result = await courseService.getStudentsByCourseId(courseId, userId || '', role, query);
+    const result = await this.courseService.getStudentsByCourseId(courseId, userId || '', role, query);
     successResponse({
       res,
       data: result.data,
@@ -134,7 +121,7 @@ export class CourseController {
 
   async getCourses(req: Request, res: Response) {
     const query = req?.query as unknown as GetCoursesQueryDTO;
-    const result = await courseService.getCourses(query);
+    const result = await this.courseService.getCourses(query);
     successResponse({
       res,
       data: result.data,
@@ -145,7 +132,7 @@ export class CourseController {
   async getRecommendedCourses(req: Request, res: Response) {
     const { categoryId } = req.query as unknown as GetRecommendedCoursesQueryDto;
     const userId = req?.user?.id;
-    const result = await courseService.getRecommendedCourses(categoryId, userId);
+    const result = await this.courseService.getRecommendedCourses(categoryId, userId);
     successResponse({
       res,
       data: result,
@@ -154,7 +141,7 @@ export class CourseController {
 
   async getFeaturedCourses(req: Request, res: Response) {
     const query = req.query as unknown as GetFeaturedCoursesQueryDTO;
-    const result = await courseService.getFeaturedCourses(query);
+    const result = await this.courseService.getFeaturedCourses(query);
     successResponse({
       res,
       data: result.data,
@@ -166,7 +153,7 @@ export class CourseController {
     const { id: courseId } = req.params;
     const userId = req?.user?.id;
     const role = req?.user?.role;
-    const result = await courseService.getUserEnrollmentStatus(courseId, userId || '', role);
+    const result = await this.courseService.getUserEnrollmentStatus(courseId, userId || '', role);
     successResponse({
       res,
       data: result,
@@ -177,7 +164,7 @@ export class CourseController {
     const query = req.query as unknown as GetMyCreatedCoursesDTO;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    const result = await courseService.getMyCreatedCourses(query, instructorId);
+    const result = await this.courseService.getMyCreatedCourses(query, instructorId);
     successResponse({
       res,
       data: result.data,
@@ -189,7 +176,7 @@ export class CourseController {
     const { id: courseId } = req.params;
     const userId = req?.user?.id;
     const role = req?.user?.role;
-    const result = await courseService.getCourseInstructor(courseId, userId || '', role);
+    const result = await this.courseService.getCourseInstructor(courseId, userId || '', role);
     successResponse({
       res,
       data: result,
@@ -200,7 +187,7 @@ export class CourseController {
     const { id: courseId } = req.params;
     const userId = req?.user?.id;
     const role = req?.user?.role;
-    const result = await courseService.getCourseReviewStatistics(courseId, userId || '', role);
+    const result = await this.courseService.getCourseReviewStatistics(courseId, userId || '', role);
     successResponse({
       res,
       data: result,
@@ -212,7 +199,7 @@ export class CourseController {
     const query = req.query as unknown as GetCourseReviewsQueryDto;
     const userId = req?.user?.id;
     const role = req?.user?.role;
-    const result = await courseService.getCourseReviews(courseId, userId || '', role, query);
+    const result = await this.courseService.getCourseReviews(courseId, userId || '', role, query);
     successResponse({
       res,
       data: result.data,
@@ -223,7 +210,7 @@ export class CourseController {
   async getMyReviewOfTheCourse(req: Request, res: Response) {
     const { id: courseId } = req.params;
     const userId = req?.user?.id;
-    const result = await courseService.getMyReviewOfTheCourse(courseId, userId || '');
+    const result = await this.courseService.getMyReviewOfTheCourse(courseId, userId || '');
     successResponse({
       res,
       data: result,
@@ -235,7 +222,7 @@ export class CourseController {
     const { id: courseId } = req.params as GetCourseDetailParamsDTO;
     const userId = req?.user?.id;
     const role = req?.user?.role;
-    const result = await courseService.getCourseDetail(courseId, userId || '', role, view);
+    const result = await this.courseService.getCourseDetail(courseId, userId || '', role, view);
     successResponse({
       res,
       data: result,
@@ -244,7 +231,7 @@ export class CourseController {
 
   async getCourseIdBySlug(req: Request, res: Response) {
     const { slug } = req.params;
-    const result = await courseService.getCourseIdBySlug(slug);
+    const result = await this.courseService.getCourseIdBySlug(slug);
     successResponse({ res, data: result });
   }
 
@@ -253,7 +240,7 @@ export class CourseController {
     const { id: courseId } = req.params;
     const instructorId = req?.user?.id;
     const role = req?.user?.role;
-    const result = await courseService.getCourseContent(courseId, instructorId || '', role, view);
+    const result = await this.courseService.getCourseContent(courseId, instructorId || '', role, view);
     successResponse({
       res,
       data: result,
@@ -264,7 +251,7 @@ export class CourseController {
     const { id: courseId } = req.params;
     const userId = req?.user?.id;
     const role = req?.user?.role;
-    const result = await courseService.getCourseContentOutline(courseId, userId || '', role);
+    const result = await this.courseService.getCourseContentOutline(courseId, userId || '', role);
     successResponse({
       res,
       data: result,
@@ -274,7 +261,7 @@ export class CourseController {
   async getCourseContentBreadcrumb(req: Request, res: Response) {
     const { contentId } = req.params;
     const { type } = req.query as GetCourseContentBreadcrumbQueryDTO;
-    const result = await courseService.getContentBreadcrumb(contentId, type);
+    const result = await this.courseService.getContentBreadcrumb(contentId, type);
     successResponse({
       res,
       data: result,
@@ -284,7 +271,7 @@ export class CourseController {
   async getCourseExercisesGroupedBySection(req: Request, res: Response) {
     const { id: courseId } = req.params;
     const query = req.query as unknown as getCourseExercisesGroupedBySectionQueryDto;
-    const result = await courseService.getCourseExercisesGroupedBySection(courseId, query);
+    const result = await this.courseService.getCourseExercisesGroupedBySection(courseId, query);
     successResponse({
       res,
       data: result.data,
@@ -297,7 +284,7 @@ export class CourseController {
     const payload = req.body as AddSectionDto;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    const result = await courseService.addSection(courseId, instructorId, payload);
+    const result = await this.courseService.addSection(courseId, instructorId, payload);
     successResponse({ res, status: 201, message: 'Add section successfully', data: result });
   }
 
@@ -306,7 +293,7 @@ export class CourseController {
     const { imageId } = req.body as UpdateCourseImageDto;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    await courseService.updateCourseImage(courseId, imageId, instructorId);
+    await this.courseService.updateCourseImage(courseId, imageId, instructorId);
     successResponse({
       res,
       message: 'Course image updated successfully',
@@ -318,7 +305,7 @@ export class CourseController {
     const { promoVideoId } = req.body as UpdateCoursePromoVideoDto;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    await courseService.updatePromoVideoImage(courseId, promoVideoId, instructorId);
+    await this.courseService.updatePromoVideoImage(courseId, promoVideoId, instructorId);
     successResponse({
       res,
       message: 'Course promo video updated successfully',

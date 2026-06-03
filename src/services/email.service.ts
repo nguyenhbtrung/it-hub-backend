@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer';
 import { InternalServerError } from '../errors';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class EmailService {
   private transporter;
 

@@ -4,22 +4,22 @@ import {
   DeleteEnrollmentQueryDto,
   UpdateEnrollmentDto,
 } from '@/dtos/enrollment.dto';
-import { CourseRepository } from '@/repositories/course.repository';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { EnrollmentService } from '@/services/enrollment.service';
+import { EnrollmentService } from '@/services';
 import { successResponse } from '@/utils/response';
+import { Injectable } from '@ntrg/simple-di';
 import { Request, Response } from 'express';
 
-const enrollmentService = new EnrollmentService(new EnrollmentRepository(), new CourseRepository());
-
+@Injectable()
 export class EnrollmentController {
+  constructor(private readonly enrollmentService: EnrollmentService) {}
+
   async createEnrollment(req: Request, res: Response) {
     const { courseId } = req.params;
     const myId = req?.user?.id;
     const role = req?.user?.role;
     const payload = req.body as CreateEnrollmentDto;
     const { userId } = req?.query as unknown as CreateEnrollmentQueryDto;
-    const result = await enrollmentService.createEnrollment(courseId, userId, myId || '', role, payload);
+    const result = await this.enrollmentService.createEnrollment(courseId, userId, myId || '', role, payload);
     successResponse({
       res,
       status: 201,
@@ -32,7 +32,7 @@ export class EnrollmentController {
     const instructorId = req?.user?.id;
     const role = req?.user?.role;
     const payload = req.body as UpdateEnrollmentDto;
-    await enrollmentService.updateEnrollment(courseId, userId, instructorId || '', role, payload);
+    await this.enrollmentService.updateEnrollment(courseId, userId, instructorId || '', role, payload);
     successResponse({
       res,
     });
@@ -43,7 +43,7 @@ export class EnrollmentController {
     const myId = req?.user?.id;
     const role = req?.user?.role;
     const { userId } = req?.query as unknown as DeleteEnrollmentQueryDto;
-    await enrollmentService.deleteEnrollment(courseId, userId, myId || '', role);
+    await this.enrollmentService.deleteEnrollment(courseId, userId, myId || '', role);
     successResponse({
       res,
     });

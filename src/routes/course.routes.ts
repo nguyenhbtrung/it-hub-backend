@@ -1,4 +1,4 @@
-import { CourseController } from '@/controllers/course.controller';
+import { courseController } from '@/bootstrap/container';
 import {
   addSectionScheme,
   createCourseSchema,
@@ -27,7 +27,6 @@ import { validate, validateParams, validateQuery } from '@/middleware/validate.m
 import { Router } from 'express';
 
 const router = Router();
-const courseController = new CourseController();
 
 router.post(
   '/',

@@ -1,5 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class LlmService {
   constructor(private ai: GoogleGenAI) {}
 

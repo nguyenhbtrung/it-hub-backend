@@ -3,11 +3,14 @@ import fs from 'fs';
 import path from 'path';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '@/errors';
 import { successResponse } from '@/utils/response';
-import { FileService } from '@/services/interfaces/file.service';
+import { FileService } from '@/services';
 import { ConfirmUploadDto, GenerateSignedUploadOptionsDto } from '@/dtos/file.dto';
+import { Inject, Injectable } from '@ntrg/simple-di';
+import { TOKENS } from '@/di/token';
 
+@Injectable()
 export class FileController {
-  constructor(private readonly fileService: FileService) {}
+  constructor(@Inject(TOKENS.FileService) private readonly fileService: FileService) {}
 
   /**
    * Upload single file

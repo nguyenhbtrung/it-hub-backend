@@ -3,7 +3,9 @@ import { ExcerciseType, Prisma } from '@/generated/prisma/client';
 import { ExcerciseAttemptWhereInput, ExcerciseWhereInput, UserWhereInput } from '@/generated/prisma/models';
 import { prisma } from '@/lib/prisma';
 import { toAbsoluteURL } from '@/utils/file';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class ExerciseRepository {
   async getExerciseAttempStudentIdAndAttachments(attemptId: string) {
     const attemp = await prisma.excerciseAttempt.findUnique({

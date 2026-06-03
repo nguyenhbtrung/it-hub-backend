@@ -1,7 +1,9 @@
 import { Tag } from '@/generated/prisma/client';
 import { TagWhereInput } from '@/generated/prisma/models';
 import { prisma } from '@/lib/prisma';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class TagRepository {
   async getTags(take: number, skip: number, q?: string): Promise<[Tag[], number]> {
     const where = (q ? { slug: { contains: q, mode: 'insensitive' } } : {}) as TagWhereInput;

@@ -1,16 +1,17 @@
 import { GetCategoriesQueryDTO, GetCourseByCategoryIdQueryDto } from '@/dtos/category.dto';
-import { CategoryRepository } from '@/repositories/category.repository';
-import { CategoryService } from '@/services/category.service';
+import { CategoryService } from '@/services';
 import { successResponse } from '@/utils/response';
+import { Injectable } from '@ntrg/simple-di';
 import { Request, Response } from 'express';
 
-const categoryService = new CategoryService(new CategoryRepository());
-
+@Injectable()
 export class CategoryController {
+  constructor(private readonly categoryService: CategoryService) {}
+
   async getCourseByCategoryId(req: Request, res: Response) {
     const { id } = req.params;
     const query = req?.query as unknown as GetCourseByCategoryIdQueryDto;
-    const result = await categoryService.getCourseByCategoryId(id, query);
+    const result = await this.categoryService.getCourseByCategoryId(id, query);
     successResponse({
       res,
       data: result.data,
@@ -20,7 +21,7 @@ export class CategoryController {
 
   async getCategorySummary(req: Request, res: Response) {
     const { id } = req.params;
-    const result = await categoryService.getCategorySummary(id);
+    const result = await this.categoryService.getCategorySummary(id);
     successResponse({
       res,
       data: result,
@@ -28,7 +29,7 @@ export class CategoryController {
   }
   async getCategoryIdBySlug(req: Request, res: Response) {
     const { slug } = req.params;
-    const result = await categoryService.getCategoryIdBySlug(slug);
+    const result = await this.categoryService.getCategoryIdBySlug(slug);
     successResponse({
       res,
       data: result,
@@ -36,7 +37,7 @@ export class CategoryController {
   }
 
   async getCategoryTree(req: Request, res: Response) {
-    const result = await categoryService.getCategoryTree();
+    const result = await this.categoryService.getCategoryTree();
     successResponse({
       res,
       data: result,
@@ -45,7 +46,7 @@ export class CategoryController {
 
   async getCategories(req: Request, res: Response) {
     const query = req?.query as unknown as GetCategoriesQueryDTO;
-    const result = await categoryService.getCategories(query);
+    const result = await this.categoryService.getCategories(query);
     successResponse({
       res,
       data: result.data,

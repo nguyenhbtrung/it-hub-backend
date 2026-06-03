@@ -2,7 +2,9 @@ import { UpdateSectionDto } from '@/dtos/section.dto';
 import { ExcerciseType, Prisma, Unit } from '@/generated/prisma/client';
 import { SectionWhereInput } from '@/generated/prisma/models';
 import { prisma } from '@/lib/prisma';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class SectionRepository {
   async getFirstUnitOfSection(sectionId: string) {
     const unit = await prisma.unit.findFirst({

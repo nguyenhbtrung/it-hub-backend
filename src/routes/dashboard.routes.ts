@@ -1,11 +1,10 @@
-import { DashboardController } from '@/controllers/dashboard.controller';
+import { dashboardController } from '@/bootstrap/container';
 
 import { UserRole } from '@/generated/prisma/enums';
 import { authorize, requireAuth } from '@/middleware/auth.middleware';
 import { Router } from 'express';
 
 const router = Router();
-const dashboardController = new DashboardController();
 
 router.get(
   '/instructor/summary',

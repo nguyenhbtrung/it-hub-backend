@@ -1,6 +1,8 @@
+import { Injectable } from '@ntrg/simple-di';
 import { prisma } from '../lib/prisma';
 import { RefreshToken, Prisma } from '@/generated/prisma/client';
 
+@Injectable()
 export class RefreshTokenRepository {
   async create(data: Prisma.RefreshTokenCreateInput): Promise<RefreshToken> {
     return prisma.refreshToken.create({ data });

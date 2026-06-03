@@ -7,32 +7,21 @@ import {
   UpdateSubmissionDto,
 } from '@/dtos/exercise.dto';
 import { UnauthorizedError } from '@/errors';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { ExerciseRepository } from '@/repositories/exercise.repository';
-import { FileRepository } from '@/repositories/file.repository';
-import { LearningProgressRepository } from '@/repositories/learningProgressRepository';
-import { UnitRepository } from '@/repositories/unit.repository';
-import { UnitOfWork } from '@/repositories/unitOfWork';
-import { ExerciseService } from '@/services/exercise.service';
+import { ExerciseService } from '@/services';
 import { successResponse } from '@/utils/response';
+import { Injectable } from '@ntrg/simple-di';
 import { Request, Response } from 'express';
 
-const exerciseService = new ExerciseService(
-  new ExerciseRepository(),
-  new EnrollmentRepository(),
-  new UnitRepository(),
-  new FileRepository(),
-  new LearningProgressRepository(),
-  new UnitOfWork()
-);
-
+@Injectable()
 export class ExerciseController {
+  constructor(private readonly exerciseService: ExerciseService) {}
+
   async getExerciseByUnitId(req: Request, res: Response) {
     const { unitId } = req.params;
     const userId = req?.user?.id;
     if (!userId) throw new UnauthorizedError('UserId is missing');
     const role = req?.user?.role;
-    const result = await exerciseService.getExerciseByUnitId(unitId, userId, role);
+    const result = await this.exerciseService.getExerciseByUnitId(unitId, userId, role);
     successResponse({ res, data: result });
   }
 
@@ -43,33 +32,33 @@ export class ExerciseController {
 
     const query = req.query as unknown as GetExerciseSubmissionsQueryDto;
 
-    const result = await exerciseService.getExerciseSubmissions(userId, exerciseId, query);
+    const result = await this.exerciseService.getExerciseSubmissions(userId, exerciseId, query);
     successResponse({ res, data: result.data, meta: result.meta });
   }
 
   async getSubmissionOverviewByUnitId(req: Request, res: Response) {
     const { unitId } = req.params;
-    const result = await exerciseService.getSubmissionOverviewByUnitId(unitId);
+    const result = await this.exerciseService.getSubmissionOverviewByUnitId(unitId);
     successResponse({ res, data: result });
   }
 
   async getStudentSubmissions(req: Request, res: Response) {
     const { unitId } = req.params;
     const query = req.query as unknown as GetStudentSubmissionsQueryDto;
-    const result = await exerciseService.getStudentSubmissions(unitId, query);
+    const result = await this.exerciseService.getStudentSubmissions(unitId, query);
     successResponse({ res, data: result.data, meta: result.meta });
   }
 
   async getSubmissionById(req: Request, res: Response) {
     const { id } = req.params;
-    const result = await exerciseService.getSubmissionById(id);
+    const result = await this.exerciseService.getSubmissionById(id);
     successResponse({ res, data: result });
   }
 
   async getSubmissionsByUnitAndStudent(req: Request, res: Response) {
     const { unitId, studentId } = req.params;
     const query = req.query as unknown as GetSubmissionsByStudentIdQueryDto;
-    const result = await exerciseService.getSubmissionsByUnitAndStudent(studentId, unitId, query);
+    const result = await this.exerciseService.getSubmissionsByUnitAndStudent(studentId, unitId, query);
     successResponse({ res, data: result.data, meta: result.meta });
   }
 
@@ -78,14 +67,14 @@ export class ExerciseController {
     const payload = req.body as UpdateExerciseDto;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    const result = await exerciseService.updateExercise(unitId, instructorId, payload);
+    const result = await this.exerciseService.updateExercise(unitId, instructorId, payload);
     successResponse({ res, message: 'Update exercise successfully', data: result });
   }
 
   async updateSubmission(req: Request, res: Response) {
     const { id } = req.params;
     const payload = req.body as UpdateSubmissionDto;
-    const result = await exerciseService.updateSubmission(id, payload);
+    const result = await this.exerciseService.updateSubmission(id, payload);
     successResponse({ res, data: result });
   }
 
@@ -94,7 +83,7 @@ export class ExerciseController {
     const payload = req.body as AddSubmissionDto;
     const userId = req?.user?.id;
     if (!userId) throw new UnauthorizedError('userId is missing');
-    const result = await exerciseService.addSubmission(userId, exerciseId, payload);
+    const result = await this.exerciseService.addSubmission(userId, exerciseId, payload);
     successResponse({ res, status: 201, message: 'Add submission successfully', data: result });
   }
 
@@ -102,7 +91,7 @@ export class ExerciseController {
     const { id: submissionId } = req.params;
     const userId = req?.user?.id;
     if (!userId) throw new UnauthorizedError('userId is missing');
-    await exerciseService.deleteSubmission(userId, submissionId);
+    await this.exerciseService.deleteSubmission(userId, submissionId);
     successResponse({ res, status: 200, message: 'Delete submission successfully' });
   }
 }

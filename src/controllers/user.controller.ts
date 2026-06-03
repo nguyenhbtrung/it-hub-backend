@@ -8,43 +8,22 @@ import {
   UpdateUserDto,
 } from '@/dtos/user.dto';
 import { UnauthorizedError } from '@/errors';
-import { CourseRepository } from '@/repositories/course.repository';
-import { LearningProgressRepository } from '@/repositories/learningProgressRepository';
-import { UnitOfWork } from '@/repositories/unitOfWork';
-import { UserRepository } from '@/repositories/user.repository';
-import { VerificationTokenRepository } from '@/repositories/verificationToken.repository';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { ExerciseRepository } from '@/repositories/exercise.repository';
-import { SectionRepository } from '@/repositories/section.repository';
-import { StepRepository } from '@/repositories/step.repository';
-import { TagRepository } from '@/repositories/tag.repository';
-import { UnitRepository } from '@/repositories/unit.repository';
-import { CourseService } from '@/services/course.service';
-import { UserService } from '@/services/user.service';
+import { CourseService } from '@/services';
+import { UserService } from '@/services';
 import { successResponse } from '@/utils/response';
 import { Request, Response } from 'express';
+import { Injectable } from '@ntrg/simple-di';
 
-const userService = new UserService(
-  new UserRepository(),
-  new VerificationTokenRepository(),
-  new LearningProgressRepository(),
-  new UnitOfWork()
-);
-
-const courseService = new CourseService(
-  new CourseRepository(),
-  new TagRepository(),
-  new EnrollmentRepository(),
-  new StepRepository(),
-  new UnitRepository(),
-  new SectionRepository(),
-  new ExerciseRepository()
-);
-
+@Injectable()
 export class UserController {
+  constructor(
+    private readonly userService: UserService,
+    private readonly courseService: CourseService
+  ) {}
+
   async getUsers(req: Request, res: Response) {
     const query = req?.query as unknown as GetUsersQueryDto;
-    const result = await userService.getUsers(query);
+    const result = await this.userService.getUsers(query);
     successResponse({
       res,
       data: result.data,
@@ -54,7 +33,7 @@ export class UserController {
 
   async getUserById(req: Request, res: Response) {
     const { id } = req.params;
-    const result = await userService.getUserById(id);
+    const result = await this.userService.getUserById(id);
     successResponse({
       res,
       data: result,
@@ -63,7 +42,7 @@ export class UserController {
 
   async getInstructorRegistations(req: Request, res: Response) {
     const query = req?.query as unknown as GetInstructorRegistrationsQueryDto;
-    const result = await userService.getInstructorRegistations(query);
+    const result = await this.userService.getInstructorRegistations(query);
     successResponse({
       res,
       data: result.data,
@@ -74,7 +53,7 @@ export class UserController {
   async getMyProfile(req: Request, res: Response) {
     const userId = req?.user?.id;
     if (!userId) throw new UnauthorizedError('UserId is missing');
-    const result = await userService.getMyProfile(userId);
+    const result = await this.userService.getMyProfile(userId);
     successResponse({
       res,
       data: result,
@@ -85,7 +64,7 @@ export class UserController {
     const userId = req?.user?.id;
     if (!userId) throw new UnauthorizedError('UserId is missing');
     const query = req?.query as unknown as GetLearningCoursesQueryDto;
-    const result = await courseService.getLearningCoursesByUserId(userId, query);
+    const result = await this.courseService.getLearningCoursesByUserId(userId, query);
     successResponse({
       res,
       data: result.data,
@@ -97,13 +76,13 @@ export class UserController {
     const userId = req?.user?.id;
     if (!userId) throw new UnauthorizedError('UserId is missing');
     const { stepId } = req.params;
-    const result = await userService.getLearningProgressByStepId(userId, stepId);
+    const result = await this.userService.getLearningProgressByStepId(userId, stepId);
     successResponse({ res, data: result });
   }
 
   async createUser(req: Request, res: Response) {
     const payload = req.body as CreateUserDto;
-    const result = await userService.createUser(payload);
+    const result = await this.userService.createUser(payload);
     successResponse({
       res,
       status: 201,
@@ -114,7 +93,7 @@ export class UserController {
   async updateUser(req: Request, res: Response) {
     const { id } = req.params;
     const payload = req.body as UpdateUserDto;
-    const result = await userService.updateUser(id, payload);
+    const result = await this.userService.updateUser(id, payload);
     successResponse({
       res,
       data: result,
@@ -125,7 +104,7 @@ export class UserController {
     const userId = req?.user?.id;
     if (!userId) throw new UnauthorizedError('UserId is missing');
     const payload = req.body as UpdateMyProfileDto;
-    const result = await userService.updateMyProfile(userId, payload);
+    const result = await this.userService.updateMyProfile(userId, payload);
     successResponse({
       res,
       data: result,
@@ -137,7 +116,7 @@ export class UserController {
     if (!studentId) throw new UnauthorizedError('studentId is missing');
     const { stepId } = req.params;
     const payload = req.body as CreateOrUpdateLearningProgressDto;
-    const result = await userService.createOrUpdateStepLearningProgress(studentId, stepId, payload);
+    const result = await this.userService.createOrUpdateStepLearningProgress(studentId, stepId, payload);
     successResponse({ res, data: result });
   }
 
@@ -146,13 +125,13 @@ export class UserController {
     if (!studentId) throw new UnauthorizedError('studentId is missing');
     const { exerciseId } = req.params;
     const payload = req.body as CreateOrUpdateLearningProgressDto;
-    const result = await userService.createOrUpdateExerciseLearningProgress(studentId, exerciseId, payload);
+    const result = await this.userService.createOrUpdateExerciseLearningProgress(studentId, exerciseId, payload);
     successResponse({ res, data: result });
   }
 
   async deleteUser(req: Request, res: Response) {
     const { id } = req.params;
-    await userService.deleteUser(id);
+    await this.userService.deleteUser(id);
     successResponse({
       res,
     });

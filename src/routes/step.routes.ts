@@ -1,4 +1,4 @@
-import { StepController } from '@/controllers/step.controller';
+import { stepController } from '@/bootstrap/container';
 import { updateStepScheme } from '@/dtos/step.dto';
 
 import { UserRole } from '@/generated/prisma/enums';
@@ -7,7 +7,6 @@ import { validate } from '@/middleware/validate.middleware';
 import { Router } from 'express';
 
 const router = Router();
-const stepController = new StepController();
 
 router.get('/:id', requireAuth, stepController.getStepById.bind(stepController));
 

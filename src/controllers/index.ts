@@ -1,0 +1,13 @@
+export { AiController } from './ai.controller';
+export { AuthController } from './auth.controller';
+export { CategoryController } from './category.controller';
+export { CourseController } from './course.controller';
+export { DashboardController } from './dashboard.controller';
+export { EnrollmentController } from './enrollment.controller';
+export { ExerciseController } from './exercise.controller';
+export { FileController } from './file.controller';
+export { SectionController } from './section.controller';
+export { StepController } from './step.controller';
+export { TagController } from './tag.controller';
+export { UnitController } from './unit.controller';
+export { UserController } from './user.controller';

@@ -10,14 +10,13 @@ import {
   UpdateUserDto,
 } from '@/dtos/user.dto';
 import { NotFoundError } from '@/errors';
-import { LearningProgressRepository } from '@/repositories/learningProgressRepository';
-import { UnitOfWork } from '@/repositories/unitOfWork';
-import { UserRepository } from '@/repositories/user.repository';
-import { VerificationTokenRepository } from '@/repositories/verificationToken.repository';
+import { LearningProgressRepository, UnitOfWork, UserRepository, VerificationTokenRepository } from '@/repositories';
 import { generateRandomToken } from '@/utils/auth';
 import { toAbsoluteURL } from '@/utils/file';
+import { Injectable } from '@ntrg/simple-di';
 import bcrypt from 'bcrypt';
 
+@Injectable()
 export class UserService {
   constructor(
     private userRepository: UserRepository,

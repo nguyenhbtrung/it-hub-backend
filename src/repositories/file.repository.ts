@@ -1,6 +1,8 @@
 import { FileStatus, FileUsage, Prisma } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class FileRepository {
   async createOrUpdateFileUsage(
     fileIds: string[],

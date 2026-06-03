@@ -1,20 +1,20 @@
 import { AddUnitDto, UpdateSectionDto } from '@/dtos/section.dto';
 import { UnauthorizedError } from '@/errors';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { SectionRepository } from '@/repositories/section.repository';
-import { SectionService } from '@/services/section.service';
+import { SectionService } from '@/services';
 import { successResponse } from '@/utils/response';
+import { Injectable } from '@ntrg/simple-di';
 import { Request, Response } from 'express';
 
-const sectionService = new SectionService(new SectionRepository(), new EnrollmentRepository());
-
+@Injectable()
 export class SectionController {
+  constructor(private readonly sectionService: SectionService) {}
+
   async getSectionById(req: Request, res: Response) {
     const { id: sectionId } = req.params;
     const userId = req?.user?.id;
     if (!userId) throw new UnauthorizedError('InstructorId is missing');
     const role = req?.user?.role;
-    const result = await sectionService.getSectionById(sectionId, userId, role);
+    const result = await this.sectionService.getSectionById(sectionId, userId, role);
     successResponse({ res, data: result });
   }
 
@@ -23,7 +23,7 @@ export class SectionController {
     const payload = req.body as UpdateSectionDto;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    const result = await sectionService.updateSection(sectionId, instructorId, payload);
+    const result = await this.sectionService.updateSection(sectionId, instructorId, payload);
     successResponse({ res, message: 'Update section successfully', data: result });
   }
 
@@ -32,7 +32,7 @@ export class SectionController {
     const payload = req.body as AddUnitDto;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    const result = await sectionService.addUnit(sectionId, instructorId, payload);
+    const result = await this.sectionService.addUnit(sectionId, instructorId, payload);
     successResponse({ res, status: 201, message: 'Add unit successfully', data: result });
   }
 
@@ -40,7 +40,7 @@ export class SectionController {
     const { id: sectionId } = req.params;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    await sectionService.deleteSection(instructorId, sectionId);
+    await this.sectionService.deleteSection(instructorId, sectionId);
     successResponse({ res, message: 'Delete section successfully' });
   }
 }

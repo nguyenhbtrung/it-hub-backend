@@ -8,15 +8,19 @@ import {
 } from '@/dtos/exercise.dto';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@/errors';
 import { LearningStatus, UserRole } from '@/generated/prisma/enums';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { ExerciseRepository } from '@/repositories/exercise.repository';
-import { FileRepository } from '@/repositories/file.repository';
-import { LearningProgressRepository } from '@/repositories/learningProgressRepository';
-import { UnitRepository } from '@/repositories/unit.repository';
-import { UnitOfWork } from '@/repositories/unitOfWork';
+import {
+  EnrollmentRepository,
+  ExerciseRepository,
+  FileRepository,
+  LearningProgressRepository,
+  UnitRepository,
+  UnitOfWork,
+} from '@/repositories';
 import { diffFileIds, extractFileIdsFromContent } from '@/utils/content';
 import { toAbsoluteURL } from '@/utils/file';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class ExerciseService {
   constructor(
     private exerciseRepository: ExerciseRepository,

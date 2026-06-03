@@ -18,16 +18,20 @@ import { toFileResponseDto } from '@/dtos/file.dto';
 import { GetLearningCoursesQueryDto } from '@/dtos/user.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
 import { CourseEnrollmentStatus, CourseLevel, CourseStatus, UserRole } from '@/generated/prisma/enums';
-import { CourseRepository } from '@/repositories/course.repository';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { ExerciseRepository } from '@/repositories/exercise.repository';
-import { SectionRepository } from '@/repositories/section.repository';
-import { StepRepository } from '@/repositories/step.repository';
-import { TagRepository } from '@/repositories/tag.repository';
-import { UnitRepository } from '@/repositories/unit.repository';
+import {
+  CourseRepository,
+  EnrollmentRepository,
+  ExerciseRepository,
+  SectionRepository,
+  StepRepository,
+  TagRepository,
+  UnitRepository,
+} from '@/repositories';
 import { toAbsoluteURL } from '@/utils/file';
 import { generateCourseSlug, generateTagSlug } from '@/utils/slug';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class CourseService {
   constructor(
     private courseRepository: CourseRepository,

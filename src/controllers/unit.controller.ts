@@ -1,20 +1,20 @@
 import { AddMaterialDto, AddStepDto, UpdateUnitDto } from '@/dtos/unit.dto';
 import { UnauthorizedError } from '@/errors';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { UnitRepository } from '@/repositories/unit.repository';
-import { UnitService } from '@/services/unit.service';
+import { UnitService } from '@/services';
 import { successResponse } from '@/utils/response';
+import { Injectable } from '@ntrg/simple-di';
 import { Request, Response } from 'express';
 
-const unitService = new UnitService(new UnitRepository(), new EnrollmentRepository());
-
+@Injectable()
 export class UnitController {
+  constructor(private readonly unitService: UnitService) {}
+
   async getUnitById(req: Request, res: Response) {
     const { id: unitId } = req.params;
     const userId = req?.user?.id;
     if (!userId) throw new UnauthorizedError('InstructorId is missing');
     const role = req?.user?.role;
-    const result = await unitService.getUnitById(unitId, userId, role);
+    const result = await this.unitService.getUnitById(unitId, userId, role);
     successResponse({ res, data: result });
   }
 
@@ -23,7 +23,7 @@ export class UnitController {
     const payload = req.body as UpdateUnitDto;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    const result = await unitService.updateUnit(unitId, instructorId, payload);
+    const result = await this.unitService.updateUnit(unitId, instructorId, payload);
     successResponse({ res, message: 'Update unit successfully', data: result });
   }
 
@@ -31,7 +31,7 @@ export class UnitController {
     const { id: unitId } = req.params;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    await unitService.deleteUnit(instructorId, unitId);
+    await this.unitService.deleteUnit(instructorId, unitId);
     successResponse({ res, message: 'Delete unit successfully' });
   }
 
@@ -40,7 +40,7 @@ export class UnitController {
     const payload = req.body as AddStepDto;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    const result = await unitService.addStep(unitId, instructorId, payload);
+    const result = await this.unitService.addStep(unitId, instructorId, payload);
     successResponse({ res, status: 201, message: 'Add step successfully', data: result });
   }
 
@@ -49,7 +49,7 @@ export class UnitController {
     const payload = req.body as AddMaterialDto;
     const instructorId = req?.user?.id;
     if (!instructorId) throw new UnauthorizedError('InstructorId is missing');
-    const result = await unitService.addMaterial(unitId, instructorId, payload);
+    const result = await this.unitService.addMaterial(unitId, instructorId, payload);
     successResponse({ res, status: 201, message: 'Add material successfully', data: result });
   }
 }

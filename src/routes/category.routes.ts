@@ -1,10 +1,9 @@
-import { CategoryController } from '@/controllers/category.controller';
+import { categoryController } from '@/bootstrap/container';
 import { getCategoriesQuerySchema, getCourseByCategoryIdQuerySchema } from '@/dtos/category.dto';
 import { validateQuery } from '@/middleware/validate.middleware';
 import { Router } from 'express';
 
 const router = Router();
-const categoryController = new CategoryController();
 
 router.get(
   '/:id/courses',

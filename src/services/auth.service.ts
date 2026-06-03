@@ -2,10 +2,12 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { User, UserRole, UserScope } from '@/generated/prisma/client';
-import { UserRepository } from '../repositories/user.repository';
-import { RefreshTokenRepository } from '../repositories/refreshToken.repository';
-import { VerificationTokenRepository } from '../repositories/verificationToken.repository';
-import { PasswordResetTokenRepository } from '../repositories/passwordResetToken.repository';
+import {
+  UserRepository,
+  RefreshTokenRepository,
+  VerificationTokenRepository,
+  PasswordResetTokenRepository,
+} from '../repositories';
 import { EmailService } from './email.service';
 import { ConflictError, UnauthorizedError, BadRequestError, NotFoundError } from '../errors';
 import { toUserResponseDTO, UserResponseDTO } from '../dtos/user.dto';
@@ -13,12 +15,14 @@ import { UserPayload } from '@/type';
 import { RefreshTokenCache } from '@/infra/cache/refreshToken.cache';
 import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY, SALT_ROUNDS } from '@/constants/auth';
 import { generateRandomToken } from '@/utils/auth';
+import { Injectable } from '@ntrg/simple-di';
 
 interface TokenPair {
   accessToken: string;
   refreshToken: string;
 }
 
+@Injectable()
 export class AuthService {
   constructor(
     private userRepository: UserRepository,

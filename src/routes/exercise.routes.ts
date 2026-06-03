@@ -1,4 +1,4 @@
-import { ExerciseController } from '@/controllers/exercise.controller';
+import { exerciseController } from '@/bootstrap/container';
 import {
   addSubmissionScheme,
   getExerciseSubmissionsQuerySchema,
@@ -15,7 +15,6 @@ import { validate, validateQuery } from '@/middleware/validate.middleware';
 import { Router } from 'express';
 
 const router = Router();
-const exerciseController = new ExerciseController();
 
 router.get(
   '/:unitId',
