@@ -94,13 +94,16 @@ export class CategoryRepository {
               courses: {
                 where: { status: 'published' },
               },
+              subCategoryCourses: {
+                where: { status: 'published' },
+              },
             },
           },
         },
       }),
       prisma.course.aggregate({
         where: {
-          categoryId: id,
+          OR: [{ categoryId: id }, { subCategoryId: id }],
           status: 'published',
           avgRating: { gt: 0 },
         },
@@ -111,7 +114,7 @@ export class CategoryRepository {
       prisma.enrollment.count({
         where: {
           course: {
-            categoryId: id,
+            OR: [{ categoryId: id }, { subCategoryId: id }],
             status: 'published',
           },
           status: {
