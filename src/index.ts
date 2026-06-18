@@ -46,6 +46,11 @@ app.use(
 // Routes
 app.use('/api', router);
 
+// Ping endpoint
+app.get('/ping', (req, res) => {
+  res.status(200).json({ pong: true });
+});
+
 // Health check
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
