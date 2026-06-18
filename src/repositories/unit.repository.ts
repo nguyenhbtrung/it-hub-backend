@@ -1,7 +1,9 @@
 import { UpdateUnitDto } from '@/dtos/unit.dto';
 import { Material, Prisma, Step } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class UnitRepository {
   async getPreviousUnit(sectionId: string, order: number) {
     const nextUnit = await prisma.unit.findFirst({

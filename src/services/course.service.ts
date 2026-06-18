@@ -4,6 +4,7 @@ import {
   CreateCourseResponseDTO,
   CreatedCourseResponseDTO,
   CreateOrUpdateReviewDto,
+  getCourseExercisesGroupedBySectionQueryDto,
   GetCourseReviewsQueryDto,
   GetCoursesQueryDTO,
   GetFeaturedCoursesQueryDTO,
@@ -14,17 +15,23 @@ import {
   UpdateCourseDetailDTO,
 } from '@/dtos/coures.dto';
 import { toFileResponseDto } from '@/dtos/file.dto';
+import { GetLearningCoursesQueryDto } from '@/dtos/user.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
 import { CourseEnrollmentStatus, CourseLevel, CourseStatus, UserRole } from '@/generated/prisma/enums';
-import { CourseRepository } from '@/repositories/course.repository';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { SectionRepository } from '@/repositories/section.repository';
-import { StepRepository } from '@/repositories/step.repository';
-import { TagRepository } from '@/repositories/tag.repository';
-import { UnitRepository } from '@/repositories/unit.repository';
+import {
+  CourseRepository,
+  EnrollmentRepository,
+  ExerciseRepository,
+  SectionRepository,
+  StepRepository,
+  TagRepository,
+  UnitRepository,
+} from '@/repositories';
 import { toAbsoluteURL } from '@/utils/file';
 import { generateCourseSlug, generateTagSlug } from '@/utils/slug';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class CourseService {
   constructor(
     private courseRepository: CourseRepository,
@@ -32,7 +39,8 @@ export class CourseService {
     private enrollmentRepository: EnrollmentRepository,
     private stepRepository: StepRepository,
     private unitRepository: UnitRepository,
-    private sectionRepository: SectionRepository
+    private sectionRepository: SectionRepository,
+    private exerciseRepository: ExerciseRepository
   ) {}
   async createCourse(payload: CreateCourseDTO, instructorId: string): Promise<CreateCourseResponseDTO> {
     const { title, categoryId, subCategoryId } = payload;
@@ -401,7 +409,12 @@ export class CourseService {
     const { page = 1, limit = 10, status } = query;
     const take = Number(limit);
     const skip = (page - 1) * limit;
-    const [data, total] = await this.courseRepository.getInstructorCreatedCourses(take, skip, status, instructorId);
+    const [courses, total] = await this.courseRepository.getInstructorCreatedCourses(take, skip, status, instructorId);
+
+    const data = courses.map((course) => ({
+      ...course,
+      imgUrl: course?.imgUrl ? toAbsoluteURL(course.imgUrl) : null,
+    }));
 
     return { data, meta: { total, page: Number(page), limit: Number(limit) } };
   }
@@ -493,6 +506,47 @@ export class CourseService {
   async getContentBreadcrumb(contentId: string, type: 'section' | 'unit' | 'step') {
     const contentBreadcrumb = await this.courseRepository.getContentBreadcrumb(contentId, type);
     return contentBreadcrumb;
+  }
+
+  async getCourseExercisesGroupedBySection(courseId: string, query: getCourseExercisesGroupedBySectionQueryDto) {
+    const { page = 1, limit = 10, type } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const { sections, total } = await this.sectionRepository.getExercisesGroupedBySection(courseId, skip, take, type);
+    const data = sections.map((section) => ({
+      id: section.id,
+      title: section.title,
+      exercises: section.units.map((unit) => ({
+        unitId: unit.id,
+        title: unit.title,
+        ...unit.excercises[0],
+        newAssigments: unit.excercises[0]._count.attempts,
+        _count: undefined,
+      })),
+    }));
+
+    return { data, meta: { total, page: Number(page), limit: Number(limit) } };
+  }
+
+  async getLearningCoursesByUserId(userId: string, query: GetLearningCoursesQueryDto) {
+    const { page = 1, limit = 10, status = 'active' } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+
+    const { enrollments, total } = await this.enrollmentRepository.getEnrollmentsWithCourseByUserId(
+      userId,
+      skip,
+      take,
+      status
+    );
+
+    const data = enrollments.map((e) => ({
+      ...e,
+      ...e.course,
+      img: e.course?.img ? toFileResponseDto(e.course?.img) : null,
+      course: undefined,
+    }));
+    return { data, meta: { total, page: Number(page), limit: Number(limit) } };
   }
 
   async addSection(courseId: string, instructorId: string, payload: AddSectionDto) {

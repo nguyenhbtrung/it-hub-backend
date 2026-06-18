@@ -2,7 +2,6 @@ import sharp from 'sharp';
 import ffmpeg from 'fluent-ffmpeg';
 import path from 'path';
 import fs from 'fs/promises';
-import { v4 as uuidv4 } from 'uuid';
 import { uploadConfig } from '../config/upload.config';
 import { FileType, FileMetadata } from '../types/file.types';
 import { prisma } from '@/lib/prisma';
@@ -17,7 +16,9 @@ import {
   UploadFileDto,
 } from '@/dtos/file.dto';
 import { FileService } from './interfaces/file.service';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class LocalFileService implements FileService {
   /**
    * Tạo thumbnail cho image

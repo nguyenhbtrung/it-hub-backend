@@ -1,9 +1,9 @@
-import { TagController } from '@/controllers/tag.controller';
-import { UserController } from '@/controllers/user.controller';
-import { getTagsQuerySchema } from '@/dtos/tag.dto';
+import { userController } from '@/bootstrap/container';
 import {
+  createOrUpdateLearningProgressSchema,
   createUserSchema,
   getInstructorRegistrationsQuerySchema,
+  getLearningCoursesQuerySchema,
   getUsersQueryScheme,
   updateMyProfileSchema,
   updateUserSchema,
@@ -14,7 +14,6 @@ import { validate, validateQuery } from '@/middleware/validate.middleware';
 import { Router } from 'express';
 
 const router = Router();
-const userController = new UserController();
 
 router.get(
   '/',
@@ -27,6 +26,12 @@ router.get(
 router.get('/:id', requireAuth, authorize([UserRole.admin]), userController.getUserById.bind(userController));
 
 router.get('/me/profile', requireAuth, userController.getMyProfile.bind(userController));
+router.get(
+  '/me/learn/courses',
+  requireAuth,
+  validateQuery(getLearningCoursesQuerySchema),
+  userController.getMyLearningCourses.bind(userController)
+);
 
 router.get(
   '/instructor/registrations',
@@ -34,6 +39,12 @@ router.get(
   authorize([UserRole.admin]),
   validateQuery(getInstructorRegistrationsQuerySchema),
   userController.getInstructorRegistations.bind(userController)
+);
+
+router.get(
+  '/me/steps/:stepId/progress',
+  requireAuth,
+  userController.getMyLearningProgressByStepId.bind(userController)
 );
 
 router.post(
@@ -57,6 +68,20 @@ router.patch(
   requireAuth,
   validate(updateMyProfileSchema),
   userController.updateMyProfile.bind(userController)
+);
+
+router.put(
+  '/me/steps/:stepId/progress',
+  requireAuth,
+  validate(createOrUpdateLearningProgressSchema),
+  userController.createOrUpdateStepLearningProgress.bind(userController)
+);
+
+router.put(
+  '/me/exercises/:exerciseId/progress',
+  requireAuth,
+  validate(createOrUpdateLearningProgressSchema),
+  userController.createOrUpdateExerciseLearningProgress.bind(userController)
 );
 
 router.delete('/:id', requireAuth, authorize([UserRole.admin]), userController.deleteUser.bind(userController));

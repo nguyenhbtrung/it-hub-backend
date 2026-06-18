@@ -12,7 +12,7 @@ import {
 import { prisma } from '@/lib/prisma';
 import { CourseDuration } from '@/types/course.type';
 import { toAbsoluteURL } from '@/utils/file';
-import { title } from 'node:process';
+import { Injectable } from '@ntrg/simple-di';
 
 interface UpdateCourseDetailData {
   title: string;
@@ -33,6 +33,7 @@ interface UpdateCourseTagData {
 
 type WithStatus<T> = T & { status: LearningStatus | 'not_started' };
 
+@Injectable()
 export class CourseRepository {
   async create(data: Prisma.CourseCreateInput): Promise<Course> {
     return prisma.course.create({ data });
@@ -442,6 +443,47 @@ export class CourseRepository {
     return maxOrder;
   }
 
+  async countCoursesByInstructorId(instructorId: string, status?: CourseStatus) {
+    return prisma.course.count({
+      where: { instructorId, status },
+    });
+  }
+
+  async countAllCourses() {
+    return prisma.course.count();
+  }
+
+  async countCoursesByStatus(status: CourseStatus) {
+    return prisma.course.count({
+      where: {
+        status,
+      },
+    });
+  }
+
+  async countPendingCourses() {
+    return prisma.course.count({
+      where: {
+        status: 'pending',
+      },
+    });
+  }
+
+  async getCoursesAverageRatingByInstructorId(instructorId: string) {
+    const course = await prisma.course.aggregate({
+      _avg: {
+        avgRating: true,
+      },
+      where: {
+        instructorId,
+        avgRating: {
+          gt: 0,
+        },
+      },
+    });
+    return course._avg.avgRating ?? 0;
+  }
+
   async addSection(data: Prisma.SectionCreateInput): Promise<Section> {
     const newSection = await prisma.section.create({ data });
     return newSection;
@@ -524,6 +566,7 @@ export class CourseRepository {
         orderBy: { createdAt: 'desc' },
         select: {
           id: true,
+          slug: true,
           title: true,
           status: true,
           category: { select: { name: true } },
@@ -539,6 +582,7 @@ export class CourseRepository {
 
     const data: CreatedCourseResponseDTO[] = courses.map((c) => ({
       id: c.id,
+      slug: c.slug,
       title: c.title,
       category: c.category.name,
       subCategory: c.subCategory?.name,

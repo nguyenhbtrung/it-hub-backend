@@ -1,27 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
-import { AuthService } from '../services/auth.service';
-import { UserRepository } from '../repositories/user.repository';
-import { RefreshTokenRepository } from '../repositories/refreshToken.repository';
-import { VerificationTokenRepository } from '../repositories/verificationToken.repository';
-import { PasswordResetTokenRepository } from '../repositories/passwordResetToken.repository';
-import { EmailService } from '../services/email.service';
+import { AuthService } from '../services';
 import { toUserResponseDTO } from '../dtos/user.dto';
 import { UnauthorizedError } from '@/errors';
 import { successResponse } from '@/utils/response';
+import { Injectable } from '@ntrg/simple-di';
 
-const authService = new AuthService(
-  new UserRepository(),
-  new RefreshTokenRepository(),
-  new VerificationTokenRepository(),
-  new PasswordResetTokenRepository(),
-  new EmailService()
-);
-
+@Injectable()
 export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
   async register(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password, fullname } = req.body;
-      const result = await authService.register(email, password, fullname);
+      const result = await this.authService.register(email, password, fullname);
 
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
@@ -46,7 +37,7 @@ export class AuthController {
   async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password } = req.body;
-      const result = await authService.login(email, password);
+      const result = await this.authService.login(email, password);
 
       res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
@@ -73,7 +64,7 @@ export class AuthController {
       const refreshToken = req.cookies.refreshToken;
       console.log('refreshToken', refreshToken);
       if (!refreshToken) throw new UnauthorizedError('Refresh token is required');
-      const tokens = await authService.refreshAccessToken(refreshToken);
+      const tokens = await this.authService.refreshAccessToken(refreshToken);
 
       res.cookie('refreshToken', tokens.refreshToken, {
         httpOnly: true,
@@ -98,7 +89,7 @@ export class AuthController {
     try {
       const refreshToken = req.cookies.refreshToken;
       if (!refreshToken) throw new UnauthorizedError('Refresh token is required');
-      await authService.logout(refreshToken);
+      await this.authService.logout(refreshToken);
 
       res.clearCookie('refreshToken', {
         httpOnly: true,
@@ -115,7 +106,7 @@ export class AuthController {
   async logoutAll(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req.user as any).id;
-      await authService.logoutAll(userId);
+      await this.authService.logoutAll(userId);
 
       successResponse({ res, message: 'Logged out from all devices successfully' });
     } catch (error) {
@@ -126,7 +117,7 @@ export class AuthController {
   async verifyEmail(req: Request, res: Response, next: NextFunction) {
     try {
       const { token } = req.body;
-      const user = await authService.verifyEmail(token);
+      const user = await this.authService.verifyEmail(token);
 
       successResponse({ res, message: 'Email verified successfully', data: user });
     } catch (error) {
@@ -137,7 +128,7 @@ export class AuthController {
   async resendVerificationEmail(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.body;
-      await authService.resendVerificationEmail(email);
+      await this.authService.resendVerificationEmail(email);
 
       successResponse({ res, message: 'Verification email sent successfully' });
     } catch (error) {
@@ -148,7 +139,7 @@ export class AuthController {
   async requestPasswordReset(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.body;
-      await authService.requestPasswordReset(email);
+      await this.authService.requestPasswordReset(email);
 
       successResponse({ res, message: 'If the email exists, a password reset link has been sent' });
     } catch (error) {
@@ -159,7 +150,7 @@ export class AuthController {
   async resetPassword(req: Request, res: Response, next: NextFunction) {
     try {
       const { token, password } = req.body;
-      await authService.resetPassword(token, password);
+      await this.authService.resetPassword(token, password);
 
       successResponse({ res, message: 'Password reset successfully' });
     } catch (error) {
@@ -171,7 +162,7 @@ export class AuthController {
     try {
       const userId = req?.user?.id || '';
       const { currentPassword, newPassword } = req.body;
-      await authService.changePassword(userId, currentPassword, newPassword);
+      await this.authService.changePassword(userId, currentPassword, newPassword);
 
       successResponse({ res, message: 'Password changed successfully' });
     } catch (error) {

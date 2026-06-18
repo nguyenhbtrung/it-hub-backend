@@ -1,8 +1,9 @@
 import { CreateEnrollmentDto, UpdateEnrollmentDto } from '@/dtos/enrollment.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
-import { CourseRepository } from '@/repositories/course.repository';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
+import { CourseRepository, EnrollmentRepository } from '@/repositories';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class EnrollmentService {
   constructor(
     private enrollmentRepository: EnrollmentRepository,

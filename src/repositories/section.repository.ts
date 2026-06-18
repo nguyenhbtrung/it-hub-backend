@@ -1,7 +1,10 @@
 import { UpdateSectionDto } from '@/dtos/section.dto';
-import { Prisma, Unit } from '@/generated/prisma/client';
+import { ExcerciseType, Prisma, Unit } from '@/generated/prisma/client';
+import { SectionWhereInput } from '@/generated/prisma/models';
 import { prisma } from '@/lib/prisma';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class SectionRepository {
   async getFirstUnitOfSection(sectionId: string) {
     const unit = await prisma.unit.findFirst({
@@ -40,6 +43,73 @@ export class SectionRepository {
   async getMaxUnitOrder(sectionId: string) {
     const maxOrder = await prisma.unit.aggregate({ where: { sectionId }, _max: { order: true } });
     return maxOrder;
+  }
+
+  async getExercisesGroupedBySection(courseId: string, skip: number, take: number, type: ExcerciseType | undefined) {
+    const where: SectionWhereInput = {
+      courseId,
+      units: {
+        some: {
+          type: 'excercise',
+          excercises: {
+            some: {
+              type,
+            },
+          },
+        },
+      },
+    };
+
+    const [sections, total] = await Promise.all([
+      prisma.section.findMany({
+        where,
+        take,
+        skip,
+        select: {
+          id: true,
+          title: true,
+          units: {
+            where: {
+              type: 'excercise',
+              excercises: {
+                some: {
+                  type,
+                },
+              },
+            },
+            orderBy: { order: 'asc' },
+            select: {
+              id: true,
+              title: true,
+              excercises: {
+                where: {
+                  type,
+                },
+                select: {
+                  id: true,
+                  type: true,
+                  deadline: true,
+                  _count: {
+                    select: {
+                      attempts: {
+                        where: {
+                          score: null,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.section.count({
+        where,
+      }),
+    ]);
+
+    return { sections, total };
   }
 
   async addUnit(data: Prisma.UnitCreateInput): Promise<Unit> {

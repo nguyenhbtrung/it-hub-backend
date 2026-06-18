@@ -1,4 +1,4 @@
-import { CourseController } from '@/controllers/course.controller';
+import { courseController } from '@/bootstrap/container';
 import {
   addSectionScheme,
   createCourseSchema,
@@ -7,6 +7,7 @@ import {
   getCourseContentQueryScheme,
   getCourseDetailParamsScheme,
   getCourseDetailQueryScheme,
+  getCourseExercisesGroupedBySectionQuerySchema,
   getCourseReviewsQueryScheme,
   getCoursesQuerySchema,
   getFeaturedCoursesQuerySchema,
@@ -26,7 +27,6 @@ import { validate, validateParams, validateQuery } from '@/middleware/validate.m
 import { Router } from 'express';
 
 const router = Router();
-const courseController = new CourseController();
 
 router.post(
   '/',
@@ -173,6 +173,14 @@ router.get(
   optionalAuth,
   validateQuery(getCourseContentBreadcrumbQueryScheme),
   courseController.getCourseContentBreadcrumb.bind(courseController)
+);
+
+router.get(
+  '/:id/sections/exercises',
+  requireAuth,
+  authorize([UserRole.admin, UserRole.instructor]),
+  validateQuery(getCourseExercisesGroupedBySectionQuerySchema),
+  courseController.getCourseExercisesGroupedBySection.bind(courseController)
 );
 
 export default router;

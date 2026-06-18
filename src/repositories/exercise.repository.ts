@@ -1,8 +1,11 @@
 import { NotFoundError } from '@/errors';
-import { Prisma } from '@/generated/prisma/client';
+import { ExcerciseType, Prisma } from '@/generated/prisma/client';
+import { ExcerciseAttemptWhereInput, ExcerciseWhereInput, UserWhereInput } from '@/generated/prisma/models';
 import { prisma } from '@/lib/prisma';
 import { toAbsoluteURL } from '@/utils/file';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class ExerciseRepository {
   async getExerciseAttempStudentIdAndAttachments(attemptId: string) {
     const attemp = await prisma.excerciseAttempt.findUnique({
@@ -11,6 +14,14 @@ export class ExerciseRepository {
     });
     return attemp;
   }
+
+  async getExerciseById(id: string) {
+    const exercise = await prisma.excercise.findUnique({
+      where: { id },
+    });
+    return exercise;
+  }
+
   async getExerciseContentByUnitId(unitId: string) {
     const exercise = await prisma.excercise.findFirst({
       where: { unitId },
@@ -71,40 +82,39 @@ export class ExerciseRepository {
     return exercise;
   }
 
-  async getExerciseSubmission(userId: string, exerciseId: string) {
-    const submission = await prisma.excerciseAttempt.findFirst({
-      where: { studentId: userId, excerciseId: exerciseId },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        attachments: {
-          select: {
-            id: true,
-            file: {
-              select: {
-                id: true,
-                name: true,
-                size: true,
-                type: true,
-                mimeType: true,
-                url: true,
+  async getExerciseSubmissions(userId: string, exerciseId: string, take: number, skip: number) {
+    const where: ExcerciseAttemptWhereInput = { studentId: userId, excerciseId: exerciseId };
+    const [submissions, total] = await Promise.all([
+      prisma.excerciseAttempt.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take,
+        skip,
+        include: {
+          attachments: {
+            select: {
+              id: true,
+              file: {
+                select: {
+                  id: true,
+                  name: true,
+                  size: true,
+                  type: true,
+                  mimeType: true,
+                  url: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      }),
+      prisma.excerciseAttempt.count({ where }),
+    ]);
 
-    if (submission?.attachments) {
-      submission.attachments = submission.attachments.map((a) => ({
-        ...a,
-        file: {
-          ...a.file,
-          url: toAbsoluteURL(a.file.url),
-        },
-      }));
-    }
-
-    return submission;
+    return {
+      submissions,
+      total,
+    };
   }
 
   async getCourseByExerciseId(exerciseId: string) {
@@ -129,6 +139,265 @@ export class ExerciseRepository {
     });
 
     return exercise?.unit?.section?.course;
+  }
+
+  // async getExercisesByCourseId(courseId: string, skip: number, take: number, type: ExcerciseType) {
+  //   const where: ExcerciseWhereInput = {
+  //     unit: {
+  //       section: {
+  //         courseId,
+  //       },
+  //     },
+  //     type,
+  //   };
+  //   const [exercises, total] = await Promise.all([
+  //     prisma.excercise.findMany({
+  //       where,
+  //       skip,
+  //       take,
+  //       select: {
+  //         id: true,
+  //         type: true,
+  //         description: true,
+  //         content: true,
+  //         deadline: true,
+  //         unit: {
+  //           select: {
+
+  //           }
+  //         }
+  //       }
+  //     }),
+  //   ]);
+  // }
+
+  async getExerciseWithCourseIdByUnitId(unitId: string) {
+    return prisma.excercise.findFirst({
+      where: { unitId },
+      select: {
+        id: true,
+        unit: {
+          select: {
+            title: true,
+            section: {
+              select: {
+                courseId: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async countDistinctStudentsAttempted(exerciseId: string) {
+    const result = await prisma.excerciseAttempt.findMany({
+      where: { excerciseId: exerciseId },
+      distinct: ['studentId'],
+      select: { studentId: true },
+    });
+
+    return result.length;
+  }
+
+  async countUnscoredAttempts(exerciseId: string) {
+    return prisma.excerciseAttempt.count({
+      where: {
+        excerciseId: exerciseId,
+        score: null,
+      },
+    });
+  }
+
+  async countScoredAttempts(exerciseId: string) {
+    return prisma.excerciseAttempt.count({
+      where: {
+        excerciseId: exerciseId,
+        score: {
+          not: null,
+        },
+      },
+    });
+  }
+
+  async getAverageScore(exerciseId: string): Promise<number> {
+    const result = await prisma.excerciseAttempt.aggregate({
+      where: {
+        excerciseId: exerciseId,
+        score: {
+          not: null,
+        },
+      },
+      _avg: {
+        score: true,
+      },
+    });
+
+    return result._avg.score ?? 0;
+  }
+
+  async getStudentSubmissionsByUnitId(
+    exerciseId: string,
+    courseId: string,
+    take: number,
+    skip: number,
+    q?: string | undefined,
+    status?: 'all' | 'pending' | 'graded' | 'not_submitted'
+  ) {
+    const searchConditions = q
+      ? [
+          { fullname: { contains: q, mode: 'insensitive' as const } },
+          { email: { contains: q, mode: 'insensitive' as const } },
+        ]
+      : [];
+    const where: UserWhereInput = {
+      enrollments: {
+        some: {
+          courseId,
+          status: {
+            in: ['active', 'completed'],
+          },
+        },
+      },
+      OR: q ? searchConditions : undefined,
+
+      ...(status === 'pending' && {
+        excerciseAttempts: {
+          some: {
+            excerciseId: exerciseId,
+            score: null,
+          },
+        },
+      }),
+
+      ...(status === 'graded' && {
+        excerciseAttempts: {
+          some: {
+            excerciseId: exerciseId,
+            score: { not: null },
+          },
+        },
+        NOT: {
+          excerciseAttempts: {
+            some: {
+              excerciseId: exerciseId,
+              score: null,
+            },
+          },
+        },
+      }),
+
+      ...(status === 'not_submitted' && {
+        excerciseAttempts: {
+          none: {
+            excerciseId: exerciseId,
+          },
+        },
+      }),
+    };
+    const [submissions, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        take,
+        skip,
+        select: {
+          email: true,
+          fullname: true,
+          avatar: {
+            select: {
+              url: true,
+            },
+          },
+          excerciseAttempts: {
+            where: {
+              excerciseId: exerciseId,
+            },
+            orderBy: { createdAt: 'desc' },
+            select: {
+              id: true,
+              createdAt: true,
+              score: true,
+            },
+          },
+        },
+      }),
+      prisma.user.count({
+        where,
+      }),
+    ]);
+    return { submissions, total };
+  }
+
+  async getExerciseAttemptById(id: string) {
+    const attempt = await prisma.excerciseAttempt.findUnique({
+      where: { id },
+      include: {
+        attachments: {
+          select: {
+            id: true,
+            file: {
+              select: {
+                id: true,
+                name: true,
+                size: true,
+                type: true,
+                mimeType: true,
+                url: true,
+              },
+            },
+          },
+        },
+        student: {
+          select: {
+            id: true,
+            email: true,
+            fullname: true,
+            avatar: {
+              select: {
+                url: true,
+              },
+            },
+          },
+        },
+      },
+    });
+    return attempt;
+  }
+
+  async getAttempSequence(exerciseId: string, studentId: string, createdAt: Date) {
+    return prisma.excerciseAttempt.count({
+      where: {
+        excerciseId: exerciseId,
+        studentId: studentId,
+        createdAt: { lte: createdAt },
+      },
+    });
+  }
+
+  async getSubmissionsByUnitAndStudent(studentId: string, unitId: string, skip: number, take: number) {
+    const where: ExcerciseAttemptWhereInput = {
+      studentId,
+      excercise: {
+        unitId,
+      },
+    };
+    const [submissions, total] = await Promise.all([
+      prisma.excerciseAttempt.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          score: true,
+          createdAt: true,
+        },
+      }),
+      prisma.excerciseAttempt.count({
+        where,
+      }),
+    ]);
+    return { submissions, total };
   }
 
   async addExerciseAttemp(data: Prisma.ExcerciseAttemptCreateInput, tx?: Prisma.TransactionClient) {
@@ -217,6 +486,15 @@ export class ExerciseRepository {
     }
 
     return updatedExercise;
+  }
+
+  async updateExerciseAttempt(id: string, data: Prisma.ExcerciseAttemptUpdateInput, tx?: Prisma.TransactionClient) {
+    const client = tx || prisma;
+    const attempt = await client.excerciseAttempt.update({
+      where: { id },
+      data,
+    });
+    return attempt;
   }
 
   async deleteExerciseAttemp(attempId: string, tx?: Prisma.TransactionClient) {

@@ -1,4 +1,4 @@
-import { User, UserRole, UserScope, UserStatus } from '@/generated/prisma/client';
+import { EnrollmentStatus, LearningStatus, User, UserRole, UserScope, UserStatus } from '@/generated/prisma/client';
 import z from 'zod';
 
 export interface UserResponseDTO {
@@ -63,6 +63,12 @@ export const updateUserSchema = z.object({
 
 export type UpdateUserDto = z.infer<typeof updateUserSchema>;
 
+export const createOrUpdateLearningProgressSchema = z.object({
+  status: z.enum(LearningStatus),
+});
+
+export type CreateOrUpdateLearningProgressDto = z.infer<typeof createOrUpdateLearningProgressSchema>;
+
 export const getUsersQueryScheme = z.object({
   page: z.string().regex(/^\d+$/).optional().transform(Number),
   limit: z.string().regex(/^\d+$/).optional().transform(Number),
@@ -82,3 +88,11 @@ export const getInstructorRegistrationsQuerySchema = z.object({
 });
 
 export type GetInstructorRegistrationsQueryDto = z.infer<typeof getInstructorRegistrationsQuerySchema>;
+
+export const getLearningCoursesQuerySchema = z.object({
+  page: z.string().regex(/^\d+$/).optional().transform(Number),
+  limit: z.string().regex(/^\d+$/).optional().transform(Number),
+  status: z.enum(EnrollmentStatus).optional(),
+});
+
+export type GetLearningCoursesQueryDto = z.infer<typeof getLearningCoursesQuerySchema>;

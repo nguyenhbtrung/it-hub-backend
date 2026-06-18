@@ -1,18 +1,10 @@
-import express, { Application, Request, Response } from 'express';
-import dotenv from 'dotenv';
+import 'dotenv/config';
+
+import 'reflect-metadata';
+import './di/registrations';
+
+import express, { Application } from 'express';
 import passportConfig from './config/passport';
-import authRoutes from './routes/auth.routes';
-import userRoutes from './routes/user.routes';
-import categoryRoutes from './routes/category.routes';
-import courseRoutes from './routes/course.routes';
-import sectionRoutes from './routes/section.routes';
-import unitRoutes from './routes/unit.routes';
-import stepRoutes from './routes/step.routes';
-import exerciseRoutes from './routes/exercise.routes';
-import enrollmentRoutes from './routes/enrollment.routes';
-import tagRoutes from './routes/tag.routes';
-import fileRoutes from './routes/file.routes';
-import aiRoutes from './routes/ai.routes';
 import { errorHandler } from './middleware/errorHandler.middleware';
 import { apiLimiter } from './middleware/rateLimiter.middleware';
 import { NotFoundError } from './errors';
@@ -23,9 +15,7 @@ import morgan from 'morgan';
 import path from 'path';
 
 import { redisClient } from './infra/redis/redis.client';
-import { getFileService } from './services/factories/file-service.factory';
-
-dotenv.config();
+import router from './routes';
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
@@ -53,21 +43,8 @@ app.use(
 // Apply rate limiting to all API routes
 // app.use('/api/', apiLimiter);
 
-const fileService = getFileService();
-
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/tags', tagRoutes);
-app.use('/api/courses', courseRoutes);
-app.use('/api/sections', sectionRoutes);
-app.use('/api/units', unitRoutes);
-app.use('/api/steps', stepRoutes);
-app.use('/api/exercises', exerciseRoutes);
-app.use('/api/enrollments', enrollmentRoutes);
-app.use('/api/files', fileRoutes(fileService));
-app.use('/api/ai', aiRoutes);
+app.use('/api', router);
 
 // Health check
 app.get('/health', (req, res) => {

@@ -1,6 +1,8 @@
+import { Injectable } from '@ntrg/simple-di';
 import { prisma } from '../lib/prisma';
 import { PasswordResetToken, Prisma } from '@/generated/prisma/client';
 
+@Injectable()
 export class PasswordResetTokenRepository {
   async create(data: Prisma.PasswordResetTokenCreateInput): Promise<PasswordResetToken> {
     return prisma.passwordResetToken.create({ data });

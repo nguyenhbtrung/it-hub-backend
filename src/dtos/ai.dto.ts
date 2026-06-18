@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const askAiStepSchema = z.object({
   stepId: z.string().min(1),
-  scope: z.enum(['step', 'lesson']),
+  scope: z.enum(['step', 'lesson', 'section', 'course']),
   question: z.string().min(1).max(2000),
   selectedText: z.string().max(2000).optional(),
   conversationId: z.string().optional(),

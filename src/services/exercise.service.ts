@@ -1,19 +1,33 @@
-import { AddSubmissionDto, UpdateExerciseDto } from '@/dtos/exercise.dto';
+import {
+  AddSubmissionDto,
+  GetExerciseSubmissionsQueryDto,
+  GetStudentSubmissionsQueryDto,
+  GetSubmissionsByStudentIdQueryDto,
+  UpdateExerciseDto,
+  UpdateSubmissionDto,
+} from '@/dtos/exercise.dto';
 import { BadRequestError, ForbiddenError, NotFoundError } from '@/errors';
-import { UserRole } from '@/generated/prisma/enums';
-import { EnrollmentRepository } from '@/repositories/enrollment.repository';
-import { ExerciseRepository } from '@/repositories/exercise.repository';
-import { FileRepository } from '@/repositories/file.repository';
-import { UnitRepository } from '@/repositories/unit.repository';
-import { UnitOfWork } from '@/repositories/unitOfWork';
+import { LearningStatus, UserRole } from '@/generated/prisma/enums';
+import {
+  EnrollmentRepository,
+  ExerciseRepository,
+  FileRepository,
+  LearningProgressRepository,
+  UnitRepository,
+  UnitOfWork,
+} from '@/repositories';
 import { diffFileIds, extractFileIdsFromContent } from '@/utils/content';
+import { toAbsoluteURL } from '@/utils/file';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class ExerciseService {
   constructor(
     private exerciseRepository: ExerciseRepository,
     private enrollmentRepository: EnrollmentRepository,
     private unitRepository: UnitRepository,
     private fileRepository: FileRepository,
+    private learningProgressRepository: LearningProgressRepository,
     private uow: UnitOfWork
   ) {}
 
@@ -31,35 +45,177 @@ export class ExerciseService {
     return exercise;
   }
 
-  async getExerciseSubmission(userId: string, exerciseId: string) {
-    const submission = await this.exerciseRepository.getExerciseSubmission(userId, exerciseId);
-    return submission;
+  async getExerciseSubmissions(userId: string, exerciseId: string, query: GetExerciseSubmissionsQueryDto) {
+    const { page = 1, limit = 1 } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const { submissions, total } = await this.exerciseRepository.getExerciseSubmissions(userId, exerciseId, take, skip);
+    const data = submissions.map((submission) => ({
+      ...submission,
+      attachments: submission.attachments?.map((a) => ({
+        ...a,
+        file: {
+          ...a.file,
+          url: toAbsoluteURL(a.file.url),
+        },
+      })),
+    }));
+    return {
+      data,
+      meta: { total, page: Number(page), limit: Number(limit) },
+    };
+  }
+
+  async getSubmissionOverviewByUnitId(unitId: string) {
+    const exercise = await this.exerciseRepository.getExerciseWithCourseIdByUnitId(unitId);
+
+    if (!exercise) {
+      throw new NotFoundError('Exercise not found');
+    }
+
+    const exerciseId = exercise.id;
+    const courseId = exercise.unit.section.courseId;
+
+    const [totalStudents, submittedStudents, unscoredAttempts, scoredAttempts, averageScore] = await Promise.all([
+      this.enrollmentRepository.countActiveStudentsByCourseId(courseId),
+      this.exerciseRepository.countDistinctStudentsAttempted(exerciseId),
+      this.exerciseRepository.countUnscoredAttempts(exerciseId),
+      this.exerciseRepository.countScoredAttempts(exerciseId),
+      this.exerciseRepository.getAverageScore(exerciseId),
+    ]);
+
+    return {
+      title: exercise.unit.title,
+      totalStudents,
+      submittedStudents,
+      unscoredAttempts,
+      scoredAttempts,
+      averageScore,
+    };
+  }
+
+  async getStudentSubmissions(unitId: string, query: GetStudentSubmissionsQueryDto) {
+    const exercise = await this.exerciseRepository.getExerciseWithCourseIdByUnitId(unitId);
+
+    if (!exercise) {
+      throw new NotFoundError('Exercise not found');
+    }
+
+    const exerciseId = exercise.id;
+    const courseId = exercise.unit.section.courseId;
+
+    const { page = 1, limit = 10, q, status } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+
+    const { submissions, total } = await this.exerciseRepository.getStudentSubmissionsByUnitId(
+      exerciseId,
+      courseId,
+      take,
+      skip,
+      q,
+      status
+    );
+
+    const data = submissions.map((submission) => ({
+      ...submission,
+      avatar: submission.avatar ? toAbsoluteURL(submission.avatar.url) : null,
+      attemptId: submission.excerciseAttempts?.[0]?.id,
+      attemptCount: submission.excerciseAttempts.length,
+      score: submission.excerciseAttempts?.[0]?.score,
+      createdAt: submission.excerciseAttempts?.[0]?.createdAt,
+      excerciseAttempts: undefined,
+    }));
+    return {
+      data,
+      meta: { total, page: Number(page), limit: Number(limit) },
+    };
+  }
+
+  async getSubmissionById(id: string) {
+    const submission = await this.exerciseRepository.getExerciseAttemptById(id);
+    if (!submission) throw new NotFoundError('Submission not found');
+    const attemptCount = await this.exerciseRepository.getAttempSequence(
+      submission.excerciseId,
+      submission.studentId,
+      submission.createdAt
+    );
+    const data = {
+      ...submission,
+      attemptCount,
+      attachments: submission.attachments?.map((a) => ({
+        ...a,
+        file: {
+          ...a.file,
+          url: toAbsoluteURL(a.file.url),
+        },
+      })),
+      student: {
+        ...submission.student,
+        avatar: submission.student.avatar ? toAbsoluteURL(submission.student.avatar.url) : null,
+      },
+    };
+    return data;
+  }
+
+  async getSubmissionsByUnitAndStudent(studentId: string, unitId: string, query: GetSubmissionsByStudentIdQueryDto) {
+    const { page = 1, limit = 10 } = query;
+    const take = Number(limit);
+    const skip = (page - 1) * limit;
+    const { submissions, total } = await this.exerciseRepository.getSubmissionsByUnitAndStudent(
+      studentId,
+      unitId,
+      skip,
+      take
+    );
+    const data = submissions;
+    return {
+      data,
+      meta: { total, page: Number(page), limit: Number(limit) },
+    };
   }
 
   async addSubmission(userId: string, exerciseId: string, payload: AddSubmissionDto) {
-    const { score, demoUrl, note, fileIds } = payload;
-    const attemp = await this.uow.execute(async (tx) => {
-      const attemp = await this.exerciseRepository.addExerciseAttemp(
+    const { score, demoUrl, note, fileIds, quizResultsMetadata } = payload;
+
+    const quizResults = quizResultsMetadata ? JSON.parse(quizResultsMetadata) : quizResultsMetadata;
+    const attempt = await this.uow.execute(async (tx) => {
+      const attempt = await this.exerciseRepository.addExerciseAttemp(
         {
           excercise: { connect: { id: exerciseId } },
           student: { connect: { id: userId } },
           score,
           demoUrl,
           note,
+          quizResults,
         },
         tx
       );
+      if (score) {
+        const exercise = await this.exerciseRepository.getExerciseById(exerciseId);
+        if (!exercise) throw new NotFoundError('Exercise not found');
+        const passingScore = exercise.passingScore || 0;
+        const status: LearningStatus = score >= passingScore ? 'completed' : 'not_started';
+        await this.learningProgressRepository.createOrUpdateLearningProgress(
+          {
+            studentId: userId,
+            exerciseId,
+            status,
+          },
+          tx
+        );
+      }
       if (fileIds && fileIds.length > 0) {
         await this.fileRepository.markFilesStatus(fileIds, 'active', tx);
-        const attachments = await this.exerciseRepository.addAttachments(fileIds, attemp.id, tx);
+        const attachments = await this.exerciseRepository.addAttachments(fileIds, attempt.id, tx);
         return {
-          ...attemp,
+          ...attempt,
           attachments,
         };
       }
-      return attemp;
+      return attempt;
     });
-    return attemp;
+    return attempt;
   }
 
   async updateExercise(unitId: string, instructorId: string, payload: UpdateExerciseDto) {
@@ -144,6 +300,31 @@ export class ExerciseService {
     delete updateData.quizzes;
 
     return await this.exerciseRepository.updateExercise(unitId, updateData);
+  }
+
+  async updateSubmission(id: string, payload: UpdateSubmissionDto) {
+    const submission = this.uow.execute(async (tx) => {
+      const submission = await this.exerciseRepository.updateExerciseAttempt(id, payload);
+
+      const { score } = payload;
+      if (score) {
+        const exercise = await this.exerciseRepository.getExerciseById(submission.excerciseId);
+        if (!exercise) throw new NotFoundError('Exercise not found');
+        const passingScore = exercise.passingScore || 0;
+        const status: LearningStatus = score >= passingScore ? 'completed' : 'not_started';
+        await this.learningProgressRepository.createOrUpdateLearningProgress(
+          {
+            studentId: submission.studentId,
+            exerciseId: submission.excerciseId,
+            status,
+          },
+          tx
+        );
+      }
+      return submission;
+    });
+
+    return submission;
   }
 
   async deleteSubmission(userId: string, submissionId: string) {

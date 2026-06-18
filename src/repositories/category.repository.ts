@@ -2,7 +2,9 @@ import { NotFoundError } from '@/errors';
 import { Category, CourseLevel, CourseStatus } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
 import { CourseDuration } from '@/types/course.type';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class CategoryRepository {
   async getCourseByCategoryId(
     categoryId: string,
@@ -92,13 +94,16 @@ export class CategoryRepository {
               courses: {
                 where: { status: 'published' },
               },
+              subCategoryCourses: {
+                where: { status: 'published' },
+              },
             },
           },
         },
       }),
       prisma.course.aggregate({
         where: {
-          categoryId: id,
+          OR: [{ categoryId: id }, { subCategoryId: id }],
           status: 'published',
           avgRating: { gt: 0 },
         },
@@ -109,7 +114,7 @@ export class CategoryRepository {
       prisma.enrollment.count({
         where: {
           course: {
-            categoryId: id,
+            OR: [{ categoryId: id }, { subCategoryId: id }],
             status: 'published',
           },
           status: {
@@ -153,5 +158,15 @@ export class CategoryRepository {
   }
   async getAll(parentId: string | null | undefined): Promise<Category[]> {
     return prisma.category.findMany({ where: { parentId }, orderBy: { name: 'asc' } });
+  }
+
+  async getCategories(parentId: string | null | undefined, skip: number, take: number) {
+    const where = { parentId };
+
+    const [categories, total] = await Promise.all([
+      prisma.category.findMany({ where, orderBy: { name: 'asc' }, skip, take }),
+      prisma.category.count({ where }),
+    ]);
+    return { categories, total };
   }
 }

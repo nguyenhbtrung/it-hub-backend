@@ -1,5 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
+import { Injectable } from '@ntrg/simple-di';
 
+@Injectable()
 export class LlmService {
   constructor(private ai: GoogleGenAI) {}
 
@@ -11,6 +13,25 @@ export class LlmService {
       contents: userPrompt,
       config: {
         systemInstruction,
+      },
+    });
+  }
+
+  async countEmbeddingToken(contents: string): Promise<number> {
+    const countTokensResponse = await this.ai.models.countTokens({
+      model: 'gemini-embedding-001',
+      contents,
+    });
+    return countTokensResponse?.totalTokens || 0;
+  }
+
+  async embedContent(contents: string | string[], taskType: string = 'RETRIEVAL_DOCUMENT') {
+    return await this.ai.models.embedContent({
+      model: 'gemini-embedding-001',
+      contents,
+      config: {
+        taskType,
+        outputDimensionality: 768,
       },
     });
   }
