@@ -9,7 +9,7 @@ export class UnitRepository {
     const nextUnit = await prisma.unit.findFirst({
       where: { sectionId, order: { lt: order } },
       orderBy: { order: 'desc' },
-      include: { steps: true },
+      include: { steps: { orderBy: { order: 'desc' } } },
     });
     return nextUnit;
   }
@@ -26,7 +26,7 @@ export class UnitRepository {
     const unit = await prisma.unit.findUnique({
       where: { id },
       include: {
-        steps: true,
+        steps: { orderBy: { order: 'asc' } },
         section: true,
       },
     });
