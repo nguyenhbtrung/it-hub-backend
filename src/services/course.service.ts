@@ -32,6 +32,10 @@ import { generateCourseSlug, generateTagSlug } from '@/utils/slug';
 import { Injectable } from '@ntrg/simple-di';
 
 type WithStatus<T> = T & { status: LearningStatus | 'not_started' };
+type CourseIndexes = {
+  // parentMap: Map<string, string>;
+  ancestorMap: Map<string, string[]>;
+};
 
 @Injectable()
 export class CourseService {
@@ -44,6 +48,7 @@ export class CourseService {
     private sectionRepository: SectionRepository,
     private exerciseRepository: ExerciseRepository
   ) {}
+
   async createCourse(payload: CreateCourseDTO, instructorId: string): Promise<CreateCourseResponseDTO> {
     const { title, categoryId, subCategoryId } = payload;
     const slug = generateCourseSlug(title);
@@ -480,7 +485,10 @@ export class CourseService {
       return courseContent;
     }
     const courseContent = await this.getCourseContentByStudent(id, userId, role);
-    return courseContent;
+
+    const indexes = this.buildCourseContentIndexes(courseContent);
+
+    return { ...courseContent, indexes };
   }
 
   async getCourseContentByInstructor(courseId: string, instructorId: string, role: UserRole | undefined) {
@@ -534,6 +542,32 @@ export class CourseService {
     };
 
     return courseWithStatus;
+  }
+
+  private buildCourseContentIndexes(course: any): CourseIndexes {
+    // const parentMap = new Map();
+    const ancestorMap = new Map();
+
+    for (const section of course.sections) {
+      ancestorMap.set(section.id, []);
+
+      for (const unit of section.units) {
+        // parentMap.set(unit.id, section.id);
+        ancestorMap.set(unit.id, [section.id]);
+
+        for (const step of unit.steps) {
+          // parentMap.set(step.id, unit.id);
+          ancestorMap.set(step.id, [unit.id, section.id]);
+        }
+
+        for (const ex of unit.excercises) {
+          // parentMap.set(ex.id, unit.id);
+          ancestorMap.set(ex.id, [unit.id, section.id]);
+        }
+      }
+    }
+
+    return { ancestorMap: Object.fromEntries(ancestorMap) };
   }
 
   async getCourseContentOutline(id: string, userId: string, role?: UserRole) {
