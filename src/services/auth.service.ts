@@ -12,7 +12,7 @@ import { EmailService } from './email.service';
 import { ConflictError, UnauthorizedError, BadRequestError, NotFoundError } from '../errors';
 import { toUserResponseDTO, UserResponseDTO } from '../dtos/user.dto';
 import { UserPayload } from '@/type';
-import { RefreshTokenCache } from '@/infra/cache/refreshToken.cache';
+import { RefreshTokenCache } from '@/infra/cache';
 import { ACCESS_TOKEN_EXPIRY, REFRESH_TOKEN_EXPIRY, SALT_ROUNDS } from '@/constants/auth';
 import { generateRandomToken } from '@/utils/auth';
 import { Injectable } from '@ntrg/simple-di';
