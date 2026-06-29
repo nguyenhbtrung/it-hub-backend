@@ -27,15 +27,12 @@ import {
   TagRepository,
   UnitRepository,
 } from '@/repositories';
+import { CourseIndexes } from '@/types/course.types';
 import { toAbsoluteURL } from '@/utils/file';
 import { generateCourseSlug, generateTagSlug } from '@/utils/slug';
 import { Injectable } from '@ntrg/simple-di';
 
 type WithStatus<T> = T & { status: LearningStatus | 'not_started' };
-type CourseIndexes = {
-  // parentMap: Map<string, string>;
-  ancestorMap: Map<string, string[]>;
-};
 
 @Injectable()
 export class CourseService {
