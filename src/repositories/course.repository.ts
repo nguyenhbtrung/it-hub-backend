@@ -10,7 +10,7 @@ import {
   UserRole,
 } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
-import { CourseDuration } from '@/types/course.type';
+import { CourseDuration } from '@/types/course.types';
 import { toAbsoluteURL } from '@/utils/file';
 import { Injectable } from '@ntrg/simple-di';
 
