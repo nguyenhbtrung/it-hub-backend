@@ -1,7 +1,7 @@
 import { NotFoundError } from '@/errors';
 import { Category, CourseLevel, CourseStatus } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
-import { CourseDuration } from '@/types/course.type';
+import { CourseDuration } from '@/types/course.types';
 import { Injectable } from '@ntrg/simple-di';
 
 @Injectable()

@@ -17,7 +17,7 @@ import {
 import { toFileResponseDto } from '@/dtos/file.dto';
 import { GetLearningCoursesQueryDto } from '@/dtos/user.dto';
 import { ForbiddenError, NotFoundError } from '@/errors';
-import { CourseEnrollmentStatus, CourseLevel, CourseStatus, UserRole } from '@/generated/prisma/enums';
+import { CourseEnrollmentStatus, CourseLevel, CourseStatus, LearningStatus, UserRole } from '@/generated/prisma/enums';
 import {
   CourseRepository,
   EnrollmentRepository,
@@ -27,9 +27,12 @@ import {
   TagRepository,
   UnitRepository,
 } from '@/repositories';
+import { CourseIndexes } from '@/types/course.types';
 import { toAbsoluteURL } from '@/utils/file';
 import { generateCourseSlug, generateTagSlug } from '@/utils/slug';
 import { Injectable } from '@ntrg/simple-di';
+
+type WithStatus<T> = T & { status: LearningStatus | 'not_started' };
 
 @Injectable()
 export class CourseService {
@@ -42,6 +45,7 @@ export class CourseService {
     private sectionRepository: SectionRepository,
     private exerciseRepository: ExerciseRepository
   ) {}
+
   async createCourse(payload: CreateCourseDTO, instructorId: string): Promise<CreateCourseResponseDTO> {
     const { title, categoryId, subCategoryId } = payload;
     const slug = generateCourseSlug(title);
@@ -474,11 +478,93 @@ export class CourseService {
 
   async getCourseContent(id: string, userId: string, role?: UserRole, view: 'instructor' | 'student' = 'student') {
     if (view === 'instructor') {
-      const courseContent = await this.courseRepository.getCourseContentByInstructor(id, userId, role);
+      const courseContent = await this.getCourseContentByInstructor(id, userId, role);
       return courseContent;
     }
-    const courseContent = await this.courseRepository.getCourseContentByStudent(id, userId, role);
-    return courseContent;
+    const courseContent = await this.getCourseContentByStudent(id, userId, role);
+
+    const indexes = this.buildCourseContentIndexes(courseContent);
+
+    return { ...courseContent, indexes };
+  }
+
+  async getCourseContentByInstructor(courseId: string, instructorId: string, role: UserRole | undefined) {
+    return this.courseRepository.getCourseContentByInstructor(courseId, instructorId, role);
+  }
+
+  async getCourseContentByStudent(id: string, userId: string, role: UserRole | undefined) {
+    const course = await this.courseRepository.getCourseContentByStudent(id, userId, role);
+
+    if (!course) throw new NotFoundError('Course not found');
+
+    const courseWithStatus = {
+      ...course,
+      sections: course.sections.map((section) => ({
+        ...section,
+        units: section.units.map((unit) => {
+          // compute step statuses
+          const stepsWithStatus: WithStatus<(typeof unit.steps)[number]>[] = unit.steps.map((s) => {
+            const lp = s.learningProgress?.[0];
+            const status = lp ? (lp.status as LearningStatus) : 'not_started';
+            return { ...s, status };
+          });
+
+          // compute excercise statuses
+          const excsWithStatus: WithStatus<(typeof unit.excercises)[number]>[] = unit.excercises.map((e) => {
+            const lp = e.learningProgress?.[0];
+            const status = lp ? (lp.status as LearningStatus) : 'not_started';
+            return { ...e, status };
+          });
+
+          // compute unit status for lessons: completed only if ALL steps completed
+          let unitStatus: LearningStatus | 'not_started' = 'not_started';
+          if (unit.type === 'lesson') {
+            if (stepsWithStatus.length > 0 && stepsWithStatus.every((st) => st.status === 'completed')) {
+              unitStatus = 'completed';
+            } else {
+              unitStatus = 'not_started';
+            }
+          } else if (unit.type === 'excercise') {
+            unitStatus = excsWithStatus.length > 0 ? excsWithStatus[0].status : 'not_started';
+          }
+
+          return {
+            ...unit,
+            steps: stepsWithStatus,
+            excercises: excsWithStatus,
+            status: unitStatus,
+          };
+        }),
+      })),
+    };
+
+    return courseWithStatus;
+  }
+
+  private buildCourseContentIndexes(course: any): CourseIndexes {
+    // const parentMap = new Map();
+    const ancestorMap = new Map();
+
+    for (const section of course.sections) {
+      ancestorMap.set(section.id, []);
+
+      for (const unit of section.units) {
+        // parentMap.set(unit.id, section.id);
+        ancestorMap.set(unit.id, [section.id]);
+
+        for (const step of unit.steps) {
+          // parentMap.set(step.id, unit.id);
+          ancestorMap.set(step.id, [unit.id, section.id]);
+        }
+
+        for (const ex of unit.excercises) {
+          // parentMap.set(ex.id, unit.id);
+          ancestorMap.set(ex.id, [unit.id, section.id]);
+        }
+      }
+    }
+
+    return { ancestorMap: Object.fromEntries(ancestorMap) };
   }
 
   async getCourseContentOutline(id: string, userId: string, role?: UserRole) {

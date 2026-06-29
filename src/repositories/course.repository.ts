@@ -10,7 +10,7 @@ import {
   UserRole,
 } from '@/generated/prisma/client';
 import { prisma } from '@/lib/prisma';
-import { CourseDuration } from '@/types/course.type';
+import { CourseDuration } from '@/types/course.types';
 import { toAbsoluteURL } from '@/utils/file';
 import { Injectable } from '@ntrg/simple-di';
 
@@ -30,8 +30,6 @@ interface UpdateCourseTagData {
   newTags: { name: string; slug: string }[];
   tagSlugs: string[];
 }
-
-type WithStatus<T> = T & { status: LearningStatus | 'not_started' };
 
 @Injectable()
 export class CourseRepository {
@@ -942,51 +940,7 @@ export class CourseRepository {
         },
       },
     });
-
-    if (!course) return null;
-
-    const courseWithStatus = {
-      ...course,
-      sections: course.sections.map((section) => ({
-        ...section,
-        units: section.units.map((unit) => {
-          // compute step statuses
-          const stepsWithStatus: WithStatus<(typeof unit.steps)[number]>[] = unit.steps.map((s) => {
-            const lp = s.learningProgress?.[0];
-            const status = lp ? (lp.status as LearningStatus) : 'not_started';
-            return { ...s, status };
-          });
-
-          // compute excercise statuses
-          const excsWithStatus: WithStatus<(typeof unit.excercises)[number]>[] = unit.excercises.map((e) => {
-            const lp = e.learningProgress?.[0];
-            const status = lp ? (lp.status as LearningStatus) : 'not_started';
-            return { ...e, status };
-          });
-
-          // compute unit status for lessons: completed only if ALL steps completed
-          let unitStatus: LearningStatus | 'not_started' = 'not_started';
-          if (unit.type === 'lesson') {
-            if (stepsWithStatus.length > 0 && stepsWithStatus.every((st) => st.status === 'completed')) {
-              unitStatus = 'completed';
-            } else {
-              unitStatus = 'not_started';
-            }
-          } else if (unit.type === 'excercise') {
-            unitStatus = excsWithStatus.length > 0 ? excsWithStatus[0].status : 'not_started';
-          }
-
-          return {
-            ...unit,
-            steps: stepsWithStatus,
-            excercises: excsWithStatus,
-            status: unitStatus,
-          };
-        }),
-      })),
-    };
-
-    return courseWithStatus;
+    return course;
   }
 
   async getCourseContentOutline(id: string, userId: string, role: UserRole | undefined) {

@@ -3,7 +3,7 @@ import { StepRepository, UnitOfWork } from '@/repositories';
 import { JsonContentToMarkdown, jsonContentToText } from '@/utils/content';
 import { LlmService } from './llm.service';
 import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
-import { EmbeddingChunk } from '@/types/embedding.type';
+import { EmbeddingChunk } from '@/types/embedding.types';
 import { NotFoundError } from '@/errors';
 import { l2Normalize } from '@/utils/vector';
 import { CohereClientV2 } from 'cohere-ai';
