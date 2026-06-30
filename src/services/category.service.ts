@@ -50,10 +50,10 @@ export class CategoryService {
   }
 
   async getCategories(query: GetCategoriesQueryDTO): Promise<{ data: Category[]; meta: any }> {
-    const { root, page = 1, limit = 10, all, parentId } = query;
+    const { root, page = 1, limit = 10, all, parentId, includeParent, q } = query;
 
     if (all) {
-      const data = await this.categoryRepository.getAll(parentId || (root ? null : undefined));
+      const data = await this.categoryRepository.getAll(parentId || (root ? null : undefined), includeParent, q);
       return { data, meta: { total: data.length } };
     }
     const take = Number(limit);
@@ -62,7 +62,9 @@ export class CategoryService {
     const { categories, total } = await this.categoryRepository.getCategories(
       parentId || (root ? null : undefined),
       skip,
-      take
+      take,
+      includeParent,
+      q
     );
 
     return { data: categories, meta: { total, page: Number(page), limit: Number(limit) } };

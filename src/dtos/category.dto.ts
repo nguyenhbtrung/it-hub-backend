@@ -6,6 +6,11 @@ export const getCategoriesQuerySchema = z.object({
     .union([z.literal('true'), z.literal('false'), z.boolean()])
     .optional()
     .transform((val) => val === 'true' || val === true),
+  q: z.string().optional(),
+  includeParent: z
+    .union([z.literal('true'), z.literal('false'), z.boolean()])
+    .optional()
+    .transform((v) => v === 'true' || v === true),
   parentId: z.string().optional(),
   page: z.string().regex(/^\d+$/).optional().transform(Number),
   limit: z.string().regex(/^\d+$/).optional().transform(Number),
