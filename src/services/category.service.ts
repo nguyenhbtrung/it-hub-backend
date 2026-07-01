@@ -1,6 +1,6 @@
-import { GetCategoriesQueryDTO, GetCourseByCategoryIdQueryDto } from '@/dtos/category.dto';
+import { CreateCategoryDto, GetCategoriesQueryDTO, GetCourseByCategoryIdQueryDto } from '@/dtos/category.dto';
 import { toFileResponseDto } from '@/dtos/file.dto';
-import { NotFoundError } from '@/errors';
+import { BadRequestError, NotFoundError } from '@/errors';
 import { Category } from '@/generated/prisma/client';
 import { CategoryRepository } from '@/repositories';
 import { Injectable } from '@ntrg/simple-di';
@@ -68,5 +68,30 @@ export class CategoryService {
     );
 
     return { data: categories, meta: { total, page: Number(page), limit: Number(limit) } };
+  }
+
+  async createCategory(payload: CreateCategoryDto) {
+    const { name, slug, description, parentId } = payload;
+
+    if (parentId) {
+      const parent = await this.categoryRepository.getCategoryById(parentId);
+      if (!parent) {
+        throw new NotFoundError('Parent category not found');
+      }
+    }
+
+    if (slug) {
+      const existing = await this.categoryRepository.getCategoryIdBySlug(slug);
+      if (existing) {
+        throw new BadRequestError('Category slug already exists');
+      }
+    }
+
+    return this.categoryRepository.createCategory({
+      name,
+      slug,
+      description,
+      parentId: parentId ?? null,
+    });
   }
 }

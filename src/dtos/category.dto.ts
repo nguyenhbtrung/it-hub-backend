@@ -61,3 +61,12 @@ export const getCourseByCategoryIdQuerySchema = z.object({
 });
 
 export type GetCourseByCategoryIdQueryDto = z.infer<typeof getCourseByCategoryIdQuerySchema>;
+
+export const createCategorySchema = z.object({
+  name: z.string().min(1, 'Name is required').max(60, 'Name must not exceed 60 characters'),
+  slug: z.string().min(1, 'Slug is required').max(60, 'Slug must not exceed 60 characters'),
+  description: z.string().min(1, 'Description is required'),
+  parentId: z.string().nullable().optional(),
+});
+
+export type CreateCategoryDto = z.infer<typeof createCategorySchema>;

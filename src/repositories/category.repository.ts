@@ -7,6 +7,10 @@ import { Injectable } from '@ntrg/simple-di';
 
 @Injectable()
 export class CategoryRepository {
+  async getCategoryById(id: string) {
+    return prisma.category.findUnique({ where: { id } });
+  }
+
   async getCourseByCategoryId(
     categoryId: string,
     take: number,
@@ -207,5 +211,9 @@ export class CategoryRepository {
     }
 
     return query;
+  }
+
+  async createCategory(data: Omit<Category, 'id'>) {
+    return prisma.category.create({ data });
   }
 }
