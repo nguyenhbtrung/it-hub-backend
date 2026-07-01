@@ -6,6 +6,11 @@ export const getCategoriesQuerySchema = z.object({
     .union([z.literal('true'), z.literal('false'), z.boolean()])
     .optional()
     .transform((val) => val === 'true' || val === true),
+  q: z.string().optional(),
+  includeParent: z
+    .union([z.literal('true'), z.literal('false'), z.boolean()])
+    .optional()
+    .transform((v) => v === 'true' || v === true),
   parentId: z.string().optional(),
   page: z.string().regex(/^\d+$/).optional().transform(Number),
   limit: z.string().regex(/^\d+$/).optional().transform(Number),
@@ -56,3 +61,12 @@ export const getCourseByCategoryIdQuerySchema = z.object({
 });
 
 export type GetCourseByCategoryIdQueryDto = z.infer<typeof getCourseByCategoryIdQuerySchema>;
+
+export const createCategorySchema = z.object({
+  name: z.string().min(1, 'Name is required').max(60, 'Name must not exceed 60 characters'),
+  slug: z.string().min(1, 'Slug is required').max(60, 'Slug must not exceed 60 characters'),
+  description: z.string().min(1, 'Description is required'),
+  parentId: z.string().nullable().optional(),
+});
+
+export type CreateCategoryDto = z.infer<typeof createCategorySchema>;

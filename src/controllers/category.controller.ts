@@ -1,4 +1,4 @@
-import { GetCategoriesQueryDTO, GetCourseByCategoryIdQueryDto } from '@/dtos/category.dto';
+import { CreateCategoryDto, GetCategoriesQueryDTO, GetCourseByCategoryIdQueryDto } from '@/dtos/category.dto';
 import { CategoryService } from '@/services';
 import { successResponse } from '@/utils/response';
 import { Injectable } from '@ntrg/simple-di';
@@ -51,6 +51,16 @@ export class CategoryController {
       res,
       data: result.data,
       meta: result.meta,
+    });
+  }
+
+  async createCategory(req: Request, res: Response) {
+    const payload = req.body as CreateCategoryDto;
+    const result = await this.categoryService.createCategory(payload);
+    successResponse({
+      res,
+      status: 201,
+      data: result,
     });
   }
 }

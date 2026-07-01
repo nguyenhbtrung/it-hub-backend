@@ -1,6 +1,6 @@
-import { GetCategoriesQueryDTO, GetCourseByCategoryIdQueryDto } from '@/dtos/category.dto';
+import { CreateCategoryDto, GetCategoriesQueryDTO, GetCourseByCategoryIdQueryDto } from '@/dtos/category.dto';
 import { toFileResponseDto } from '@/dtos/file.dto';
-import { NotFoundError } from '@/errors';
+import { BadRequestError, NotFoundError } from '@/errors';
 import { Category } from '@/generated/prisma/client';
 import { CategoryRepository } from '@/repositories';
 import { Injectable } from '@ntrg/simple-di';
@@ -50,10 +50,10 @@ export class CategoryService {
   }
 
   async getCategories(query: GetCategoriesQueryDTO): Promise<{ data: Category[]; meta: any }> {
-    const { root, page = 1, limit = 10, all, parentId } = query;
+    const { root, page = 1, limit = 10, all, parentId, includeParent, q } = query;
 
     if (all) {
-      const data = await this.categoryRepository.getAll(parentId || (root ? null : undefined));
+      const data = await this.categoryRepository.getAll(parentId || (root ? null : undefined), includeParent, q);
       return { data, meta: { total: data.length } };
     }
     const take = Number(limit);
@@ -62,9 +62,36 @@ export class CategoryService {
     const { categories, total } = await this.categoryRepository.getCategories(
       parentId || (root ? null : undefined),
       skip,
-      take
+      take,
+      includeParent,
+      q
     );
 
     return { data: categories, meta: { total, page: Number(page), limit: Number(limit) } };
+  }
+
+  async createCategory(payload: CreateCategoryDto) {
+    const { name, slug, description, parentId } = payload;
+
+    if (parentId) {
+      const parent = await this.categoryRepository.getCategoryById(parentId);
+      if (!parent) {
+        throw new NotFoundError('Parent category not found');
+      }
+    }
+
+    if (slug) {
+      const existing = await this.categoryRepository.getCategoryIdBySlug(slug);
+      if (existing) {
+        throw new BadRequestError('Category slug already exists');
+      }
+    }
+
+    return this.categoryRepository.createCategory({
+      name,
+      slug,
+      description,
+      parentId: parentId ?? null,
+    });
   }
 }
