@@ -58,6 +58,9 @@ export function jsonContentToText(node: any, depth = 0): string {
     case 'paragraph':
       return extractText(node);
 
+    case 'text':
+      return node.text ?? '';
+
     case 'bulletList':
       return node.content?.map((item: any) => `- ${jsonContentToText(item)}`).join('\n') ?? '';
 
@@ -65,7 +68,7 @@ export function jsonContentToText(node: any, depth = 0): string {
       return node.content?.map((item: any, i: number) => `${i + 1}. ${jsonContentToText(item)}`).join('\n') ?? '';
 
     case 'listItem':
-      return node.content?.map((n: any) => jsonContentToText(n)).join(' ') ?? '';
+      return node.content?.map((n: any) => jsonContentToText(n, depth + 1)).join('\n') ?? '';
 
     case 'blockquote':
       return `> ${extractText(node)}`;
@@ -79,6 +82,37 @@ export function jsonContentToText(node: any, depth = 0): string {
     case 'callout':
       return `${node.attrs?.type?.toUpperCase() ?? 'NOTE'}: ${extractText(node)}`;
 
+    case 'inlineMath':
+      return `$${node.attrs?.latex ?? ''}$`;
+
+    case 'blockMath':
+      return `$$\n${node.attrs?.latex ?? ''}\n$$`;
+
+    case 'table': {
+      const rows = node.content ?? [];
+      if (!rows.length) return '';
+
+      const markdownRows = rows.map(
+        (row: any) =>
+          '| ' +
+          (row.content ?? []).map((cell: any) => jsonContentToText(cell).trim().replace(/\n+/g, '<br>')).join(' | ') +
+          ' |'
+      );
+
+      // separator
+      const colCount = rows[0]?.content?.length ?? 0;
+      const separator = '| ' + Array(colCount).fill('---').join(' | ') + ' |';
+
+      return [markdownRows[0], separator, ...markdownRows.slice(1)].join('\n');
+    }
+
+    case 'tableRow':
+      return node.content?.map((cell: any) => jsonContentToText(cell)).join(' | ') ?? '';
+
+    case 'tableCell':
+    case 'tableHeader':
+      return node.content?.map((n: any) => jsonContentToText(n)).join('\n') ?? '';
+
     default:
       return extractText(node);
   }
@@ -86,7 +120,7 @@ export function jsonContentToText(node: any, depth = 0): string {
 
 export function extractText(node: any): string {
   if (!node.content) return '';
-  return node.content.map((c: any) => (c.type === 'text' ? c.text : extractText(c))).join('');
+  return node.content.map((c: any) => (c.type === 'text' ? c.text : jsonContentToText(c))).join('');
 }
 
 export function extractFileIdsFromContent(doc: any): string[] {
@@ -209,6 +243,43 @@ export function JsonContentToMarkdown(node: any): string {
 
     case 'callout':
       return `> ${node.attrs?.type?.toUpperCase() ?? 'NOTE'}: ${childrenText}\n\n`;
+
+    case 'inlineMath':
+      return `$${node.attrs?.latex ?? ''}$`;
+
+    case 'blockMath':
+      return `\n$$\n${node.attrs?.latex ?? ''}\n$$\n\n`;
+
+    case 'table': {
+      const rows = node.content ?? [];
+      if (rows.length === 0) return '';
+
+      // Lấy header
+      const headers = (rows[0].content ?? []).map((cell: any) =>
+        JsonContentToMarkdown(cell)
+          .trim()
+          .replace(/\n{3,}/g, '\n\n')
+          .replace(/\n/g, '; ')
+      );
+
+      const records: string[] = [];
+
+      for (const row of rows.slice(1)) {
+        const cells = row.content ?? [];
+
+        const fields = cells.map((cell: any, index: number) => {
+          const value = JsonContentToMarkdown(cell).trim().replace(/\n+/g, '; ');
+
+          const key = headers[index] || `Column ${index + 1}`;
+
+          return `${key}: ${value}`;
+        });
+
+        records.push(fields.join('\n'));
+      }
+
+      return records.join('\n\n') + '\n\n';
+    }
 
     default:
       return childrenText;
