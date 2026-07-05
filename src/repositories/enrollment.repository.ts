@@ -106,7 +106,6 @@ export class EnrollmentRepository {
   async getRecentEnrollmentsByInstructorId(instructorId: string, limit: number) {
     return prisma.enrollment.findMany({
       where: {
-        status: 'pending',
         course: {
           instructorId,
         },
