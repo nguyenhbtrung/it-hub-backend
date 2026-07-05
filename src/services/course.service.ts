@@ -410,10 +410,16 @@ export class CourseService {
     query: GetMyCreatedCoursesDTO,
     instructorId: string
   ): Promise<{ data: CreatedCourseResponseDTO[]; meta: any }> {
-    const { page = 1, limit = 10, status } = query;
+    const { page = 1, limit = 10, status, q } = query;
     const take = Number(limit);
     const skip = (page - 1) * limit;
-    const [courses, total] = await this.courseRepository.getInstructorCreatedCourses(take, skip, status, instructorId);
+    const [courses, total] = await this.courseRepository.getInstructorCreatedCourses(
+      take,
+      skip,
+      status,
+      instructorId,
+      q
+    );
 
     const data = courses.map((course) => ({
       ...course,

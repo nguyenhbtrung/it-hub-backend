@@ -67,6 +67,7 @@ export interface CreatedCourseResponseDTO {
 export const getMyCreatedCoursesSchema = z.object({
   page: z.string().regex(/^\d+$/).optional().transform(Number),
   limit: z.string().regex(/^\d+$/).optional().transform(Number),
+  q: z.string().optional(),
   status: z
     .enum([
       CourseStatus.draft,
