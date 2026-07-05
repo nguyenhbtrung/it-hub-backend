@@ -552,9 +552,22 @@ export class CourseRepository {
     take: number,
     skip: number,
     status: CourseStatus | undefined,
-    instructorId: string
+    instructorId: string,
+    q: string | undefined
   ): Promise<[CreatedCourseResponseDTO[], number]> {
-    const where = { status, instructorId };
+    const searchConditions = q
+      ? [
+          { title: { contains: q, mode: 'insensitive' as const } },
+          { category: { name: { contains: q, mode: 'insensitive' as const } } },
+          { subCategory: { name: { contains: q, mode: 'insensitive' as const } } },
+        ]
+      : [];
+
+    const where = {
+      status,
+      instructorId,
+      OR: q ? searchConditions : undefined,
+    };
 
     const [courses, total] = await Promise.all([
       prisma.course.findMany({
