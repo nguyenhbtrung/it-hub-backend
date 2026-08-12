@@ -16,8 +16,10 @@ import {
 } from '@/dtos/coures.dto';
 import { toFileResponseDto } from '@/dtos/file.dto';
 import { GetLearningCoursesQueryDto } from '@/dtos/user.dto';
+import { CacheService } from '@/common/cache/cache.service';
 import { ForbiddenError, NotFoundError } from '@/errors';
 import { CourseEnrollmentStatus, CourseLevel, CourseStatus, LearningStatus, UserRole } from '@/generated/prisma/enums';
+import { RedisKeys } from '@/infra/redis/redis.keys';
 import {
   CourseRepository,
   EnrollmentRepository,
@@ -45,6 +47,61 @@ export class CourseService {
     private sectionRepository: SectionRepository,
     private exerciseRepository: ExerciseRepository
   ) {}
+
+  private async invalidateCourseCaches(courseId?: string) {
+    const patterns = ['courses:catalog:*', 'course:detail:*', 'course:content:*', 'learning-courses:*'];
+
+    if (courseId) {
+      patterns.push(`course:detail:${courseId}:*`);
+      patterns.push(`course:content:${courseId}:*`);
+    }
+
+    await Promise.all(patterns.map((pattern) => CacheService.delByPattern(pattern)));
+  }
+
+  private buildCourseCatalogCacheKey(query: GetCoursesQueryDTO) {
+    const {
+      view = 'student',
+      page = 1,
+      limit = 5,
+      q = '',
+      level,
+      duration,
+      avgRating = 0,
+      sortBy,
+      sortOrder = 'asc',
+      status,
+    } = query;
+
+    const normalizedLevel = Array.isArray(level) ? level.join(',') : level || '';
+    const normalizedDuration = Array.isArray(duration) ? duration.join(',') : duration || '';
+
+    return RedisKeys.courseCatalog(
+      `${view}:${Number(page)}:${Number(limit)}:${q}:${normalizedLevel}:${normalizedDuration}:${Number(avgRating)}:${sortBy || ''}:${sortOrder}:${status || ''}`
+    );
+  }
+
+  private buildCourseDetailCacheKey(
+    courseId: string,
+    userId: string,
+    role?: UserRole,
+    view: 'instructor' | 'student' = 'student'
+  ) {
+    return RedisKeys.courseDetail(courseId, view, userId, role);
+  }
+
+  private buildCourseContentCacheKey(
+    courseId: string,
+    userId: string,
+    role?: UserRole,
+    view: 'instructor' | 'student' = 'student'
+  ) {
+    return RedisKeys.courseContent(courseId, view, userId, role);
+  }
+
+  private buildLearningCoursesCacheKey(userId: string, status: string, page: number, limit: number) {
+    return RedisKeys.learningCourses(userId, status, page, limit);
+  }
 
   async createCourse(payload: CreateCourseDTO, instructorId: string): Promise<CreateCourseResponseDTO> {
     const { title, categoryId, subCategoryId } = payload;
@@ -81,11 +138,14 @@ export class CourseService {
       instructor: { connect: { id: instructorId } },
     });
 
+    await this.invalidateCourseCaches();
+
     return toCreateCourseResponseDTO(newCourse);
   }
 
   async createOrUpdateReview(courseId: string, userId: string, payload: CreateOrUpdateReviewDto) {
     const review = await this.courseRepository.createOrUpdateReview(courseId, userId, payload);
+    await this.invalidateCourseCaches(courseId);
     return review;
   }
 
@@ -102,10 +162,13 @@ export class CourseService {
       throw new ForbiddenError('Permission denied');
     }
     await this.courseRepository.updateCourseStatus(courseId, status);
+    await this.invalidateCourseCaches(courseId);
   }
 
   async updateCourseTotalDuration(courseId: string) {
-    return this.courseRepository.recalcAndUpdateCourseTotalDuration(courseId);
+    const result = await this.courseRepository.recalcAndUpdateCourseTotalDuration(courseId);
+    await this.invalidateCourseCaches(courseId);
+    return result;
   }
 
   async updateCourseDetail(
@@ -165,6 +228,8 @@ export class CourseService {
         tagSlugs,
       }
     );
+
+    await this.invalidateCourseCaches(courseId);
   }
 
   async getNavigationByContentId(contentId: string, query: GetNavigationByContentIdQueryDto) {
@@ -313,6 +378,13 @@ export class CourseService {
       sortOrder = 'asc',
       status,
     } = query;
+
+    const cacheKey = this.buildCourseCatalogCacheKey(query);
+    const cachedResult = await CacheService.get<any>(cacheKey);
+    if (cachedResult) {
+      return cachedResult;
+    }
+
     const take = Number(limit);
     const skip = (page - 1) * limit;
     const levels = !level || Array.isArray(level) ? level : [level];
@@ -327,7 +399,7 @@ export class CourseService {
         status
       );
 
-      return {
+      const result = {
         data: courses.map((course: any) => ({
           ...course,
           img: course.img ? toFileResponseDto(course.img) : null,
@@ -338,6 +410,8 @@ export class CourseService {
         })),
         meta: { total, page: Number(page), limit: Number(limit) },
       };
+      await CacheService.set(cacheKey, result, 300);
+      return result;
     }
     const orderBy = sortBy || 'popular';
     const { courses, total } = await this.courseRepository.getCoursesByStudent(
@@ -349,13 +423,15 @@ export class CourseService {
       avgRating,
       orderBy
     );
-    return {
+    const result = {
       data: courses.map((course: any) => ({
         ...course,
         img: course.img ? toFileResponseDto(course.img) : null,
       })),
       meta: { total, page: Number(page), limit: Number(limit) },
     };
+    await CacheService.set(cacheKey, result, 60 * 60);
+    return result;
   }
 
   async getRecommendedCourses(categoryId: string, userId?: string) {
@@ -466,32 +542,51 @@ export class CourseService {
   }
 
   async getCourseDetail(id: string, userId: string, role?: UserRole, view: 'instructor' | 'student' = 'student') {
+    const cacheKey = this.buildCourseDetailCacheKey(id, userId, role, view);
+    const cachedResult = await CacheService.get<any>(cacheKey);
+    if (cachedResult) {
+      return cachedResult;
+    }
+
+    let result;
     if (view === 'instructor') {
       const course = await this.courseRepository.getCourseDetailByInstructor(id, userId, role);
-      return {
+      result = {
+        ...course,
+        img: course.img ? toFileResponseDto(course.img) : null,
+        promoVideo: course.promoVideo ? toFileResponseDto(course.promoVideo) : null,
+      };
+    } else {
+      const course = await this.courseRepository.getCourseDetailByStudent(id, userId, role);
+      result = {
         ...course,
         img: course.img ? toFileResponseDto(course.img) : null,
         promoVideo: course.promoVideo ? toFileResponseDto(course.promoVideo) : null,
       };
     }
-    const course = await this.courseRepository.getCourseDetailByStudent(id, userId, role);
-    return {
-      ...course,
-      img: course.img ? toFileResponseDto(course.img) : null,
-      promoVideo: course.promoVideo ? toFileResponseDto(course.promoVideo) : null,
-    };
+
+    await CacheService.set(cacheKey, result, 24 * 60 * 60);
+    return result;
   }
 
   async getCourseContent(id: string, userId: string, role?: UserRole, view: 'instructor' | 'student' = 'student') {
-    if (view === 'instructor') {
-      const courseContent = await this.getCourseContentByInstructor(id, userId, role);
-      return courseContent;
+    const cacheKey = this.buildCourseContentCacheKey(id, userId, role, view);
+    const cachedResult = await CacheService.get<any>(cacheKey);
+    if (cachedResult) {
+      return cachedResult;
     }
-    const courseContent = await this.getCourseContentByStudent(id, userId, role);
 
-    const indexes = this.buildCourseContentIndexes(courseContent);
+    let result;
+    if (view === 'instructor') {
+      result = await this.getCourseContentByInstructor(id, userId, role);
+    } else {
+      const courseContent = await this.getCourseContentByStudent(id, userId, role);
+      const indexes = this.buildCourseContentIndexes(courseContent);
+      result = { ...courseContent, indexes };
+    }
 
-    return { ...courseContent, indexes };
+    await CacheService.set(cacheKey, result, 600);
+    return result;
   }
 
   async getCourseContentByInstructor(courseId: string, instructorId: string, role: UserRole | undefined) {
@@ -622,6 +717,12 @@ export class CourseService {
 
   async getLearningCoursesByUserId(userId: string, query: GetLearningCoursesQueryDto) {
     const { page = 1, limit = 10, status = 'active' } = query;
+    const cacheKey = this.buildLearningCoursesCacheKey(userId, status, Number(page), Number(limit));
+    const cachedResult = await CacheService.get<any>(cacheKey);
+    if (cachedResult) {
+      return cachedResult;
+    }
+
     const take = Number(limit);
     const skip = (page - 1) * limit;
 
@@ -638,7 +739,9 @@ export class CourseService {
       img: e.course?.img ? toFileResponseDto(e.course?.img) : null,
       course: undefined,
     }));
-    return { data, meta: { total, page: Number(page), limit: Number(limit) } };
+    const result = { data, meta: { total, page: Number(page), limit: Number(limit) } };
+    await CacheService.set(cacheKey, result, 60 * 60);
+    return result;
   }
 
   async addSection(courseId: string, instructorId: string, payload: AddSectionDto) {
@@ -662,6 +765,7 @@ export class CourseService {
       objectives,
       order: nextOrder,
     });
+    await this.invalidateCourseCaches(courseId);
     return {
       id: newSection.id,
       courseId: newSection.courseId,
@@ -684,6 +788,7 @@ export class CourseService {
     }
 
     await this.courseRepository.updateCourseImage(courseId, imageId);
+    await this.invalidateCourseCaches(courseId);
   }
 
   async updatePromoVideoImage(courseId: string, promoVideoId: string, instructorId: string): Promise<void> {
@@ -697,5 +802,6 @@ export class CourseService {
     }
 
     await this.courseRepository.updateCoursePromoVideo(courseId, promoVideoId);
+    await this.invalidateCourseCaches(courseId);
   }
 }
