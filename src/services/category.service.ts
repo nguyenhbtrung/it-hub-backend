@@ -2,7 +2,7 @@ import { CreateCategoryDto, GetCategoriesQueryDTO, GetCourseByCategoryIdQueryDto
 import { toFileResponseDto } from '@/dtos/file.dto';
 import { BadRequestError, NotFoundError } from '@/errors';
 import { Category } from '@/generated/prisma/client';
-import { CourseCache } from '@/infra/cache';
+import { CategoryCache, CourseCache } from '@/infra/cache';
 import { CategoryRepository } from '@/repositories';
 import { Injectable } from '@ntrg/simple-di';
 
@@ -66,7 +66,15 @@ export class CategoryService {
   }
 
   async getCategoryTree() {
+    const cachedResult = await CategoryCache.getTree();
+    if (cachedResult) {
+      return cachedResult;
+    }
+
     const categories = await this.categoryRepository.getCategoryTree();
+
+    await CategoryCache.setTree(categories);
+
     return categories;
   }
 
@@ -108,11 +116,15 @@ export class CategoryService {
       }
     }
 
-    return this.categoryRepository.createCategory({
+    const result = await this.categoryRepository.createCategory({
       name,
       slug,
       description,
       parentId: parentId ?? null,
     });
+
+    await CategoryCache.invalidateTree();
+
+    return result;
   }
 }
