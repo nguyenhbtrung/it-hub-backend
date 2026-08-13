@@ -5,6 +5,7 @@ export const RedisKeys = {
     `course:detail:${id}:${view}:${userId || 'anon'}:${role || 'anon'}`,
   courseContent: (id: string, view = 'student', userId = '', role = '') =>
     `course:content:${id}:${view}:${userId || 'anon'}:${role || 'anon'}`,
+  featuredCourses: (page: number, limit: number) => `courses:featured:${page}:${limit}`,
   courseCatalog: (query: string) => `courses:catalog:${query}`,
   learningCourses: (userId: string, status: string, page: number, limit: number) =>
     `learning-courses:${userId}:${status}:${page}:${limit}`,

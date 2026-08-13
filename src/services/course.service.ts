@@ -49,7 +49,13 @@ export class CourseService {
   ) {}
 
   private async invalidateCourseCaches(courseId?: string) {
-    const patterns = ['courses:catalog:*', 'course:detail:*', 'course:content:*', 'learning-courses:*'];
+    const patterns = [
+      'courses:catalog:*',
+      'course:detail:*',
+      'course:content:*',
+      'courses:featured:*',
+      'learning-courses:*',
+    ];
 
     if (courseId) {
       patterns.push(`course:detail:${courseId}:*`);
@@ -97,6 +103,10 @@ export class CourseService {
     view: 'instructor' | 'student' = 'student'
   ) {
     return RedisKeys.courseContent(courseId, view, userId, role);
+  }
+
+  private buildFeaturedCoursesCacheKey(page: number, limit: number) {
+    return RedisKeys.featuredCourses(page, limit);
   }
 
   private buildLearningCoursesCacheKey(userId: string, status: string, page: number, limit: number) {
@@ -441,17 +451,28 @@ export class CourseService {
 
   async getFeaturedCourses(query: GetFeaturedCoursesQueryDTO): Promise<any> {
     const { page = 1, limit = 10 } = query;
+
+    const cacheKey = this.buildFeaturedCoursesCacheKey(page, limit);
+    const cachedResult = await CacheService.get<any>(cacheKey);
+    if (cachedResult) {
+      return cachedResult;
+    }
+
     const take = Number(limit);
     const skip = (page - 1) * limit;
     const { courses, total } = await this.courseRepository.getFeaturedCourses(take, skip);
 
-    return {
+    const result = {
       data: courses.map((course: any) => ({
         ...course,
         img: course.img ? toFileResponseDto(course.img) : null,
       })),
       meta: { total, page: Number(page), limit: Number(limit) },
     };
+
+    await CacheService.set(cacheKey, result, 60 * 60);
+
+    return result;
   }
 
   async getUserEnrollmentStatus(courseId: string, userId: string, role?: UserRole) {
