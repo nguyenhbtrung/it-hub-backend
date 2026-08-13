@@ -18,6 +18,8 @@ export const RedisKeys = {
 
   step: (id: string) => `step:${id}`,
 
+  categoryTree: () => `categories:tree`,
+
   refreshToken: (jti: string) => `auth:refresh:${jti}`,
   rateLimit: (key: string) => `rate:${key}`,
 };

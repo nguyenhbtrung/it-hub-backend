@@ -1,5 +1,4 @@
 import { CacheService } from '@/common/cache/cache.service';
-import { User } from '@/generated/prisma/client';
 import { RedisKeys } from '@/infra/redis/redis.keys';
 
 export class StepCache {
