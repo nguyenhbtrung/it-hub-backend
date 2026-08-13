@@ -5,6 +5,7 @@ import { EnrollmentRepository, FileRepository, StepRepository, UnitOfWork } from
 import { diffFileIds, estimateDurationFromContent, extractFileIdsFromContent } from '@/utils/content';
 import { AiService } from './ai.service';
 import { Injectable } from '@ntrg/simple-di';
+import { CourseCache, StepCache } from '@/infra/cache';
 
 @Injectable()
 export class StepService {
@@ -17,16 +18,38 @@ export class StepService {
   ) {}
 
   async getStepById(stepId: string, userId: string, role?: UserRole) {
+    const cachedCourse = await CourseCache.getByStepId(stepId);
+    if (cachedCourse) {
+      return cachedCourse;
+    }
+
     const course = await this.stepRepository.getCourseByStepId(stepId);
+
     if (!course) {
       throw new NotFoundError('Course not found');
     }
+
+    await CourseCache.setByStepId(stepId, course);
+
     if (course.instructorId !== userId && role !== 'admin') {
       const enrollment = await this.enrollmentRepository.getEnrollment(course.id, userId);
       if (!enrollment || (enrollment.status !== 'active' && enrollment.status !== 'completed'))
         throw new ForbiddenError('Permission denied: You do not have permission to access this content.');
     }
+
+    const cachedStep = await StepCache.get(stepId);
+    if (cachedStep) {
+      return cachedStep;
+    }
+
     const step = await this.stepRepository.getStepById(stepId);
+
+    if (!step) {
+      throw new NotFoundError('Step not found');
+    }
+
+    await StepCache.set(step);
+
     return step;
   }
 
@@ -47,9 +70,12 @@ export class StepService {
         if (added.length > 0) await this.fileRepository.markFilesStatus(added, 'active', tx);
 
         const newFileIds = extractFileIdsFromContent(newContent);
-        if (newFileIds.length > 0) await this.fileRepository.createOrUpdateFileUsage(newFileIds, { stepId }, tx);
+        if (newFileIds.length > 0) {
+          await this.fileRepository.createOrUpdateFileUsage(newFileIds, { stepId }, tx);
+        }
 
         const duration = estimateDurationFromContent(payload.content);
+
         const step = await this.stepRepository.updateStep(
           stepId,
           {
@@ -59,13 +85,21 @@ export class StepService {
           },
           tx
         );
+
         await this.aiService.embedStepContentCore(stepId, tx);
+
         return step;
       });
+
+      await StepCache.invalidate(stepId);
+
       return step;
     }
 
     const step = await this.stepRepository.updateStep(stepId, payload);
+
+    await StepCache.invalidate(stepId);
+
     return step;
   }
 
@@ -78,5 +112,7 @@ export class StepService {
       throw new ForbiddenError('Permission denied: You are not the owner of this course');
     }
     await this.stepRepository.deleteStep(stepId);
+    await StepCache.invalidate(stepId);
+    await CourseCache.invalidateByStepId(stepId);
   }
 }
