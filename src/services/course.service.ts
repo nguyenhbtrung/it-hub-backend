@@ -55,6 +55,7 @@ export class CourseService {
       'course:content:*',
       'courses:featured:*',
       'learning-courses:*',
+      'courses:by-category:*',
     ];
 
     if (courseId) {

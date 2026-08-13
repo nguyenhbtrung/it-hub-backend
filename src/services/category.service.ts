@@ -2,6 +2,7 @@ import { CreateCategoryDto, GetCategoriesQueryDTO, GetCourseByCategoryIdQueryDto
 import { toFileResponseDto } from '@/dtos/file.dto';
 import { BadRequestError, NotFoundError } from '@/errors';
 import { Category } from '@/generated/prisma/client';
+import { CourseCache } from '@/infra/cache';
 import { CategoryRepository } from '@/repositories';
 import { Injectable } from '@ntrg/simple-di';
 
@@ -9,8 +10,24 @@ import { Injectable } from '@ntrg/simple-di';
 export class CategoryService {
   constructor(private categoryRepository: CategoryRepository) {}
 
+  private buildCoursesByCategoryCacheKeyQuery(query: GetCourseByCategoryIdQueryDto) {
+    const { page = 1, limit = 5, level, duration, avgRating = 0, sortBy = 'popular' } = query;
+
+    const normalizedLevel = Array.isArray(level) ? level.join(',') : level || '';
+    const normalizedDuration = Array.isArray(duration) ? duration.join(',') : duration || '';
+
+    return `${Number(page)}:${Number(limit)}:${normalizedLevel}:${normalizedDuration}:${Number(avgRating)}:${sortBy}`;
+  }
+
   async getCourseByCategoryId(id: string, query: GetCourseByCategoryIdQueryDto) {
     const { page = 1, limit = 5, level, duration, avgRating = 0, sortBy = 'popular' } = query;
+
+    const cacheKeyQuery = this.buildCoursesByCategoryCacheKeyQuery(query);
+    const cachedResult = await CourseCache.getByCategoryId(id, cacheKeyQuery);
+    if (cachedResult) {
+      return cachedResult;
+    }
+
     const take = Number(limit);
     const skip = (page - 1) * limit;
     const levels = !level || Array.isArray(level) ? level : [level];
@@ -24,13 +41,17 @@ export class CategoryService {
       avgRating,
       sortBy
     );
-    return {
+    const result = {
       data: courses.map((course: any) => ({
         ...course,
         img: course.img ? toFileResponseDto(course.img) : null,
       })),
       meta: { total, page: Number(page), limit: Number(limit) },
     };
+
+    await CourseCache.setByCategoryId(id, cacheKeyQuery, result);
+
+    return result;
   }
 
   async getCategorySummary(id: string) {
