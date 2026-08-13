@@ -9,6 +9,8 @@ export const RedisKeys = {
     `course:content:${id}:${view}:${userId || 'anon'}:${role || 'anon'}`,
   featuredCourses: (page: number, limit: number) => `courses:featured:${page}:${limit}`,
   courseCatalog: (query: string) => `courses:catalog:${query}`,
+  coursesByCategory: (categoryId: string, query: string) => `courses:by-category:${categoryId}:${query}`,
+  coursesByCategoryPattern: (categoryId: string) => `courses:by-category:${categoryId}:*`,
   learningCourses: (userId: string, status: string, page: number, limit: number) =>
     `learning-courses:${userId}:${status}:${page}:${limit}`,
 
