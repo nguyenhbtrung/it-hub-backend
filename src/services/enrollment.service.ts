@@ -1,4 +1,5 @@
 import { CreateEnrollmentDto, UpdateEnrollmentDto } from '@/dtos/enrollment.dto';
+import { CacheService } from '@/common/cache/cache.service';
 import { ForbiddenError, NotFoundError } from '@/errors';
 import { CourseRepository, EnrollmentRepository } from '@/repositories';
 import { Injectable } from '@ntrg/simple-di';
@@ -31,6 +32,9 @@ export class EnrollmentService {
     userId = userId ? userId : myId;
 
     const enrollment = await this.enrollmentRepository.createEnrollment(courseId, userId, payload.status);
+    await CacheService.delByPattern(`course:detail:${courseId}:*`);
+    await CacheService.delByPattern(`course:content:${courseId}:*`);
+    await CacheService.delByPattern(`learning-courses:${userId}:*`);
     return enrollment;
   }
 
@@ -54,6 +58,9 @@ export class EnrollmentService {
     const data = { ...payload, enrolledAt };
 
     const enrollment = await this.enrollmentRepository.updateEnrollment(courseId, userId, data);
+    await CacheService.delByPattern(`course:detail:${courseId}:*`);
+    await CacheService.delByPattern(`course:content:${courseId}:*`);
+    await CacheService.delByPattern(`learning-courses:${userId}:*`);
     return enrollment;
   }
 
@@ -73,5 +80,8 @@ export class EnrollmentService {
     userId = userId ? userId : myId;
 
     await this.enrollmentRepository.deleteEnrollment(courseId, userId);
+    await CacheService.delByPattern(`course:detail:${courseId}:*`);
+    await CacheService.delByPattern(`course:content:${courseId}:*`);
+    await CacheService.delByPattern(`learning-courses:${userId}:*`);
   }
 }
