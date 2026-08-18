@@ -28,4 +28,26 @@ export class CacheService {
       /* empty */
     }
   }
+
+  static async delByPattern(pattern: string) {
+    try {
+      let cursor = '0';
+
+      do {
+        const reply = await redisClient.scan(cursor, {
+          MATCH: pattern,
+          COUNT: 100,
+        });
+
+        cursor = reply.cursor;
+        const keys = reply.keys;
+
+        if (keys.length > 0) {
+          await redisClient.del(keys);
+        }
+      } while (cursor !== '0');
+    } catch (error) {
+      /* empty */
+    }
+  }
 }

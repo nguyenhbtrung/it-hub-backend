@@ -1,4 +1,5 @@
 import { SALT_ROUNDS } from '@/constants/auth';
+import { CacheService } from '@/common/cache/cache.service';
 import { toFileResponseDto } from '@/dtos/file.dto';
 import {
   CreateOrUpdateLearningProgressDto,
@@ -181,6 +182,9 @@ export class UserService {
       stepId,
       status,
     });
+    await CacheService.delByPattern('course:detail:*');
+    await CacheService.delByPattern('course:content:*');
+    await CacheService.delByPattern(`learning-courses:${studentId}:*`);
     return learningProgress;
   }
 
@@ -195,6 +199,9 @@ export class UserService {
       exerciseId,
       status,
     });
+    await CacheService.delByPattern('course:detail:*');
+    await CacheService.delByPattern('course:content:*');
+    await CacheService.delByPattern(`learning-courses:${studentId}:*`);
     return learningProgress;
   }
 
