@@ -17,7 +17,7 @@ export class StepService {
     private aiService: AiService
   ) {}
 
-  async getStepById(stepId: string, userId: string, role?: UserRole) {
+  private async getCourseByStep(stepId: string) {
     const cachedCourse = await CourseCache.getByStepId(stepId);
     if (cachedCourse) {
       return cachedCourse;
@@ -30,6 +30,11 @@ export class StepService {
     }
 
     await CourseCache.setByStepId(stepId, course);
+    return course;
+  }
+
+  async getStepById(stepId: string, userId: string, role?: UserRole) {
+    const course = await this.getCourseByStep(stepId);
 
     if (course.instructorId !== userId && role !== 'admin') {
       const enrollment = await this.enrollmentRepository.getEnrollment(course.id, userId);
