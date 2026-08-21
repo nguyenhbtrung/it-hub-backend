@@ -33,6 +33,7 @@ import { CourseIndexes } from '@/types/course.types';
 import { toAbsoluteURL } from '@/utils/file';
 import { generateCourseSlug, generateTagSlug } from '@/utils/slug';
 import { Injectable } from '@ntrg/simple-di';
+import { CourseKeys } from '@/infra/cache';
 
 type WithStatus<T> = T & { status: LearningStatus | 'not_started' };
 
@@ -50,17 +51,16 @@ export class CourseService {
 
   private async invalidateCourseCaches(courseId?: string) {
     const patterns = [
-      'courses:catalog:*',
-      'course:detail:*',
-      'course:content:*',
-      'courses:featured:*',
-      'learning-courses:*',
-      'courses:by-category:*',
+      CourseKeys.patterns.catalog(),
+      CourseKeys.patterns.detail(),
+      CourseKeys.patterns.content(),
+      CourseKeys.patterns.featured(),
+      CourseKeys.patterns.byCategory(),
+      CourseKeys.patterns.learningCourses(),
     ];
 
     if (courseId) {
-      patterns.push(`course:detail:${courseId}:*`);
-      patterns.push(`course:content:${courseId}:*`);
+      patterns.push(CourseKeys.patterns.byCourse(courseId), CourseKeys.patterns.contentByCourse(courseId));
     }
 
     await Promise.all(patterns.map((pattern) => CacheService.delByPattern(pattern)));
