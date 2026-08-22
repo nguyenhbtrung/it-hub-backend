@@ -8,6 +8,7 @@ export const CourseKeys = {
   catalog: (query: string) => `courses:catalog:${query}`,
   featured: (page: number, limit: number) => `courses:featured:${page}:${limit}`,
 
+  byStep: (stepId: string) => `course:by-step:${stepId}`,
   byCategory: (categoryId: string, query: string) => `courses:by-category:${categoryId}:${query}`,
   learningCourses: (userId: string, status: string, page: number, limit: number) =>
     `learning-courses:${userId}:${status}:${page}:${limit}`,
@@ -18,7 +19,7 @@ export const CourseKeys = {
     content: () => 'course:content:*',
     featured: () => 'courses:featured:*',
     learningCourses: () => 'learning-courses:*',
-    byCategory: () => 'courses:by-category:*',
+    byCategory: (categoryId?: string) => ('courses:by-category:' + categoryId ? `${categoryId}:*` : '*'),
     byCourse: (courseId: string) => `course:detail:${courseId}:*`,
     contentByCourse: (courseId: string) => `course:content:${courseId}:*`,
   },
