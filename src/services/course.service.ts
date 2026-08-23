@@ -60,7 +60,7 @@ export class CourseService {
     ];
 
     if (courseId) {
-      patterns.push(CourseKeys.patterns.byCourse(courseId), CourseKeys.patterns.contentByCourse(courseId));
+      patterns.push(CourseKeys.patterns.detailByCourse(courseId), CourseKeys.patterns.contentByCourse(courseId));
     }
 
     await Promise.all(patterns.map((pattern) => CacheService.delByPattern(pattern)));

@@ -6,21 +6,31 @@ export const CourseKeys = {
     `course:content:${id}:${view}:${userId || 'anon'}:${role || 'anon'}`,
 
   catalog: (query: string) => `courses:catalog:${query}`,
+
   featured: (page: number, limit: number) => `courses:featured:${page}:${limit}`,
 
   byStep: (stepId: string) => `course:by-step:${stepId}`,
+
   byCategory: (categoryId: string, query: string) => `courses:by-category:${categoryId}:${query}`,
+
   learningCourses: (userId: string, status: string, page: number, limit: number) =>
     `learning-courses:${userId}:${status}:${page}:${limit}`,
 
   patterns: {
     catalog: () => 'courses:catalog:*',
+
     detail: () => 'course:detail:*',
+
     content: () => 'course:content:*',
+
     featured: () => 'courses:featured:*',
+
     learningCourses: () => 'learning-courses:*',
-    byCategory: (categoryId?: string) => ('courses:by-category:' + categoryId ? `${categoryId}:*` : '*'),
-    byCourse: (courseId: string) => `course:detail:${courseId}:*`,
+
+    byCategory: (categoryId?: string) => (categoryId ? `courses:by-category:${categoryId}:*` : 'courses:by-category:*'),
+
+    detailByCourse: (courseId: string) => `course:detail:${courseId}:*`,
+
     contentByCourse: (courseId: string) => `course:content:${courseId}:*`,
   },
 };
