@@ -5,7 +5,7 @@ import { EnrollmentRepository, FileRepository, StepRepository, UnitOfWork } from
 import { diffFileIds, estimateDurationFromContent, extractFileIdsFromContent } from '@/utils/content';
 import { AiService } from './ai.service';
 import { Injectable } from '@ntrg/simple-di';
-import { CourseCache, StepCache } from '@/infra/cache';
+import { CourseRelationCache, StepCache } from '@/infra/cache';
 
 @Injectable()
 export class StepService {
@@ -18,7 +18,7 @@ export class StepService {
   ) {}
 
   private async getCourseByStep(stepId: string) {
-    const cachedCourse = await CourseCache.getByStepId(stepId);
+    const cachedCourse = await CourseRelationCache.getByStepId(stepId);
     if (cachedCourse) {
       return cachedCourse;
     }
@@ -29,7 +29,7 @@ export class StepService {
       throw new NotFoundError('Course not found');
     }
 
-    await CourseCache.setByStepId(stepId, course);
+    await CourseRelationCache.setByStepId(stepId, course);
     return course;
   }
 
@@ -118,6 +118,6 @@ export class StepService {
     }
     await this.stepRepository.deleteStep(stepId);
     await StepCache.invalidate(stepId);
-    await CourseCache.invalidateByStepId(stepId);
+    await CourseRelationCache.invalidateByStepId(stepId);
   }
 }

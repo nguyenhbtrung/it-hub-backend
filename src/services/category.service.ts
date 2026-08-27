@@ -2,7 +2,7 @@ import { CreateCategoryDto, GetCategoriesQueryDTO, GetCourseByCategoryIdQueryDto
 import { toFileResponseDto } from '@/dtos/file.dto';
 import { BadRequestError, NotFoundError } from '@/errors';
 import { Category } from '@/generated/prisma/client';
-import { CategoryCache, CourseCache } from '@/infra/cache';
+import { CategoryCache, CourseRelationCache } from '@/infra/cache';
 import { CategoryRepository } from '@/repositories';
 import { Injectable } from '@ntrg/simple-di';
 
@@ -23,7 +23,7 @@ export class CategoryService {
     const { page = 1, limit = 5, level, duration, avgRating = 0, sortBy = 'popular' } = query;
 
     const cacheKeyQuery = this.buildCoursesByCategoryCacheKeyQuery(query);
-    const cachedResult = await CourseCache.getByCategoryId(id, cacheKeyQuery);
+    const cachedResult = await CourseRelationCache.getByCategoryId(id, cacheKeyQuery);
     if (cachedResult) {
       return cachedResult;
     }
@@ -49,7 +49,7 @@ export class CategoryService {
       meta: { total, page: Number(page), limit: Number(limit) },
     };
 
-    await CourseCache.setByCategoryId(id, cacheKeyQuery, result);
+    await CourseRelationCache.setByCategoryId(id, cacheKeyQuery, result);
 
     return result;
   }
