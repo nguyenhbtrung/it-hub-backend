@@ -1,31 +1,25 @@
-import { CacheService } from '@/common/cache/cache.service';
-import { CourseKeys } from './course.keys';
+import { CourseCatalogCache } from './course.catalog.cache';
+import { CourseContentCache } from './course.content.cache';
+import { CourseDetailCache } from './course.detail.cache';
+import { CourseFeaturedCache } from './course.featured.cache';
+import { CourseLearningCache } from './course.learning.cache';
+import { CourseRelationCache } from './course.relation.cache';
 
 export class CourseCache {
-  private static readonly TTL = 24 * 60 * 60;
-  private static readonly LIST_TTL = 60 * 60;
+  static async invalidateAll(courseId?: string) {
+    const tasks = [
+      CourseCatalogCache.invalidateAll(),
+      CourseDetailCache.invalidateAll(),
+      CourseContentCache.invalidateAll(),
+      CourseFeaturedCache.invalidateAll(),
+      CourseLearningCache.invalidateAll(),
+      CourseRelationCache.invalidateAllCategories(),
+    ];
 
-  static getByStepId(stepId: string) {
-    return CacheService.get<any>(CourseKeys.byStep(stepId));
-  }
+    if (courseId) {
+      tasks.push(CourseDetailCache.invalidateByCourseId(courseId), CourseContentCache.invalidateByCourseId(courseId));
+    }
 
-  static getByCategoryId(categoryId: string, query: string) {
-    return CacheService.get<any>(CourseKeys.byCategory(categoryId, query));
-  }
-
-  static setByStepId(stepId: string, course: any) {
-    return CacheService.set(CourseKeys.byStep(stepId), course, this.TTL);
-  }
-
-  static setByCategoryId(categoryId: string, query: string, data: any) {
-    return CacheService.set(CourseKeys.byCategory(categoryId, query), data, this.LIST_TTL);
-  }
-
-  static invalidateByCategoryId(categoryId: string) {
-    return CacheService.delByPattern(CourseKeys.patterns.byCategory(categoryId));
-  }
-
-  static invalidateByStepId(stepId: string) {
-    return CacheService.del(CourseKeys.byStep(stepId));
+    await Promise.all(tasks);
   }
 }
