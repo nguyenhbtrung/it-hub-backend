@@ -1,18 +1,18 @@
 import { CacheService } from '@/common/cache/cache.service';
-import { RedisKeys } from '@/infra/redis/redis.keys';
+import { CategoryKeys } from './category.keys';
 
 export class CategoryCache {
   private static readonly TTL = 24 * 60 * 60;
 
   static getTree() {
-    return CacheService.get<any>(RedisKeys.categoryTree());
+    return CacheService.get<any>(CategoryKeys.tree());
   }
 
   static setTree(data: any) {
-    return CacheService.set(RedisKeys.categoryTree(), data, this.TTL);
+    return CacheService.set(CategoryKeys.tree(), data, this.TTL);
   }
 
   static invalidateTree() {
-    return CacheService.del(RedisKeys.categoryTree());
+    return CacheService.del(CategoryKeys.tree());
   }
 }
